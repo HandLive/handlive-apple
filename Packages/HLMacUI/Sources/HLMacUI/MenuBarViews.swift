@@ -114,9 +114,16 @@ struct SettingsCommand: View {
 }
 
 enum SettingsOpener {
+    /// The `Settings` scene from code (reopen, Dock menu). macOS 14+ ignores the `showSettingsWindow:` action, so the
+    /// app menu's own "Settings…" item (⌘,) is triggered; the action is the fallback for macOS 13.
     @MainActor
     static func open() {
         NSApp.activate(ignoringOtherApps: true)
+        if let menu = NSApp.mainMenu?.items.first?.submenu,
+           let index = menu.items.firstIndex(where: { $0.keyEquivalent == "," && $0.keyEquivalentModifierMask == .command }) {
+            menu.performActionForItem(at: index)
+            return
+        }
         NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
     }
 }
