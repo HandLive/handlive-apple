@@ -3,7 +3,7 @@ import HLCrypto
 import HLProtocol
 
 /// Thông tin cặp đã ghép (từ Keychain/SQLite) cần cho bắt tay.
-public struct PairContext: Sendable {
+public struct PairContext: Sendable, Equatable {
     public let pairId: String
     public let clientDeviceId: String
     /// `device_id` Android đã lưu lúc ghép nối; `welcome` phải khớp.

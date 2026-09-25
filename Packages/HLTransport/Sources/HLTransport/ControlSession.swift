@@ -100,6 +100,17 @@ public actor ControlSession {
         await end(.local(.normal), closing: .normal)
     }
 
+    /// Pings at once with a short deadline; a dead link ends the session. Used after the default network changes,
+    /// so reconnecting does not wait for the next keepalive (CONN-02 step 5, reconnect < 3 s).
+    public func probe(timeout: Duration) async {
+        guard ending == nil else { return }
+        do {
+            try await channel.ping(payload: Data(count: 8), timeout: timeout)
+        } catch {
+            await end(.pongTimeout, closing: .normal)
+        }
+    }
+
     // MARK: - Internals shared by the extensions
 
     func encode<Body: Encodable>(op: String, data: Body) throws -> Data {
