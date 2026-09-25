@@ -72,6 +72,9 @@ struct WelcomeStep: View {
             Text(Self.title).hlTextStyle(.brandLargeTitle).multilineTextAlignment(.center)
             Text(L10n.Setup.welcomeBodyClient).hlTextStyle(.macBody).multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
+            if let privacy = PrivacyPage.url() {
+                Link(L10n.Setup.welcomePrivacyLink, destination: privacy).hlTextStyle(.macBody)
+            }
             VStack(alignment: .leading, spacing: HLSpacing.space8) {
                 Toggle(L10n.Settings.openAtLogin, isOn: $flow.openAtLogin)
                 Toggle(L10n.Settings.showInMenuBar, isOn: $flow.showInMenuBar)
