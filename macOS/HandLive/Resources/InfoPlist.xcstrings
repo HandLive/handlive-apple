@@ -1,0 +1,60 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "NSFocusStatusUsageDescription" : {
+      "comment" : "Purpose string of the Focus status permission, asked when the user turns on Ring on Mac; one active sentence starting with HandLive",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HandLive reads your Focus status so it doesn't ring or show calls while a Focus is on."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HandLive đọc trạng thái Tập trung để không đổ chuông và không hiện cuộc gọi khi bạn đang tập trung."
+          }
+        }
+      }
+    },
+    "NSLocalNetworkUsageDescription" : {
+      "comment" : "Purpose string of the local network permission (iOS, macOS 15+), asked by the first Bonjour browse",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HandLive looks for your Android phone on your Wi-Fi network to connect to it directly, not over the internet."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HandLive tìm điện thoại Android của bạn trong mạng Wi-Fi để kết nối trực tiếp, không qua Internet."
+          }
+        }
+      }
+    },
+    "NSMicrophoneUsageDescription" : {
+      "comment" : "Purpose string of the microphone permission, asked with Bluetooth when the user turns on Take Calls on Mac",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HandLive uses the microphone so you can talk during calls transferred from your phone."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HandLive dùng micro để bạn nói trong cuộc gọi chuyển từ điện thoại."
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

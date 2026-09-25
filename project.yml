@@ -3,6 +3,8 @@
 name: HandLive
 options:
   bundleIdPrefix: app.handlive
+  # C20: English is the development, source and fallback language; Vietnamese is the second language.
+  developmentLanguage: en
   deploymentTarget:
     macOS: "13.0"
     iOS: "16.0"
@@ -19,6 +21,8 @@ packages:
     path: Packages/HLTransport
   HLDesignSystem:
     path: Packages/HLDesignSystem
+  HLLocalization:
+    path: Packages/HLLocalization
 targets:
   HandLive:
     type: application
@@ -33,6 +37,8 @@ targets:
         MARKETING_VERSION: "0.0.1"
         CURRENT_PROJECT_VERSION: "1"
         GENERATE_INFOPLIST_FILE: YES
+        # Purpose strings (English, from the catalog) and NSBonjourServices; InfoPlist.xcstrings translates them.
+        INFOPLIST_FILE: macOS/Info.plist
         INFOPLIST_KEY_LSUIElement: YES
         INFOPLIST_KEY_CFBundleDisplayName: HandLive
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
@@ -43,3 +49,4 @@ targets:
       - package: HLCrypto
       - package: HLTransport
       - package: HLDesignSystem
+      - package: HLLocalization
