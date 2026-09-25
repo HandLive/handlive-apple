@@ -33,6 +33,8 @@ public final class AppModel: ObservableObject {
     @Published public internal(set) var menuStatusLine: String?
     /// Symbol shown for about a second on the menu bar icon after a manual send (Feedback, M1.4).
     @Published public internal(set) var menuBarFeedback: String?
+    /// Image transfers over 1 MiB in progress, one per direction (CLIP-03 field 2).
+    @Published public internal(set) var clipboardProgress: [ClipboardProgress.Direction: ClipboardProgress] = [:]
 
     let settings: AppSettings
     let secrets: any SecretStore
@@ -42,14 +44,20 @@ public final class AppModel: ObservableObject {
     var manager: ConnectionManager?
     var capabilityUpdate: Task<Void, Never>?
     var linkEvents: Task<Void, Never>?
+    var clipboard: ClipboardEngine?
+    var statusLineReset: Task<Void, Never>?
+    let pasteboard: any ClipboardAccess
+    let alerts: any ClipboardAlerting
     let pairStoreURL: URL
     let makeManager: @MainActor (CapabilityData) -> ConnectionManager
 
-    /// `pairStoreURL` defaults to Application Support of the bundle identifier; tests pass a temporary file.
+    /// `pairStoreURL` defaults to Application Support of the bundle identifier; tests pass a temporary file, a
+    /// pasteboard and notifications of their own.
     public init(settings: AppSettings = AppSettings(), secrets: any SecretStore = KeychainSecretStore(),
                 device: LocalDevice = .current(name: Host.current().localizedName ?? "Mac", platform: .macos),
                 pairStoreURL: URL = PairedDeviceStore.defaultURL(
                     bundleIdentifier: Bundle.main.bundleIdentifier ?? "app.handlive.mac"),
+                pasteboard: (any ClipboardAccess)? = nil, alerts: (any ClipboardAlerting)? = nil,
                 makeManager: @escaping @MainActor (CapabilityData) -> ConnectionManager = {
                     ConnectionManager(localCapability: $0)
                 }) {
@@ -57,6 +65,8 @@ public final class AppModel: ObservableObject {
         self.secrets = secrets
         self.device = device
         self.pairStoreURL = pairStoreURL
+        self.pasteboard = pasteboard ?? MacPasteboard()
+        self.alerts = alerts ?? UserNotificationAlerts()
         self.makeManager = makeManager
         showInMenuBar = settings.showInMenuBar
         clipboardEnabled = settings.clipboardEnabled
@@ -93,6 +103,7 @@ public final class AppModel: ObservableObject {
             self.store = store
             pairedDevice = try? store.active()
             phase = .ready
+            startClipboard(identity: keys)
             startConnection()
         } catch IdentityError.keysMissing {
             // The Keychain lost the keys after setup started: start over as a fresh install.
@@ -140,13 +151,15 @@ public final class AppModel: ObservableObject {
         Task { await manager?.reconnectNow() }
     }
 
-    /// Mac sleep and wake (CONN-02 E2), forwarded by the app delegate.
+    /// Mac sleep and wake (CONN-02 E2, CLIP-02 logic 4, CLIP-05 E6), forwarded by the app delegate.
     public func systemWillSleep() async {
+        clipboard?.systemWillSleep()
         await manager?.systemWillSleep()
     }
 
     public func systemDidWake() {
         pasteAccess = PasteAccess.current
+        clipboard?.systemDidWake(pollingWanted: clipboardPollingWanted)
         Task { await manager?.systemDidWake() }
     }
 

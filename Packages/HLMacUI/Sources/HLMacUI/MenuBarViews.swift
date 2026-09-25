@@ -70,6 +70,12 @@ public struct MenuBarMenu: View {
         if let line = model.menuStatusLine {
             Text(line)
         }
+        ForEach([ClipboardProgress.Direction.sending, .receiving], id: \.self) { direction in
+            if let progress = model.clipboardProgress[direction] {
+                Text(progress.text)
+                Button(L10n.Common.cancel) { model.cancelClipboardTransfer(progress.transferId) }
+            }
+        }
         Divider()
         SettingsCommand()
         Button(L10n.Menu.quit) { NSApp.terminate(nil) }

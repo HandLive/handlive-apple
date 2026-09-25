@@ -11,19 +11,22 @@ extension AppModel {
         switch event {
         case .status(let status):
             link = status
-        case .connected(_, let details):
+        case .connected(let session, let details):
             updatePairRecord { record in
                 record.lastHost = details.host
                 record.lastPort = details.port
                 record.lastSeenAt = HLUUID.currentTimeMs()
                 record.peerCapability = details.peerCapability
             }
+            clipboardConnected(session, details: details)
         case .capabilityUpdated(let capability):
             updatePairRecord { $0.peerCapability = capability }
+            clipboard?.phoneCapabilityUpdated(capability.features.clipboard)
         case .disconnected:
             updatePairRecord { $0.lastSeenAt = HLUUID.currentTimeMs() }
-        case .message:
-            break // feature modules (clipboard) subscribe through `AppModel+Clipboard`
+            clipboard?.phoneDisconnected()
+        case .message(let envelope):
+            if envelope.type == .clipboard { clipboard?.receive(envelope) }
         case .pairRemoved:
             forgetPair()
         }
@@ -42,6 +45,8 @@ extension AppModel {
         try? secrets.delete(account: SecretAccount.pairKey(pairId: record.pairId))
         try? store?.remove(pairId: record.pairId)
         pairedDevice = nil
+        clipboard?.phoneDisconnected()
+        updateClipboardPolling()
     }
 }
 

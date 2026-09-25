@@ -58,6 +58,7 @@ extension AppModel {
             throw error
         }
         pairedDevice = record
+        updateClipboardPolling()
         let phone = activePhone()
         Task { await manager?.setPhone(phone) }
     }

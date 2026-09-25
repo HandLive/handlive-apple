@@ -8,8 +8,8 @@ import HLLocalization
 public final class AppCoordinator {
     public let model: AppModel
     public let windows: WindowPresenter
-    /// Sends the clipboard on "Send Clipboard to Phone"; set by the clipboard module.
-    public var sendClipboard: () -> Void = {}
+    /// "Send Clipboard to Phone" from the menus (CLIP-02 field 4).
+    public lazy var sendClipboard: () -> Void = { [weak self] in self?.model.sendClipboard() }
     private var observers: [NSObjectProtocol] = []
 
     public init(model: AppModel = AppModel()) {
@@ -28,6 +28,7 @@ public final class AppCoordinator {
     public func didFinishLaunching(arguments: [String] = ProcessInfo.processInfo.arguments) {
         ApplicationLocation.removeMovedFromCopy(arguments: arguments)
         WindowKeyMonitor.install()
+        (model.alerts as? UserNotificationAlerts)?.register()
         model.launch()
         model.applyActivationPolicy()
         observeSystem()

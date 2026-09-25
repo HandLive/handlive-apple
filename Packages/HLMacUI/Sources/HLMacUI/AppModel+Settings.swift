@@ -27,6 +27,7 @@ extension AppModel {
     public func setClipboardEnabled(_ enabled: Bool) {
         settings.clipboardEnabled = enabled
         clipboardEnabled = enabled
+        updateClipboardPolling()
         scheduleCapabilityUpdate()
     }
 
@@ -46,6 +47,7 @@ extension AppModel {
     public func setAutoClearSeconds(_ seconds: Int) {
         settings.autoClearSeconds = seconds
         autoClearSeconds = settings.autoClearSeconds
+        clipboard?.autoClearSettingChanged()
     }
 
     public func setRelayEnabled(_ enabled: Bool) {
