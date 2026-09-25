@@ -1,0 +1,11 @@
+HandLive for macOS and iOS/iPadOS
+Copyright 2026 Hồ Xuân Dũng and HandLive contributors
+
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+This product bundles a third-party font under the SIL Open Font License 1.1
+(license text in Packages/HLDesignSystem/Sources/HLDesignSystem/Resources/Fonts/OFL.txt):
+- Be Vietnam Pro — Copyright 2021 The Be Vietnam Pro Project Authors (https://github.com/bettergui/BeVietnamPro)
+
+San Francisco (SF Pro, SF Mono) and SF Symbols are used only through Apple's system APIs on Apple
+platforms and are not bundled.
