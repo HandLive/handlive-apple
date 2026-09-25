@@ -102,8 +102,6 @@
 	<string>Pairing…</string>
 	<key>pairing.options</key>
 	<string>Options</string>
-	<key>pairing.pair_phone</key>
-	<string>Pair Phone…</string>
 	<key>pairing.pair_phone_title</key>
 	<string>Pair Phone</string>
 	<key>pairing.paired</key>

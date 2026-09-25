@@ -102,8 +102,6 @@
 	<string>Đang ghép nối…</string>
 	<key>pairing.options</key>
 	<string>Tùy chọn</string>
-	<key>pairing.pair_phone</key>
-	<string>Ghép điện thoại…</string>
 	<key>pairing.pair_phone_title</key>
 	<string>Ghép nối điện thoại</string>
 	<key>pairing.paired</key>

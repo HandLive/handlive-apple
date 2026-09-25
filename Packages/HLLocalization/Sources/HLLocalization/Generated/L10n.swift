@@ -127,8 +127,6 @@ public enum L10n {
         public static var inProgress: String { L10nLookup.string("pairing.in_progress") }
         /// Options
         public static var options: String { L10nLookup.string("pairing.options") }
-        /// Pair Phone…
-        public static var pairPhone: String { L10nLookup.string("pairing.pair_phone") }
         /// Pair Phone
         public static var pairPhoneTitle: String { L10nLookup.string("pairing.pair_phone_title") }
         /// Paired

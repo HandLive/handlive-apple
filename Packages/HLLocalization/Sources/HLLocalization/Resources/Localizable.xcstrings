@@ -901,24 +901,6 @@
         }
       }
     },
-    "pairing.pair_phone" : {
-      "comment" : "Mac HandLive menu item and button (Settings › Devices, Needs to be paired again) that opens the pairing sheet",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pair Phone…"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ghép điện thoại…"
-          }
-        }
-      }
-    },
     "pairing.pair_phone_title" : {
       "comment" : "Title of the pairing sheet (PairingCard) that shows the QR code",
       "extractionState" : "manual",
