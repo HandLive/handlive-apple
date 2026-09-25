@@ -89,21 +89,25 @@ def render_text_styles(styles: list[TextStyleToken]) -> str:
     return "".join(out)
 
 
-def render_metrics(metrics: dict[str, list[MetricToken]]) -> str:
-    out = [_HEADER, "import CoreGraphics\n"]
+def render_metrics(metrics: dict[str, list[MetricToken]]) -> dict[str, str]:
+    """Một tệp cho mỗi họ số đo, đặt tên theo kiểu bên trong (HLSpacing.swift …)."""
+    files = {}
     for family, enum_name, prefix, swift_type, summary in _METRIC_ENUMS:
+        out = [_HEADER, "import CoreGraphics\n"]
         out.append(f"\n/// {summary}\npublic enum {enum_name} {{\n")
         for token in metrics[family]:
             member = swift_identifier(token.name.removeprefix(prefix))
             out.append(_doc(token.usage))
             out.append(f"    public static let {member}: {swift_type} = {_number(token.value)}\n")
         out.append("}\n")
-    return "".join(out)
+        files[f"{GENERATED_DIR}/{enum_name}.swift"] = "".join(out)
+    return files
 
 
 def render_swift_sources(colors, styles, metrics) -> dict[str, str]:
+    """Tệp Swift sinh ra, đặt tên theo kiểu chính bên trong (docs/code-standards.md)."""
     return {
-        f"{GENERATED_DIR}/hl-color-token-generated.swift": render_colors(colors),
-        f"{GENERATED_DIR}/hl-text-style-generated.swift": render_text_styles(styles),
-        f"{GENERATED_DIR}/hl-metrics-generated.swift": render_metrics(metrics),
+        f"{GENERATED_DIR}/HLColorToken.swift": render_colors(colors),
+        f"{GENERATED_DIR}/HLTextStyle.swift": render_text_styles(styles),
+        **render_metrics(metrics),
     }
