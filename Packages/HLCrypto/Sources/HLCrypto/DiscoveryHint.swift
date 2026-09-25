@@ -5,7 +5,8 @@ import Foundation
 ///
 /// `K_disc` = HKDF(`PRK`, info `"handlive/v1/discovery"`); hint = the first 8 hex characters of
 /// HMAC-SHA256(`K_disc`, `"HLDISC1"` ‖ int64 BE `floor(now_ms / 3 600 000)`). Hints change every hour; the
-/// client accepts the current and the previous hour to tolerate clock skew around the hour.
+/// client accepts the previous, current and next hour, so a phone clock up to an hour behind or ahead still matches
+/// (0.4.1, CONN-01 step 3).
 public enum DiscoveryHint {
     public static let info = "handlive/v1/discovery"
     public static let label = Data("HLDISC1".utf8)
@@ -25,11 +26,16 @@ public enum DiscoveryHint {
         return mac.prefix(4).map { String(format: "%02x", $0) }.joined()
     }
 
-    /// Hints a client accepts at `nowMs`: the current hour first, then the previous one.
+    /// `floor(now_ms / 3 600 000)`, rounding down for negative clocks too.
+    public static func hourIndex(nowMs: Int64) -> Int64 {
+        nowMs >= 0 ? nowMs / hourMilliseconds : (nowMs - hourMilliseconds + 1) / hourMilliseconds
+    }
+
+    /// Hints a client accepts at `nowMs`: the previous, the current and the next hour.
     public static func acceptedHints(prk: Data, nowMs: Int64) throws -> [String] {
         let discoveryKey = try key(prk: prk)
-        let hour = nowMs >= 0 ? nowMs / hourMilliseconds : (nowMs - hourMilliseconds + 1) / hourMilliseconds
-        return [hint(discoveryKey: discoveryKey, hour: hour), hint(discoveryKey: discoveryKey, hour: hour - 1)]
+        let hour = hourIndex(nowMs: nowMs)
+        return [hour - 1, hour, hour + 1].map { hint(discoveryKey: discoveryKey, hour: $0) }
     }
 
     /// Whether a TXT `h` value (comma-separated hints) carries one of the accepted hints; case-insensitive.
