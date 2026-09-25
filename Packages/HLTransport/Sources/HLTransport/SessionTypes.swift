@@ -32,6 +32,13 @@ public struct IncomingEnvelope: Sendable, Equatable {
     public let ts: Int64
     public let body: Body
 
+    public init(id: String, type: MessageType, ts: Int64, body: Body) {
+        self.id = id
+        self.type = type
+        self.ts = ts
+        self.body = body
+    }
+
     /// Op of a JSON body, `chunk` for a binary one.
     public var op: String {
         switch body {
