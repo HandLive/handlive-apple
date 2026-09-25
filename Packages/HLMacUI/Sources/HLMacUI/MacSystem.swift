@@ -125,3 +125,15 @@ public enum NotificationPermission: Equatable, Sendable {
         return await current()
     }
 }
+
+/// Hardware facts `pair/hello` carries (PAIR-01 API 2 `model`).
+public enum MacHardware {
+    /// Model identifier such as `Mac15,3` (`hw.model`).
+    public static var modelIdentifier: String? {
+        var size = 0
+        guard sysctlbyname("hw.model", nil, &size, nil, 0) == 0, size > 1 else { return nil }
+        var bytes = [CChar](repeating: 0, count: size)
+        guard sysctlbyname("hw.model", &bytes, &size, nil, 0) == 0 else { return nil }
+        return String(bytes: bytes.prefix { $0 != 0 }.map { UInt8(bitPattern: $0) }, encoding: .utf8)
+    }
+}

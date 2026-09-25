@@ -42,19 +42,21 @@ public final class AppModel: ObservableObject {
     var manager: ConnectionManager?
     var capabilityUpdate: Task<Void, Never>?
     var linkEvents: Task<Void, Never>?
-    let bundleIdentifier: String
+    let pairStoreURL: URL
     let makeManager: @MainActor (CapabilityData) -> ConnectionManager
 
+    /// `pairStoreURL` defaults to Application Support of the bundle identifier; tests pass a temporary file.
     public init(settings: AppSettings = AppSettings(), secrets: any SecretStore = KeychainSecretStore(),
                 device: LocalDevice = .current(name: Host.current().localizedName ?? "Mac", platform: .macos),
-                bundleIdentifier: String = Bundle.main.bundleIdentifier ?? "app.handlive.mac",
+                pairStoreURL: URL = PairedDeviceStore.defaultURL(
+                    bundleIdentifier: Bundle.main.bundleIdentifier ?? "app.handlive.mac"),
                 makeManager: @escaping @MainActor (CapabilityData) -> ConnectionManager = {
                     ConnectionManager(localCapability: $0)
                 }) {
         self.settings = settings
         self.secrets = secrets
         self.device = device
-        self.bundleIdentifier = bundleIdentifier
+        self.pairStoreURL = pairStoreURL
         self.makeManager = makeManager
         showInMenuBar = settings.showInMenuBar
         clipboardEnabled = settings.clipboardEnabled
@@ -87,8 +89,7 @@ public final class AppModel: ObservableObject {
             let keys = try DeviceIdentityKeys.loadOrCreate(secrets: secrets, settings: settings)
             identity = keys
             BenchLog.configure(deviceId: keys.deviceId, role: .macos)
-            let store = PairedDeviceStore(fileURL: PairedDeviceStore.defaultURL(bundleIdentifier: bundleIdentifier),
-                                          databaseKey: keys.databaseKey)
+            let store = PairedDeviceStore(fileURL: pairStoreURL, databaseKey: keys.databaseKey)
             self.store = store
             pairedDevice = try? store.active()
             phase = .ready
