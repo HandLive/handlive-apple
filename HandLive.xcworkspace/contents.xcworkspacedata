@@ -16,4 +16,7 @@
    <FileRef
       location = "group:Packages/HLDesignSystem">
    </FileRef>
+   <FileRef
+      location = "group:Packages/HLLocalization">
+   </FileRef>
 </Workspace>

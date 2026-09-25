@@ -12,15 +12,28 @@ Kho này là một phần của workspace HandLive: kho hub `handlive` (tài li�
 
 | Đường dẫn | Nội dung |
 |-----------|----------|
-| `project.yml` | XcodeGen: target app `HandLive` (menu bar, bundle `app.handlive.mac`) + 4 local package. Không cấu hình ký |
+| `project.yml` | XcodeGen: target app `HandLive` (menu bar, bundle `app.handlive.mac`, ngôn ngữ phát triển `en`, vùng `en` và `vi`) và các local package. Không cấu hình ký |
 | `HandLive.xcworkspace` | Workspace tham chiếu `HandLive.xcodeproj` (sinh ra) và các package |
-| `macOS/HandLive/` | App menu bar (placeholder Phase 0, tính năng từ Phase 1) |
+| `macOS/HandLive/` | App menu bar; `Resources/Assets.xcassets` (AccentColor = `accent-fill`, sinh ra), `Resources/InfoPlist.xcstrings` (purpose string tiếng Anh và tiếng Việt, sinh ra) |
+| `macOS/Info.plist` | `NSBonjourServices` và purpose string tiếng Anh (bộ sinh chuỗi ghi) |
 | `Packages/HLProtocol` | Envelope, `{op, data}`, Ack, `ErrorCode` (0.8.1), khung HL (0.5.2), plaintext nhị phân `clipboard/chunk`, UUIDv7, b64/b64u, AAD, kiểu `session`/`capability` |
 | `Packages/HLCrypto` | HChaCha20 tự cài + CryptoKit `ChaChaPoly` = XChaCha20-Poly1305; X25519, Ed25519, HKDF/HMAC-SHA256; `device_id`; PRK; bắt tay/rekey/`K_stream`; mã hóa envelope và khung HL; Keychain sau protocol `SecretStore` |
-| `Packages/HLTransport` | Máy trạng thái 0.11, `RECONNECT_BACKOFF`, bắt tay phía client (thuần logic; mạng thật từ Phase 1) |
-| `Packages/HLDesignSystem` | Token giao diện (thẻ M0.2) |
+| `Packages/HLTransport` | Máy trạng thái 0.11 cùng các cạnh lỗi, `RECONNECT_BACKOFF`, mã đóng và phản ứng của client, bắt tay phía client |
+| `Packages/HLDesignSystem` | Màu (API hệ thống, hex chỉ khi nền tảng không có API), kiểu chữ, số đo, `StatusIndicator`, `GroupedList`, kiểu nút; `Scripts/generate-design-tokens.py` sinh token từ `../shared/design-tokens` |
+| `Packages/HLLocalization` | `Localizable.xcstrings` và accessor `L10n` an toàn kiểu, sinh từ `../shared/strings/ui-strings.json` bằng `Scripts/generate-strings.py` (kèm `InfoPlist.xcstrings` và purpose string trong Info.plist của app); mã không viết câu chữ giao diện |
 
-Phụ thuộc: `HLTransport → HLCrypto → HLProtocol`.
+Phụ thuộc: `HLTransport → HLCrypto → HLProtocol`; `HLDesignSystem → HLLocalization`.
+
+## File sinh ra
+
+Hai bộ sinh ghi file được commit và có chế độ `--check` mà test của package chạy:
+
+```sh
+python3 apple/Packages/HLDesignSystem/Scripts/generate-design-tokens.py   # tokens.json → màu, kiểu chữ, số đo
+python3 apple/Packages/HLLocalization/Scripts/generate-strings.py        # ui-strings.json → String Catalog, L10n
+```
+
+Sửa catalog trong `../shared` (tài liệu trước), rồi chạy bộ sinh; không sửa tay file sinh ra.
 
 ## Sinh project Xcode
 
