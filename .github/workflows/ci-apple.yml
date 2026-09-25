@@ -54,10 +54,25 @@ jobs:
     env:
       DERIVED_DATA: ${{ github.workspace }}/.ci-derived-data
     steps:
+      - name: Resolve matching branches of the hub and handlive-shared
+        id: refs
+        env:
+          BRANCH: ${{ github.head_ref || github.ref_name }}
+          OWNER: ${{ github.repository_owner }}
+          GH_TOKEN: ${{ secrets.HANDLIVE_REPOS_TOKEN || github.token }}
+        run: |
+          resolve() {
+            if git ls-remote --exit-code --heads "https://x-access-token:${GH_TOKEN}@github.com/${OWNER}/$1.git" "$BRANCH" >/dev/null 2>&1; then echo "$BRANCH"; else echo main; fi
+          }
+          hub="$(resolve handlive)"; shared="$(resolve handlive-shared)"
+          echo "hub=$hub" >> "$GITHUB_OUTPUT"; echo "shared=$shared" >> "$GITHUB_OUTPUT"
+          echo "hub → $hub, handlive-shared → $shared"
+
       - name: Kho hub handlive ở gốc workspace
         uses: actions/checkout@v5
         with:
           repository: ${{ github.repository_owner }}/handlive
+          ref: ${{ steps.refs.outputs.hub }}
           token: ${{ secrets.HANDLIVE_REPOS_TOKEN || github.token }}
 
       - uses: actions/checkout@v5
@@ -69,6 +84,7 @@ jobs:
         with:
           repository: ${{ github.repository_owner }}/handlive-shared
           path: shared
+          ref: ${{ steps.refs.outputs.shared }}
           token: ${{ secrets.HANDLIVE_REPOS_TOKEN || github.token }}
 
       - name: Chọn Xcode ổn định mới nhất
