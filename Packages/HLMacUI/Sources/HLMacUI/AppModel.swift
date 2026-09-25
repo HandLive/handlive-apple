@@ -76,10 +76,11 @@ public final class AppModel: ObservableObject {
         relayEnabled = settings.relayEnabled
     }
 
-    /// "Send Clipboard to Phone" is available: connected, clipboard on here and on the phone (QC1).
+    /// "Send Clipboard to Phone" is available with a paired phone and clipboard on here and, as far as known, on the
+    /// phone (QC1). While disconnected it keeps the clip and says it will send on reconnection (CLIP-02 E6).
     public var canSendClipboard: Bool {
-        guard clipboardEnabled, case .connected = link.state else { return false }
-        return pairedDevice?.peerCapability?.features.clipboard?.enabled ?? false
+        guard clipboardEnabled, let device = pairedDevice else { return false }
+        return device.peerCapability?.features.clipboard?.enabled ?? true
     }
 
     /// `true` once `setup.completed_at` is set (SET-03 step 1).
