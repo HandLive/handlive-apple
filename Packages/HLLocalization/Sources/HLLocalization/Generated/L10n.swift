@@ -131,6 +131,8 @@ public enum L10n {
         }
         /// Couldn't find the phone. Put both devices on the same Wi-Fi network and try again.
         public static var phoneNotFound: String { L10nLookup.string("pairing.phone_not_found") }
+        /// On the phone, tap Add Device, choose Enter PIN, and type this code.
+        public static var pinInstructions: String { L10nLookup.string("pairing.pin_instructions") }
         /// Code changes in {time}
         public static func qrCodeChangesIn(time: String) -> String {
             L10nLookup.format("pairing.qr_code_changes_in", time)
@@ -233,6 +235,8 @@ public enum L10n {
         public static var title: String { L10nLookup.string("settings.title") }
     }
     public enum Setup {
+        /// Drag HandLive into the Applications folder in Finder, then open it again.
+        public static var applicationsDragHint: String { L10nLookup.string("setup.applications_drag_hint") }
         /// Not Now
         public static var applicationsLater: String { L10nLookup.string("setup.applications_later") }
         /// Move
@@ -241,6 +245,14 @@ public enum L10n {
         public static var applicationsPrompt: String { L10nLookup.string("setup.applications_prompt") }
         /// The clipboard syncs while HandLive is open on this device: tap the Paste button to send, with no paste permission prompt. iPhone and iPad can't take calls. When HandLive is closed, SMS messages and incoming calls appear as notifications.
         public static var iosLimits: String { L10nLookup.string("setup.ios_limits") }
+        /// Couldn't create the security keys on this device. Try again.
+        public static var keysFailed: String { L10nLookup.string("setup.keys_failed") }
+        /// HandLive can't look for the phone on Wi-Fi. Turn on HandLive in System Settings › Privacy & Security › Local Network.
+        public static var localNetworkDeniedMac: String { L10nLookup.string("setup.local_network_denied_mac") }
+        /// To open HandLive at login, allow it in System Settings › General › Login Items.
+        public static var loginItemApprovalMac: String { L10nLookup.string("setup.login_item_approval_mac") }
+        /// Notifications are off, so new SMS messages and missed calls don't appear. Turn them on in System Settings › Notifications › HandLive.
+        public static var notificationsDeniedMac: String { L10nLookup.string("setup.notifications_denied_mac") }
         /// Focus may silence call notifications
         public static var timeSensitiveOff: String { L10nLookup.string("setup.time_sensitive_off") }
         /// HandLive brings the clipboard, SMS messages, and calls from your Android phone to this device. Data is end-to-end encrypted and travels only between your devices; the server can't read it. No account needed.

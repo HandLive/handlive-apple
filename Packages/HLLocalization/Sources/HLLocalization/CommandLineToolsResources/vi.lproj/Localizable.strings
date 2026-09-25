@@ -106,6 +106,8 @@
 	<string>Đã ghép nối với %1$@</string>
 	<key>pairing.phone_not_found</key>
 	<string>Không tìm thấy điện thoại. Để hai máy cùng mạng Wi-Fi rồi thử lại.</string>
+	<key>pairing.pin_instructions</key>
+	<string>Trên điện thoại, chạm Thêm thiết bị, chọn Nhập mã PIN rồi nhập mã này.</string>
 	<key>pairing.qr_code_changes_in</key>
 	<string>Mã đổi sau %1$@</string>
 	<key>pairing.qr_instructions</key>
@@ -188,6 +190,8 @@
 	<string>Đồng bộ ảnh</string>
 	<key>settings.title</key>
 	<string>Cài đặt</string>
+	<key>setup.applications_drag_hint</key>
+	<string>Kéo HandLive vào thư mục Ứng dụng trong Finder rồi mở lại.</string>
 	<key>setup.applications_later</key>
 	<string>Để sau</string>
 	<key>setup.applications_move</key>
@@ -196,6 +200,14 @@
 	<string>Camera ảo chỉ hoạt động khi HandLive nằm trong thư mục Ứng dụng. Chuyển ngay?</string>
 	<key>setup.ios_limits</key>
 	<string>Bảng nhớ tạm đồng bộ khi HandLive đang mở trên máy này: chạm nút Dán để gửi, không bị hỏi quyền dán. iPhone/iPad không nghe gọi được. Khi HandLive đóng, SMS và cuộc gọi đến hiện dưới dạng thông báo.</string>
+	<key>setup.keys_failed</key>
+	<string>Không tạo được khóa bảo mật trên máy này. Hãy thử lại.</string>
+	<key>setup.local_network_denied_mac</key>
+	<string>HandLive không tìm được điện thoại trong mạng Wi-Fi. Bật HandLive trong Cài đặt hệ thống › Quyền riêng tư &amp; Bảo mật › Mạng cục bộ.</string>
+	<key>setup.login_item_approval_mac</key>
+	<string>Để mở HandLive khi đăng nhập, cho phép trong Cài đặt hệ thống › Cài đặt chung › Mục đăng nhập.</string>
+	<key>setup.notifications_denied_mac</key>
+	<string>Thông báo đang tắt nên không thấy SMS mới và cuộc gọi nhỡ. Bật lại trong Cài đặt hệ thống › Thông báo › HandLive.</string>
 	<key>setup.time_sensitive_off</key>
 	<string>Thông báo cuộc gọi có thể bị chế độ Tập trung chặn</string>
 	<key>setup.welcome_body_client</key>

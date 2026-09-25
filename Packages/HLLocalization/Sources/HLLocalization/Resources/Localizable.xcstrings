@@ -937,6 +937,24 @@
         }
       }
     },
+    "pairing.pin_instructions" : {
+      "comment" : "Mac/iPhone PairingCard in PIN mode, under the six digits (PIN fallback of PAIR-01 A1–A3)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On the phone, tap Add Device, choose Enter PIN, and type this code."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trên điện thoại, chạm Thêm thiết bị, chọn Nhập mã PIN rồi nhập mã này."
+          }
+        }
+      }
+    },
     "pairing.qr_code_changes_in" : {
       "comment" : "Countdown under the QR code; {time} is the remaining time formatted m:ss by the system (1:42)",
       "extractionState" : "manual",
@@ -1675,6 +1693,24 @@
         }
       }
     },
+    "setup.applications_drag_hint" : {
+      "comment" : "Mac first run when HandLive cannot move itself (App Translocation or no write access), SET-03 E2",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drag HandLive into the Applications folder in Finder, then open it again."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kéo HandLive vào thư mục Ứng dụng trong Finder rồi mở lại."
+          }
+        }
+      }
+    },
     "setup.applications_later" : {
       "comment" : "Mac button: keep HandLive outside the Applications folder for now",
       "extractionState" : "manual",
@@ -1743,6 +1779,78 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bảng nhớ tạm đồng bộ khi HandLive đang mở trên máy này: chạm nút Dán để gửi, không bị hỏi quyền dán. iPhone/iPad không nghe gọi được. Khi HandLive đóng, SMS và cuộc gọi đến hiện dưới dạng thông báo."
+          }
+        }
+      }
+    },
+    "setup.keys_failed" : {
+      "comment" : "Mac/iPhone first run when creating or saving the identity keys in the Keychain fails (SET-03 E1); shown with a Try Again button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't create the security keys on this device. Try again."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không tạo được khóa bảo mật trên máy này. Hãy thử lại."
+          }
+        }
+      }
+    },
+    "setup.local_network_denied_mac" : {
+      "comment" : "Mac guidance when local network access is denied (SET-03 E4, CONN-01 E8), with an Open System Settings button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HandLive can't look for the phone on Wi-Fi. Turn on HandLive in System Settings › Privacy & Security › Local Network."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HandLive không tìm được điện thoại trong mạng Wi-Fi. Bật HandLive trong Cài đặt hệ thống › Quyền riêng tư & Bảo mật › Mạng cục bộ."
+          }
+        }
+      }
+    },
+    "setup.login_item_approval_mac" : {
+      "comment" : "Mac guidance when SMAppService reports requiresApproval (SET-03 E5), with an Open System Settings button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To open HandLive at login, allow it in System Settings › General › Login Items."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Để mở HandLive khi đăng nhập, cho phép trong Cài đặt hệ thống › Cài đặt chung › Mục đăng nhập."
+          }
+        }
+      }
+    },
+    "setup.notifications_denied_mac" : {
+      "comment" : "Mac guidance when notifications are denied (SET-03 E3), with an Open System Settings button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notifications are off, so new SMS messages and missed calls don't appear. Turn them on in System Settings › Notifications › HandLive."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thông báo đang tắt nên không thấy SMS mới và cuộc gọi nhỡ. Bật lại trong Cài đặt hệ thống › Thông báo › HandLive."
           }
         }
       }

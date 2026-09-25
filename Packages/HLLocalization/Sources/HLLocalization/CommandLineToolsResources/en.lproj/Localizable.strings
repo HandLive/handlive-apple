@@ -106,6 +106,8 @@
 	<string>Paired with %1$@</string>
 	<key>pairing.phone_not_found</key>
 	<string>Couldn't find the phone. Put both devices on the same Wi-Fi network and try again.</string>
+	<key>pairing.pin_instructions</key>
+	<string>On the phone, tap Add Device, choose Enter PIN, and type this code.</string>
 	<key>pairing.qr_code_changes_in</key>
 	<string>Code changes in %1$@</string>
 	<key>pairing.qr_instructions</key>
@@ -188,6 +190,8 @@
 	<string>Sync Images</string>
 	<key>settings.title</key>
 	<string>Settings</string>
+	<key>setup.applications_drag_hint</key>
+	<string>Drag HandLive into the Applications folder in Finder, then open it again.</string>
 	<key>setup.applications_later</key>
 	<string>Not Now</string>
 	<key>setup.applications_move</key>
@@ -196,6 +200,14 @@
 	<string>The virtual camera works only when HandLive is in the Applications folder. Move it now?</string>
 	<key>setup.ios_limits</key>
 	<string>The clipboard syncs while HandLive is open on this device: tap the Paste button to send, with no paste permission prompt. iPhone and iPad can't take calls. When HandLive is closed, SMS messages and incoming calls appear as notifications.</string>
+	<key>setup.keys_failed</key>
+	<string>Couldn't create the security keys on this device. Try again.</string>
+	<key>setup.local_network_denied_mac</key>
+	<string>HandLive can't look for the phone on Wi-Fi. Turn on HandLive in System Settings › Privacy &amp; Security › Local Network.</string>
+	<key>setup.login_item_approval_mac</key>
+	<string>To open HandLive at login, allow it in System Settings › General › Login Items.</string>
+	<key>setup.notifications_denied_mac</key>
+	<string>Notifications are off, so new SMS messages and missed calls don't appear. Turn them on in System Settings › Notifications › HandLive.</string>
 	<key>setup.time_sensitive_off</key>
 	<string>Focus may silence call notifications</string>
 	<key>setup.welcome_body_client</key>
