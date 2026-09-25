@@ -1,0 +1,2094 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "clipboard.auto_send_off_on_phone" : {
+      "comment" : "Mac/iPhone note when the phone reports features.clipboard.auto_send = false",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto-send is off on the phone — use the Send Clipboard button on the phone"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tự gửi đang tắt trên điện thoại — dùng nút Gửi bảng nhớ tạm trên điện thoại"
+          }
+        }
+      }
+    },
+    "clipboard.conflict_body" : {
+      "comment" : "Body of the conflict notification; the device is the one named in the title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That device just copied something new."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thiết bị này vừa có nội dung sao chép mới."
+          }
+        }
+      }
+    },
+    "clipboard.conflict_title" : {
+      "comment" : "Title of the conflict notification on the sending device; action clipboard.send_again",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clipboard Not Updated on %1$@"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chưa ghi lên %1$@"
+          }
+        }
+      }
+    },
+    "clipboard.image_sending" : {
+      "comment" : "Progress of an image over 1 MiB (Android notification, Mac menu bar menu) with a Cancel button; {percent} is formatted by the system",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sending image to %1$@ — %2$@"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang gửi ảnh tới %1$@ — %2$@"
+          }
+        }
+      }
+    },
+    "clipboard.not_connected_will_send" : {
+      "comment" : "Result of a manual send while no device is connected (Android toast, Mac menu bar status line)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not connected — will send if reconnected within 2 minutes"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chưa kết nối — sẽ gửi nếu kết nối lại trong 2 phút"
+          }
+        }
+      }
+    },
+    "clipboard.send_again" : {
+      "comment" : "Action of the conflict notification; valid for 2 minutes",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send Again"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gửi lại"
+          }
+        }
+      }
+    },
+    "clipboard.send_anyway" : {
+      "comment" : "Action of the sensitive content notification; valid for 2 minutes",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send Anyway"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vẫn gửi"
+          }
+        }
+      }
+    },
+    "clipboard.sensitive_blocked_body" : {
+      "comment" : "Body of the sensitive content notification (Android channel clipboard, Mac notification)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HandLive doesn't send content that looks like a password or card number."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HandLive không gửi nội dung có vẻ là mật khẩu hoặc số thẻ."
+          }
+        }
+      }
+    },
+    "clipboard.sensitive_blocked_title" : {
+      "comment" : "Title of the sensitive content notification; action clipboard.send_anyway",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensitive Content Blocked"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã chặn nội dung nhạy cảm"
+          }
+        }
+      }
+    },
+    "clipboard.sent_to" : {
+      "comment" : "Result of a manual send (Android toast or HUD, Mac status line, iPhone HUD)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sent to %1$@"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã gửi tới %1$@"
+          }
+        }
+      }
+    },
+    "common.agree" : {
+      "comment" : "ConsentSheet primary button (right on Mac, full width at the bottom on Android); max 2 words",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agree"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đồng ý"
+          }
+        }
+      }
+    },
+    "common.cancel" : {
+      "comment" : "Cancel button of alerts, sheets and progress (left of the action, or last in an action sheet); never the default",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hủy"
+          }
+        }
+      }
+    },
+    "common.continue" : {
+      "comment" : "Only button of a permission explanation (PermissionPrimer) and next step of a multi-step flow",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tiếp tục"
+          }
+        }
+      }
+    },
+    "common.done" : {
+      "comment" : "Last button of the first-run flow (the Paired screen); design system Onboarding",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Done"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Xong"
+          }
+        }
+      }
+    },
+    "common.get_started" : {
+      "comment" : "Button of the welcome screen (Onboarding), bottom on iPhone and Android, bottom right on Mac",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Get Started"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bắt đầu"
+          }
+        }
+      }
+    },
+    "common.off" : {
+      "comment" : "Off value: option of Auto-Clear Received Clipboard, state read by TalkBack/VoiceOver for a switch",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Off"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tắt"
+          }
+        }
+      }
+    },
+    "common.on" : {
+      "comment" : "On value: state read by TalkBack/VoiceOver for a switch, value of a permission row",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bật"
+          }
+        }
+      }
+    },
+    "common.open_settings" : {
+      "comment" : "Button that opens the app's page in the system Settings (Android app info, iOS Settings) after a permission was denied for good",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Settings"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mở cài đặt"
+          }
+        }
+      }
+    },
+    "common.open_system_settings" : {
+      "comment" : "Mac button that opens the right page of System Settings (paste permission, login items, local network)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open System Settings"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mở Cài đặt hệ thống"
+          }
+        }
+      }
+    },
+    "common.retry" : {
+      "comment" : "Button of an error that the user can retry (service start, key creation)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Try Again"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thử lại"
+          }
+        }
+      }
+    },
+    "error.clip_image_no_space" : {
+      "comment" : "Receiver of an image transfer cannot write the temporary file (acks INTERNAL); Android toast, Mac menu bar status line",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not enough storage to receive the image"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không đủ bộ nhớ để nhận ảnh"
+          }
+        }
+      }
+    },
+    "error.clip_image_send_failed" : {
+      "comment" : "Sender after the second CLIP_CHECKSUM_MISMATCH of one image; notification",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't send the image"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không gửi được ảnh"
+          }
+        }
+      }
+    },
+    "error.clip_image_too_large" : {
+      "comment" : "CLIP_TOO_LARGE for an image; shown in place (Android toast, Mac menu bar status line), never as a notification",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Image is too large (up to 10 MB)"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ảnh quá lớn (tối đa 10 MB)"
+          }
+        }
+      }
+    },
+    "error.clip_image_unreadable" : {
+      "comment" : "Manual send of an image that cannot be decoded (CLIP_UNSUPPORTED_MIME); Android toast, Mac menu bar status line",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't read the image"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không đọc được ảnh"
+          }
+        }
+      }
+    },
+    "error.clip_text_too_large" : {
+      "comment" : "CLIP_TOO_LARGE for text; shown in place (Android toast, Mac menu bar status line), never as a notification",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Content is too large to send (up to 1 MB of text)"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nội dung quá lớn để gửi (tối đa 1 MB văn bản)"
+          }
+        }
+      }
+    },
+    "error.clip_write_failed_on_phone" : {
+      "comment" : "Mac menu bar status line when the phone acks INTERNAL for a clip it could not write",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't update the clipboard on the phone"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không ghi được bảng nhớ tạm trên điện thoại"
+          }
+        }
+      }
+    },
+    "error.feature_disabled" : {
+      "comment" : "Reply FEATURE_DISABLED from the peer; {device_name} is the peer's name",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This feature is off on %1$@"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tính năng đang tắt trên %1$@"
+          }
+        }
+      }
+    },
+    "error.pairing_auth_failed" : {
+      "comment" : "AUTH_FAILED while pairing (MAC, signature or TLS binding wrong); shown inside the pairing sheet, a new QR code follows",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pairing isn't secure — try again"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ghép nối không an toàn, thử lại"
+          }
+        }
+      }
+    },
+    "error.session_auth_failed" : {
+      "comment" : "session/error AUTH_FAILED; status line on Mac/iPhone, no automatic retry for 5 minutes",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't verify the phone"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không xác thực được điện thoại"
+          }
+        }
+      }
+    },
+    "error.update_phone_app" : {
+      "comment" : "UNSUPPORTED_VERSION when the phone's app is older (min_protocol above its protocol)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update HandLive on the phone"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cập nhật HandLive trên điện thoại"
+          }
+        }
+      }
+    },
+    "error.update_this_app" : {
+      "comment" : "UNSUPPORTED_VERSION when this Mac/iPhone's app is older than the phone requires",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update HandLive on this device"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cập nhật HandLive trên máy này"
+          }
+        }
+      }
+    },
+    "infoplist.focus_status_usage" : {
+      "comment" : "Purpose string of the Focus status permission, asked when the user turns on Ring on Mac; one active sentence starting with HandLive",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HandLive reads your Focus status so it doesn't ring or show calls while a Focus is on."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HandLive đọc trạng thái Tập trung để không đổ chuông và không hiện cuộc gọi khi bạn đang tập trung."
+          }
+        }
+      }
+    },
+    "infoplist.local_network_usage" : {
+      "comment" : "Purpose string of the local network permission (iOS, macOS 15+), asked by the first Bonjour browse",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HandLive looks for your Android phone on your Wi-Fi network to connect to it directly, not over the internet."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HandLive tìm điện thoại Android của bạn trong mạng Wi-Fi để kết nối trực tiếp, không qua Internet."
+          }
+        }
+      }
+    },
+    "infoplist.microphone_usage" : {
+      "comment" : "Purpose string of the microphone permission, asked with Bluetooth when the user turns on Take Calls on Mac",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HandLive uses the microphone so you can talk during calls transferred from your phone."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HandLive dùng micro để bạn nói trong cuộc gọi chuyển từ điện thoại."
+          }
+        }
+      }
+    },
+    "menu.camera_preview" : {
+      "comment" : "Mac menu bar menu and Window menu item opening the camera preview window; dimmed while unavailable",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Camera Preview"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Xem trước camera"
+          }
+        }
+      }
+    },
+    "menu.messages" : {
+      "comment" : "Mac menu bar menu item opening the Messages window (unread count on the right); dimmed while unavailable",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Messages"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tin nhắn"
+          }
+        }
+      }
+    },
+    "menu.quit" : {
+      "comment" : "Last item of the Mac menu bar menu and of the HandLive menu (⌘Q)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quit HandLive"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thoát HandLive"
+          }
+        }
+      }
+    },
+    "menu.send_clipboard_to_phone" : {
+      "comment" : "Mac menu bar menu, Edit menu and Dock menu item; reads the clipboard now instead of waiting for the next poll",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send Clipboard to Phone"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gửi bảng nhớ tạm sang điện thoại"
+          }
+        }
+      }
+    },
+    "menu.settings" : {
+      "comment" : "Mac menu bar menu and HandLive menu item opening Settings (⌘,)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Settings…"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cài đặt…"
+          }
+        }
+      }
+    },
+    "pairing.add_phone" : {
+      "comment" : "Mac/iPhone button that opens the pairing sheet with the QR code (first run, empty state)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Phone…"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thêm điện thoại…"
+          }
+        }
+      }
+    },
+    "pairing.details" : {
+      "comment" : "Mac button on the phone's row in Settings › Devices",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Details…"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chi tiết…"
+          }
+        }
+      }
+    },
+    "pairing.devices" : {
+      "comment" : "Android tab and Mac Settings pane listing the paired devices",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Devices"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thiết bị"
+          }
+        }
+      }
+    },
+    "pairing.empty_body_client" : {
+      "comment" : "One-sentence body of the Mac/iPhone empty state; button pairing.add_phone",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pair an Android phone to get its clipboard, messages, and calls."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ghép điện thoại Android để nhận bảng nhớ tạm, tin nhắn và cuộc gọi."
+          }
+        }
+      }
+    },
+    "pairing.empty_title_client" : {
+      "comment" : "Title of the Mac/iPhone empty state before pairing",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Phone Yet"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chưa có điện thoại"
+          }
+        }
+      }
+    },
+    "pairing.in_progress" : {
+      "comment" : "Label of the pairing button while the exchange runs (locked until a result)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pairing…"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang ghép nối…"
+          }
+        }
+      }
+    },
+    "pairing.options" : {
+      "comment" : "Button in a device's details that opens its settings (SET-02)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Options"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tùy chọn"
+          }
+        }
+      }
+    },
+    "pairing.pair_phone" : {
+      "comment" : "Mac HandLive menu item and button (Settings › Devices, Needs to be paired again) that opens the pairing sheet",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pair Phone…"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ghép điện thoại…"
+          }
+        }
+      }
+    },
+    "pairing.pair_phone_title" : {
+      "comment" : "Title of the pairing sheet (PairingCard) that shows the QR code",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pair Phone"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ghép nối điện thoại"
+          }
+        }
+      }
+    },
+    "pairing.paired" : {
+      "comment" : "Title of the screen shown after pairing during first run",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paired"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã ghép nối"
+          }
+        }
+      }
+    },
+    "pairing.paired_with" : {
+      "comment" : "Feedback on both devices when pairing succeeds (HUD, sheet); {device_name} is the peer",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paired with %1$@"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã ghép nối với %1$@"
+          }
+        }
+      }
+    },
+    "pairing.qr_code_changes_in" : {
+      "comment" : "Countdown under the QR code; {time} is the remaining time formatted m:ss by the system (1:42)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Code changes in %1$@"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mã đổi sau %1$@"
+          }
+        }
+      }
+    },
+    "pairing.qr_instructions" : {
+      "comment" : "Instructions in the pairing sheet above the QR code; Add Device is pairing.add_device",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open HandLive on your Android phone, tap Add Device, then scan this code."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mở HandLive trên điện thoại Android, chạm Thêm thiết bị rồi quét mã này."
+          }
+        }
+      }
+    },
+    "pairing.reason_internet_off_on_phone" : {
+      "comment" : "Reason under a feature that needs the internet connection while the phone turned it off",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Internet connection is off on the phone"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kết nối qua Internet đang tắt trên điện thoại"
+          }
+        }
+      }
+    },
+    "pairing.reason_missing_permission" : {
+      "comment" : "Reason under a feature that lacks an Android permission (permissions_missing)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Missing permission on the phone"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thiếu quyền trên điện thoại"
+          }
+        }
+      }
+    },
+    "pairing.reason_missing_sms_permission" : {
+      "comment" : "Reason under the SMS feature when the phone lacks READ_SMS",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Missing SMS permission on the phone"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thiếu quyền SMS trên điện thoại"
+          }
+        }
+      }
+    },
+    "pairing.reason_off_on_device" : {
+      "comment" : "Reason under a feature turned off on the peer device; {device_name} is the peer",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Off on %1$@"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tắt trên %1$@"
+          }
+        }
+      }
+    },
+    "pairing.revoked_elsewhere" : {
+      "comment" : "Shown after cleaning up a pair that was revoked from the other device",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ was unpaired from another device"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thiết bị %1$@ đã được hủy ghép nối từ thiết bị khác"
+          }
+        }
+      }
+    },
+    "pairing.security_code" : {
+      "comment" : "Label of the 8-hex-digit code shown on both devices to compare (device details, Android confirmation)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Security Code"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mã an toàn"
+          }
+        }
+      }
+    },
+    "pairing.unpair" : {
+      "comment" : "Destructive action: device details (iPhone, Android), confirm button of the unpair alert and action sheet",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unpair"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hủy ghép nối"
+          }
+        }
+      }
+    },
+    "pairing.unpair_confirm_message" : {
+      "comment" : "Message of the unpair alert; {device_name} is the Mac/iPhone that holds the synced data",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unpairing deletes the security keys and the SMS messages and call history synced to %1$@. This can't be undone."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hủy ghép nối sẽ xóa khóa bảo mật và dữ liệu SMS, nhật ký cuộc gọi đã đồng bộ trên %1$@. Không thể hoàn tác."
+          }
+        }
+      }
+    },
+    "pairing.unpair_confirm_title" : {
+      "comment" : "Title of the unpair alert (Mac sheet) or action sheet (iPhone, Android); {device_name} is the device to unpair",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unpair %1$@?"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hủy ghép nối với %1$@?"
+          }
+        }
+      }
+    },
+    "pairing.unpair_ellipsis" : {
+      "comment" : "Mac button on the phone's row in Settings › Devices; opens the unpair alert",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unpair…"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hủy ghép nối…"
+          }
+        }
+      }
+    },
+    "pairing.unpaired_by_peer" : {
+      "comment" : "Shown on the other device after an unpair from {device_name}",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ unpaired this device"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ đã hủy ghép nối với thiết bị này"
+          }
+        }
+      }
+    },
+    "pairing.use_pin" : {
+      "comment" : "Text button under the QR code; shows a 6-digit PIN instead (same Wi-Fi only)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Can't Scan? Use a PIN"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không quét được? Dùng mã PIN"
+          }
+        }
+      }
+    },
+    "permission.local_network_primer_title" : {
+      "comment" : "Title of the explanation before the local network dialog (iOS, macOS 15+)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Find Your Phone on Wi-Fi"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tìm điện thoại trong mạng Wi-Fi"
+          }
+        }
+      }
+    },
+    "permission.notifications_primer_client" : {
+      "comment" : "Mac/iPhone explanation before the notification dialog",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notifications tell you about new SMS messages and incoming calls; incoming calls are Time Sensitive so they arrive on time."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thông báo cho bạn biết có SMS mới và cuộc gọi đến; cuộc gọi đến dùng mức nhạy cảm thời gian để đến kịp lúc."
+          }
+        }
+      }
+    },
+    "permission.notifications_primer_title_client" : {
+      "comment" : "Title of the explanation before the notification dialog",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Get Notified About Messages and Calls"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Báo khi có tin nhắn và cuộc gọi"
+          }
+        }
+      }
+    },
+    "permission.primer_footer" : {
+      "comment" : "Small print at the bottom of every permission explanation (PermissionPrimer)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You can change this in Settings at any time."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bạn có thể đổi lại trong Cài đặt bất cứ lúc nào."
+          }
+        }
+      }
+    },
+    "push.call_incoming" : {
+      "comment" : "APNs aps.alert.loc-key for reason call_incoming when the extension cannot decrypt (iPhone locked)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Incoming call on your phone"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuộc gọi đến trên điện thoại"
+          }
+        }
+      }
+    },
+    "push.call_missed" : {
+      "comment" : "APNs aps.alert.loc-key for reason call_missed when the extension cannot decrypt",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Missed call on your phone"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuộc gọi nhỡ trên điện thoại"
+          }
+        }
+      }
+    },
+    "push.generic" : {
+      "comment" : "Body the notification service extension shows when it cannot read the key or decrypt",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New notification from your phone"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Có thông báo mới từ điện thoại"
+          }
+        }
+      }
+    },
+    "push.sms_new" : {
+      "comment" : "APNs aps.alert.loc-key for reason sms_new when the extension cannot decrypt; no title (the system shows the app name)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New SMS message"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tin nhắn SMS mới"
+          }
+        }
+      }
+    },
+    "settings.auto_clear" : {
+      "comment" : "Pop-up (Mac) or list row (iPhone, Android) for clip.auto_clear_s; options common.off, settings.auto_clear_1_min, settings.auto_clear_5_min",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto-Clear Received Clipboard"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tự xóa bảng nhớ tạm đã nhận"
+          }
+        }
+      }
+    },
+    "settings.auto_clear_1_min" : {
+      "comment" : "Option of Auto-Clear Received Clipboard (60 s)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "After 1 Minute"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sau 1 phút"
+          }
+        }
+      }
+    },
+    "settings.auto_clear_5_min" : {
+      "comment" : "Option of Auto-Clear Received Clipboard (300 s)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "After 5 Minutes"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sau 5 phút"
+          }
+        }
+      }
+    },
+    "settings.auto_clear_footer" : {
+      "comment" : "Footnote under Auto-Clear Received Clipboard",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clears only content received from other devices, and only if you haven't copied anything new."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chỉ xóa nội dung nhận từ thiết bị khác, và chỉ khi bạn chưa sao chép gì mới."
+          }
+        }
+      }
+    },
+    "settings.block_sensitive" : {
+      "comment" : "Switch or checkbox for clip.block_sensitive (Android, Mac; iPhone sends only on Paste)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Block Sensitive Content"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chặn nội dung nhạy cảm"
+          }
+        }
+      }
+    },
+    "settings.calls" : {
+      "comment" : "Mac Settings pane title (toolbar item)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Calls"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuộc gọi"
+          }
+        }
+      }
+    },
+    "settings.camera" : {
+      "comment" : "Mac Settings pane title (toolbar item)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Camera"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Camera"
+          }
+        }
+      }
+    },
+    "settings.clipboard" : {
+      "comment" : "Mac Settings pane title; group header of the settings list on iPhone and Android",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clipboard"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bảng nhớ tạm"
+          }
+        }
+      }
+    },
+    "settings.general" : {
+      "comment" : "Mac Settings pane title (toolbar item)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "General"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chung"
+          }
+        }
+      }
+    },
+    "settings.internet_connection" : {
+      "comment" : "Switch for relay.enabled (connect through the HandLive server when not on the same Wi-Fi)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Internet Connection"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kết nối qua Internet"
+          }
+        }
+      }
+    },
+    "settings.messages" : {
+      "comment" : "Mac Settings pane title (toolbar item)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Messages"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tin nhắn"
+          }
+        }
+      }
+    },
+    "settings.open_at_login" : {
+      "comment" : "Mac switch (Settings › General) and first-run checkbox backed by SMAppService",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open HandLive at Login"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mở HandLive khi đăng nhập"
+          }
+        }
+      }
+    },
+    "settings.paste_from_other_apps" : {
+      "comment" : "Mac row (macOS 15.4+) with the paste permission state; the name of the macOS privacy setting",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paste from Other Apps"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dán từ ứng dụng khác"
+          }
+        }
+      }
+    },
+    "settings.paste_permission_hint" : {
+      "comment" : "Mac guidance when NSPasteboard.accessBehavior is ask or alwaysDeny; macOS names as the system shows them",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To send the clipboard automatically, open System Settings › Privacy & Security › Paste from Other Apps and choose Always Allow for HandLive."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Để tự gửi bảng nhớ tạm, mở Cài đặt hệ thống › Quyền riêng tư & Bảo mật › Dán từ ứng dụng khác và chọn Luôn cho phép cho HandLive."
+          }
+        }
+      }
+    },
+    "settings.show_in_menu_bar" : {
+      "comment" : "Mac switch (Settings › General) and first-run checkbox for mac.menu_bar_extra",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show HandLive in Menu Bar"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hiện HandLive trên thanh menu"
+          }
+        }
+      }
+    },
+    "settings.show_in_menu_bar_footer" : {
+      "comment" : "Footnote under Show HandLive in Menu Bar",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When this is off, HandLive appears in the Dock."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Khi tắt, HandLive nằm trên Dock."
+          }
+        }
+      }
+    },
+    "settings.sync_clipboard" : {
+      "comment" : "Main switch of the clipboard feature (feature.clipboard)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sync Clipboard"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đồng bộ bảng nhớ tạm"
+          }
+        }
+      }
+    },
+    "settings.sync_images" : {
+      "comment" : "Switch or checkbox for clip.send_images under Sync Clipboard",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sync Images"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đồng bộ ảnh"
+          }
+        }
+      }
+    },
+    "settings.title" : {
+      "comment" : "Title of the Settings tab (Android, iPhone)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Settings"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cài đặt"
+          }
+        }
+      }
+    },
+    "setup.applications_later" : {
+      "comment" : "Mac button: keep HandLive outside the Applications folder for now",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not Now"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Để sau"
+          }
+        }
+      }
+    },
+    "setup.applications_move" : {
+      "comment" : "Mac button: copy HandLive into /Applications, open it and quit this copy",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chuyển"
+          }
+        }
+      }
+    },
+    "setup.applications_prompt" : {
+      "comment" : "Mac first run when the app does not run from /Applications; buttons setup.applications_later, setup.applications_move",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The virtual camera works only when HandLive is in the Applications folder. Move it now?"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Camera ảo chỉ hoạt động khi HandLive nằm trong thư mục Ứng dụng. Chuyển ngay?"
+          }
+        }
+      }
+    },
+    "setup.ios_limits" : {
+      "comment" : "iPhone/iPad first run: the platform limits, stated plainly",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The clipboard syncs while HandLive is open on this device: tap the Paste button to send, with no paste permission prompt. iPhone and iPad can't take calls. When HandLive is closed, SMS messages and incoming calls appear as notifications."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bảng nhớ tạm đồng bộ khi HandLive đang mở trên máy này: chạm nút Dán để gửi, không bị hỏi quyền dán. iPhone/iPad không nghe gọi được. Khi HandLive đóng, SMS và cuộc gọi đến hiện dưới dạng thông báo."
+          }
+        }
+      }
+    },
+    "setup.time_sensitive_off" : {
+      "comment" : "Warning when Time Sensitive notifications are turned off for HandLive",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Focus may silence call notifications"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thông báo cuộc gọi có thể bị chế độ Tập trung chặn"
+          }
+        }
+      }
+    },
+    "setup.welcome_body_client" : {
+      "comment" : "Mac/iPhone welcome screen: introduction and privacy summary",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HandLive brings the clipboard, SMS messages, and calls from your Android phone to this device. Data is end-to-end encrypted and travels only between your devices; the server can't read it. No account needed."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HandLive đưa bảng nhớ tạm, tin nhắn SMS và cuộc gọi từ điện thoại Android lên máy này. Dữ liệu được mã hóa đầu-cuối, chỉ đi giữa các thiết bị của bạn; máy chủ không đọc được nội dung. Không cần tài khoản."
+          }
+        }
+      }
+    },
+    "setup.welcome_privacy_link" : {
+      "comment" : "Link on the welcome screen to a short privacy page",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HandLive and Your Privacy"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HandLive và quyền riêng tư của bạn"
+          }
+        }
+      }
+    },
+    "setup.welcome_title" : {
+      "comment" : "Title of the welcome screen (Onboarding, brand large title)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Welcome to HandLive"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chào mừng đến với HandLive"
+          }
+        }
+      }
+    },
+    "status.channel_internet" : {
+      "comment" : "Short channel label (pill) of a device connected through the HandLive server",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Internet"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Qua Internet"
+          }
+        }
+      }
+    },
+    "status.channel_lan" : {
+      "comment" : "Short channel label (pill) of a device on the same Wi-Fi",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LAN"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LAN"
+          }
+        }
+      }
+    },
+    "status.channel_usb" : {
+      "comment" : "Short channel label (pill) of a device connected by USB cable",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "USB"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "USB"
+          }
+        }
+      }
+    },
+    "status.connected_internet" : {
+      "comment" : "State Connected while the session goes through the relay",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connected over the internet"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã kết nối qua Internet"
+          }
+        }
+      }
+    },
+    "status.connected_usb" : {
+      "comment" : "State Connected while the camera channel uses USB",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connected via USB"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã kết nối qua USB"
+          }
+        }
+      }
+    },
+    "status.connected_wifi" : {
+      "comment" : "State Connected while the session goes over the LAN",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connected via Wi-Fi"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã kết nối qua Wi-Fi"
+          }
+        }
+      }
+    },
+    "status.connected_wifi_to" : {
+      "comment" : "Status line with the phone's name (Mac menu bar menu); also the VoiceOver/TalkBack text of the indicator",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connected via Wi-Fi to %1$@"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã kết nối qua Wi-Fi với %1$@"
+          }
+        }
+      }
+    },
+    "status.connecting" : {
+      "comment" : "States Discovering, Connecting and Handshaking",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connecting…"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang kết nối…"
+          }
+        }
+      }
+    },
+    "status.disconnected" : {
+      "comment" : "States Idle and Backoff",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disconnected"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mất kết nối"
+          }
+        }
+      }
+    },
+    "status.messages_waiting" : {
+      "comment" : "Number of SMS messages queued until the phone reconnects",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$lld message waiting for the phone"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$lld messages waiting for the phone"
+                }
+              }
+            }
+          }
+        },
+        "vi" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$lld tin đang chờ điện thoại"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "status.not_paired" : {
+      "comment" : "Mac menu bar status before the first pairing",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not paired"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chưa ghép nối"
+          }
+        }
+      }
+    },
+    "status.peer_offline" : {
+      "comment" : "State WaitingPeer: the server is reachable but the phone is not",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Phone offline"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Điện thoại ngoại tuyến"
+          }
+        }
+      }
+    },
+    "status.peer_offline_since" : {
+      "comment" : "WaitingPeer with the last contact; {time} is formatted by the system (14:05, 2:05 PM)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Phone offline · last seen %1$@"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Điện thoại ngoại tuyến · lần cuối %1$@"
+          }
+        }
+      }
+    },
+    "status.reconnect_now" : {
+      "comment" : "Button or menu item shown while not connected; skips the backoff wait",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reconnect Now"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kết nối lại ngay"
+          }
+        }
+      }
+    },
+    "status.repair_needed" : {
+      "comment" : "Every instance of the pair failed certificate pinning, or the pair is gone (status-error); action pairing.pair_phone",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Needs to be paired again"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cần ghép nối lại"
+          }
+        }
+      }
+    },
+    "status.retry_in" : {
+      "comment" : "Backoff countdown; {duration} is formatted by the system (8 s)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retrying in %1$@"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thử lại sau %1$@"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}
