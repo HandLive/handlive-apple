@@ -16,11 +16,17 @@ public enum PairingProgress: Sendable, Equatable {
     case phoneUnreachable
 }
 
+/// Runs one pairing search per code; the pairing screen depends on this so tests can script it.
+public protocol PairingSearching: Sendable {
+    func run(identity: PairingIdentity, credential: PairingCredential, offerTimeout: Duration,
+             progress: @escaping @Sendable (PairingProgress) -> Void) async throws -> PairingResult
+}
+
 /// Finds the phone's pairing window on the LAN and runs the exchange (PAIR-01 steps 7–11, A2–A5): an instance whose
 /// TXT `pr` matches this QR code, or any instance with `pm = 1` for a PIN. Dropped connections, `PAIRING_CLOSED`
 /// and connection errors are retried while the window stays visible; a pair, `AUTH_FAILED` and a wrong PIN end the
 /// search. Cancel the calling task to stop it (a new code, Cancel).
-public struct PairingSearch: Sendable {
+public struct PairingSearch: PairingSearching {
     public let discovery: any LANDiscovering
     public let connector: any ChannelConnecting
     public var connectTimeout: Duration = .seconds(5)

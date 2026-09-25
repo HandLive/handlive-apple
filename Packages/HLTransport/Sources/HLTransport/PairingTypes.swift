@@ -58,6 +58,24 @@ public struct PairingResult: Sendable, Equatable {
     public let signatureSelf: Data
     public let signaturePeer: Data
     public let prk: Data
+
+    public init(pairId: String, createdAt: Int64, phoneDeviceId: String, phoneName: String, phoneModel: String,
+                phoneOSVersion: String, phoneSigningPublicKey: Data, phoneDHPublicKey: Data, certificateSHA256: Data,
+                attestation: Data, signatureSelf: Data, signaturePeer: Data, prk: Data) {
+        self.pairId = pairId
+        self.createdAt = createdAt
+        self.phoneDeviceId = phoneDeviceId
+        self.phoneName = phoneName
+        self.phoneModel = phoneModel
+        self.phoneOSVersion = phoneOSVersion
+        self.phoneSigningPublicKey = phoneSigningPublicKey
+        self.phoneDHPublicKey = phoneDHPublicKey
+        self.certificateSHA256 = certificateSHA256
+        self.attestation = attestation
+        self.signatureSelf = signatureSelf
+        self.signaturePeer = signaturePeer
+        self.prk = prk
+    }
 }
 
 /// Why an exchange ended without a pair.
