@@ -44,6 +44,13 @@ public struct ClipboardProgress: Equatable, Sendable {
     public let deviceName: String
     /// 0…1: chunks sent or received over `chunk_count`.
     public let fraction: Double
+
+    public init(direction: Direction, transferId: String, deviceName: String, fraction: Double) {
+        self.direction = direction
+        self.transferId = transferId
+        self.deviceName = deviceName
+        self.fraction = fraction
+    }
 }
 
 /// A clip copied on this device, the latest one kept for replay until the phone acknowledges it (QC7).

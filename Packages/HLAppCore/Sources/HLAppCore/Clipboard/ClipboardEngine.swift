@@ -85,6 +85,8 @@ public final class ClipboardEngine {
         pollTask = nil
     }
 
+    public var isPolling: Bool { pollTask != nil }
+
     /// One poll: nothing is read while `changeCount` is unchanged or HandLive wrote the change (E1).
     public func poll() {
         let count = access.changeCount
