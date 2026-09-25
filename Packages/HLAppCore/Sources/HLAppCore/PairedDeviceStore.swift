@@ -71,6 +71,8 @@ public final class PairedDeviceStore: @unchecked Sendable {
         let plaintext = try JSONEncoder().encode(records)
         let sealed = try XChaCha20Poly1305.seal(plaintext, key: key, aad: Self.aad).combined
         try FileManager.default.createDirectory(at: fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
-        try sealed.write(to: fileURL, options: [.atomic, .completeFileProtection])
+        // Class C, not "complete": the menu bar app keeps connecting and updating the pair while the screen is locked,
+        // and complete protection refuses every write then. The content is sealed with db_key anyway.
+        try sealed.write(to: fileURL, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
     }
 }
