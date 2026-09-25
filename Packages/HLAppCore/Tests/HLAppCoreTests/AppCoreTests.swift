@@ -123,11 +123,16 @@ struct PairedDeviceStoreTests {
         #expect(try store.all().isEmpty)
     }
 
-    @Test("Security code: first 8 hex of SHA-256(attestation) in two groups (PAIR-02 field 10)")
-    func securityCode() {
-        let code = record("x").securityCode
-        let hex = HMACSHA256.sha256(Data("HLPAIR1".utf8)).prefix(4).map { String(format: "%02X", $0) }.joined()
-        #expect(code == "\(hex.prefix(4)) \(hex.suffix(4))")
-        #expect(code.count == 9)
+    @Test("Security code: the first 8 lowercase hex of SHA-256(attestation), as on Android (PAIR-02 field 10)")
+    func securityCode() throws {
+        var pair = record("x")
+        // The attestation of the Android PairingAuthDerivationTest; its code there is "fc647e0b".
+        let hex = "484c50414952313f2b1c4d5e6f4a7b8c9d0e1f2a3b4c5d8c7d6e5f4a3b8c2d9e1f0a1b2c3d4e5f5b1f8c2e9a4d8e6f"
+            + "a1b2c3d4e5f60718" + String(repeating: "33", count: 32) + String(repeating: "11", count: 32) + "000001922229940a"
+        pair.attestation = Data(stride(from: 0, to: hex.count, by: 2).map { offset in
+            let start = hex.index(hex.startIndex, offsetBy: offset)
+            return UInt8(hex[start..<hex.index(start, offsetBy: 2)], radix: 16) ?? 0
+        })
+        #expect(pair.securityCode == "fc647e0b")
     }
 }

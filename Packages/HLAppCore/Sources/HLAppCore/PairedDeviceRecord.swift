@@ -43,11 +43,10 @@ public struct PairedDeviceRecord: Codable, Sendable, Equatable {
         self.createdAt = createdAt
     }
 
-    /// "Security Code": the first 8 hex digits of SHA-256(`attestation`), shown as two groups ("7F3A 9C21"),
-    /// the same on both devices of the pair (PAIR-02 field 10).
+    /// "Security Code": the first 8 lowercase hex characters of SHA-256(`attestation`), the same on both devices of
+    /// the pair (PAIR-02 field 10).
     public var securityCode: String {
-        let hex = HMACSHA256.sha256(attestation).prefix(4).map { String(format: "%02X", $0) }.joined()
-        return "\(hex.prefix(4)) \(hex.suffix(4))"
+        HMACSHA256.sha256(attestation).prefix(4).map { String(format: "%02x", $0) }.joined()
     }
 
     /// What the connection manager needs, with the `PRK` loaded from the Keychain.
