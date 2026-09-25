@@ -58,7 +58,7 @@ public struct OnboardingView: View {
         case .pairing:
             PairingStep(model: model, flow: flow)
         case .paired(let name):
-            PairedStep(name: name, close: close)
+            PairedStep(name: name, securityCode: model.pairedDevice?.securityCode, close: close)
         }
     }
 }
@@ -153,9 +153,10 @@ struct PairingStep: View {
     }
 }
 
-/// PAIR-01 step 12 in the first run: the phone's name and "Done".
+/// PAIR-01 step 12 in the first run: the phone's name, the Security Code to compare (PAIR-02 field 10) and "Done".
 struct PairedStep: View {
     let name: String
+    let securityCode: String?
     let close: () -> Void
 
     var body: some View {
@@ -163,6 +164,13 @@ struct PairedStep: View {
             Image(systemName: "checkmark.circle.fill").font(.system(size: 48)).foregroundStyle(HLColorToken.statusConnected.color)
                 .accessibilityHidden(true)
             Text(L10n.Pairing.pairedWith(deviceName: name)).hlTextStyle(.brandTitle).multilineTextAlignment(.center)
+            if let securityCode {
+                LabeledContent(L10n.Pairing.securityCode) {
+                    Text(verbatim: securityCode).font(.system(.body, design: .monospaced).weight(.semibold))
+                        .textSelection(.enabled)
+                }
+                .fixedSize()
+            }
         }
     }
 }
