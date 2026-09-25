@@ -6,6 +6,9 @@ public protocol SecretStore: Sendable {
     func save(_ secret: Data, account: String) throws
     func load(account: String) throws -> Data?
     func delete(account: String) throws
+    /// Deletes every item of the service: a fresh install must not inherit keys the Keychain kept after the app
+    /// was removed (SET-03 API 1 logic 1).
+    func deleteAll() throws
 }
 
 public enum SecretAccount {
@@ -34,6 +37,10 @@ public final class InMemorySecretStore: SecretStore, @unchecked Sendable {
 
     public func delete(account: String) throws {
         locked { _ = items.removeValue(forKey: account) }
+    }
+
+    public func deleteAll() throws {
+        locked { items.removeAll() }
     }
 
     private func locked<T>(_ body: () -> T) -> T {

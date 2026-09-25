@@ -44,6 +44,15 @@ public struct KeychainSecretStore: SecretStore {
         return result as? Data
     }
 
+    public func deleteAll() throws {
+        var query: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: Self.service]
+        #if os(macOS)
+        query[kSecUseDataProtectionKeychain as String] = true
+        #endif
+        let status = SecItemDelete(query as CFDictionary)
+        if status != errSecItemNotFound { try check(status) }
+    }
+
     public func delete(account: String) throws {
         let status = SecItemDelete(baseQuery(account: account) as CFDictionary)
         if status != errSecItemNotFound { try check(status) }
