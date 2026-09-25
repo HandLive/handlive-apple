@@ -4,9 +4,9 @@ import SwiftUI
 
 /// Token màu của HandLive, mỗi token có đủ 4 giao diện.
 public enum HLColorToken: String, CaseIterable, Sendable {
-    /// Màu nhấn HandLive — xanh lá Mộc (Mộc sinh Hỏa). AccentColor của app: chữ liên kết, biểu tượng đang chọn, dấu chưa đọc. Chữ đạt 4.5:1 trên mọi nền hệ thống.
+    /// Màu nhấn HandLive — xanh lá Mộc (Mộc sinh Hỏa): chữ liên kết, biểu tượng đang chọn, dấu chưa đọc. Chữ đạt 4.5:1 trên mọi nền hệ thống. Không làm nền có chữ trắng (dùng accent-fill).
     case accent = "accent"
-    /// Nền nút chính (prominent) và bong bóng tin mình gửi. Chữ trên nền này dùng on-accent (≥ 4.5:1).
+    /// Nền nút chính (prominent), bong bóng tin mình gửi, và giá trị của Color Set AccentColor trên Apple (4 giao diện) để nút nổi bật của hệ thống giữ chữ trắng ≥ 4.5:1. Chữ trên nền này dùng on-accent.
     case accentFill = "accent-fill"
     /// Chữ và biểu tượng trên accent-fill.
     case onAccent = "on-accent"
@@ -128,6 +128,10 @@ public enum HLColorToken: String, CaseIterable, Sendable {
     case onBubbleOutgoing = "on-bubble-outgoing"
     /// Bong bóng tin đến.
     case bubbleIncoming = "bubble-incoming"
+    /// Núm công tắc (trắng ở mọi giao diện, như iOS).
+    case switchThumb = "switch-thumb"
+    /// Glyph trên ô biểu tượng màu của GroupedList.
+    case onIconFill = "on-icon-fill"
     /// Vòng focus bàn phím cho control tự dựng (control hệ thống giữ focus ring của hệ thống).
     case focusRing = "focus-ring"
     /// Điểm của mã QR — luôn đen trên trắng ở mọi giao diện.
@@ -206,6 +210,8 @@ public enum HLColorToken: String, CaseIterable, Sendable {
         case .bubbleOutgoing: return HLColorPalette(light: HLRGBA(0x19, 0x79, 0x34, 0xFF), dark: HLRGBA(0x23, 0x86, 0x36, 0xFF), lightHighContrast: HLRGBA(0x14, 0x6B, 0x2E, 0xFF), darkHighContrast: HLRGBA(0x19, 0x79, 0x34, 0xFF))
         case .onBubbleOutgoing: return HLColorPalette(light: HLRGBA(0xFF, 0xFF, 0xFF, 0xFF), dark: HLRGBA(0xFF, 0xFF, 0xFF, 0xFF), lightHighContrast: HLRGBA(0xFF, 0xFF, 0xFF, 0xFF), darkHighContrast: HLRGBA(0xFF, 0xFF, 0xFF, 0xFF))
         case .bubbleIncoming: return HLColorPalette(light: HLRGBA(0xE9, 0xE9, 0xEB, 0xFF), dark: HLRGBA(0x26, 0x26, 0x28, 0xFF), lightHighContrast: HLRGBA(0xDC, 0xDC, 0xE0, 0xFF), darkHighContrast: HLRGBA(0x30, 0x30, 0x34, 0xFF))
+        case .switchThumb: return HLColorPalette(light: HLRGBA(0xFF, 0xFF, 0xFF, 0xFF), dark: HLRGBA(0xFF, 0xFF, 0xFF, 0xFF), lightHighContrast: HLRGBA(0xFF, 0xFF, 0xFF, 0xFF), darkHighContrast: HLRGBA(0xFF, 0xFF, 0xFF, 0xFF))
+        case .onIconFill: return HLColorPalette(light: HLRGBA(0xFF, 0xFF, 0xFF, 0xFF), dark: HLRGBA(0xFF, 0xFF, 0xFF, 0xFF), lightHighContrast: HLRGBA(0xFF, 0xFF, 0xFF, 0xFF), darkHighContrast: HLRGBA(0xFF, 0xFF, 0xFF, 0xFF))
         case .focusRing: return HLColorPalette(light: HLRGBA(0x19, 0x79, 0x34, 0xFF), dark: HLRGBA(0x3D, 0xDC, 0x6C, 0xFF), lightHighContrast: HLRGBA(0x14, 0x6B, 0x2E, 0xFF), darkHighContrast: HLRGBA(0x5B, 0xE5, 0x84, 0xFF))
         case .qrInk: return HLColorPalette(light: HLRGBA(0x00, 0x00, 0x00, 0xFF), dark: HLRGBA(0x00, 0x00, 0x00, 0xFF), lightHighContrast: HLRGBA(0x00, 0x00, 0x00, 0xFF), darkHighContrast: HLRGBA(0x00, 0x00, 0x00, 0xFF))
         case .qrPaper: return HLColorPalette(light: HLRGBA(0xFF, 0xFF, 0xFF, 0xFF), dark: HLRGBA(0xFF, 0xFF, 0xFF, 0xFF), lightHighContrast: HLRGBA(0xFF, 0xFF, 0xFF, 0xFF), darkHighContrast: HLRGBA(0xFF, 0xFF, 0xFF, 0xFF))

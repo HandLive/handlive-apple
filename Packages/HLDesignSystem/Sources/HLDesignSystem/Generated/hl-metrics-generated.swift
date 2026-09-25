@@ -40,6 +40,8 @@ public enum HLRadius {
     public static let sheet: CGFloat = 26
     /// Nút capsule, công tắc, huy hiệu, thanh tab nổi.
     public static let capsule: CGFloat = 999
+    /// Bo góc ô biểu tượng trong dòng GroupedList.
+    public static let rowIcon: CGFloat = 8
 }
 
 /// Kích thước tối thiểu và kích thước cố định (pt).
@@ -62,6 +64,8 @@ public enum HLSize {
     public static let callButton: CGFloat = 48
     /// Cạnh mã QR ghép nối trên Mac.
     public static let qr: CGFloat = 220
+    /// Cạnh ô biểu tượng trong dòng GroupedList (iOS, Android 30 dp).
+    public static let rowIcon: CGFloat = 30
 }
 
 /// Thời lượng (giây); Apple ưu tiên spring của hệ thống.
