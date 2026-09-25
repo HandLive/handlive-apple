@@ -76,6 +76,15 @@ struct PairingSearchTests {
         identity = try PairingFixtures.identity()
     }
 
+    /// Polls `condition` for up to five seconds: CI machines schedule tasks slowly.
+    static func eventually(_ condition: () -> Bool) async -> Bool {
+        for _ in 0..<500 {
+            if condition() { return true }
+            try? await Task.sleep(for: .milliseconds(10))
+        }
+        return condition()
+    }
+
     static func instance(_ name: String, txt: [String: String]) -> DiscoveredPhone {
         let endpoint = NWEndpoint.service(name: name, type: TransportConstants.serviceType, domain: "local.", interface: nil)
         return DiscoveredPhone(name: name, endpoint: ServiceEndpoint(endpoint), txt: ["v": "1"].merging(txt) { $1 })
@@ -153,13 +162,11 @@ struct PairingSearchTests {
             try await search(FakePairingConnector([]), discovery: discovery).run(
                 identity: identity, credential: .qr(secret: secret), offerTimeout: .seconds(5), progress: log.add)
         }
-        try await Task.sleep(for: .milliseconds(50))
-        #expect(log.all.last == .localNetworkDenied)
+        #expect(await Self.eventually { log.all.last == .localNetworkDenied })
         discovery.publish(.state(.ready))
         let hint = PairingAuthDerivation.pairingRequestHint(clientDHPublicKey: identity.dhPublicKey)
         discovery.publish(.results([Self.instance("phone", txt: ["pr": hint])]))
-        try await Task.sleep(for: .milliseconds(400))
-        #expect(log.all.contains(.phoneUnreachable))
+        #expect(await Self.eventually { log.all.contains(.phoneUnreachable) })
         task.cancel()
         await #expect(throws: CancellationError.self) { try await task.value }
     }
