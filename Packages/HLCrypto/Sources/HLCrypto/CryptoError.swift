@@ -10,6 +10,8 @@ public enum CryptoError: Error, Equatable, Sendable {
     case payloadTooShort
     case invalidPublicKey
     case keychain(status: Int32)
+    /// A `str(x)` field of a pairing transcript is longer than 65,535 UTF-8 bytes.
+    case fieldTooLong
 }
 
 enum Bytes {
