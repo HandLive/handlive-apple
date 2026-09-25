@@ -13,6 +13,8 @@ public enum L10n {
         public static func conflictTitle(deviceName: String) -> String {
             L10nLookup.format("clipboard.conflict_title", deviceName)
         }
+        /// The clipboard is empty or doesn't contain text
+        public static var emptyOrNotText: String { L10nLookup.string("clipboard.empty_or_not_text") }
         /// Receiving image from {device_name} — {percent}
         public static func imageReceiving(deviceName: String, percent: String) -> String {
             L10nLookup.format("clipboard.image_receiving", deviceName, percent)
@@ -34,6 +36,10 @@ public enum L10n {
         /// Sent to {device_name}
         public static func sentTo(deviceName: String) -> String {
             L10nLookup.format("clipboard.sent_to", deviceName)
+        }
+        /// Not sent — this just came from {device_name}.
+        public static func skippedJustReceived(deviceName: String) -> String {
+            L10nLookup.format("clipboard.skipped_just_received", deviceName)
         }
     }
     public enum Common {
@@ -77,6 +83,8 @@ public enum L10n {
         }
         /// Pairing isn't secure — try again
         public static var pairingAuthFailed: String { L10nLookup.string("error.pairing_auth_failed") }
+        /// Pairing didn't finish. Try again.
+        public static var pairingFailed: String { L10nLookup.string("error.pairing_failed") }
         /// Couldn't verify the phone
         public static var sessionAuthFailed: String { L10nLookup.string("error.session_auth_failed") }
         /// Update HandLive on the phone

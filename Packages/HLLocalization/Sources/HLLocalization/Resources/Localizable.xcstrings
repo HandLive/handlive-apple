@@ -55,6 +55,24 @@
         }
       }
     },
+    "clipboard.empty_or_not_text" : {
+      "comment" : "Result of a manual send with nothing to send; Android toast or HUD, Mac status line in the menu bar menu (Send Clipboard to Phone)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The clipboard is empty or doesn't contain text"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bảng nhớ tạm trống hoặc không phải văn bản"
+          }
+        }
+      }
+    },
     "clipboard.image_receiving" : {
       "comment" : "Progress of an incoming image over 1 MiB (Android notification, Mac menu bar menu); {percent} is formatted by the system",
       "extractionState" : "manual",
@@ -195,6 +213,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Đã gửi tới %1$@"
+          }
+        }
+      }
+    },
+    "clipboard.skipped_just_received" : {
+      "comment" : "CLIP-01 field 11, manual send skipped because the content matches what was just received (QC4, E9); Mac: status line after Send Clipboard to Phone",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not sent — this just came from %1$@."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không gửi: nội dung này vừa nhận từ %1$@."
           }
         }
       }
@@ -519,6 +555,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ghép nối không an toàn, thử lại"
+          }
+        }
+      }
+    },
+    "error.pairing_failed" : {
+      "comment" : "PAIR-01 field 10: failures without their own text (lost connection, internal error)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pairing didn't finish. Try again."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không ghép nối được. Thử lại."
           }
         }
       }

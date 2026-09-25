@@ -8,6 +8,8 @@
 	<string>That device just copied something new.</string>
 	<key>clipboard.conflict_title</key>
 	<string>Clipboard Not Updated on %1$@</string>
+	<key>clipboard.empty_or_not_text</key>
+	<string>The clipboard is empty or doesn't contain text</string>
 	<key>clipboard.image_receiving</key>
 	<string>Receiving image from %1$@ — %2$@</string>
 	<key>clipboard.image_sending</key>
@@ -24,6 +26,8 @@
 	<string>Sensitive Content Blocked</string>
 	<key>clipboard.sent_to</key>
 	<string>Sent to %1$@</string>
+	<key>clipboard.skipped_just_received</key>
+	<string>Not sent — this just came from %1$@.</string>
 	<key>common.agree</key>
 	<string>Agree</string>
 	<key>common.cancel</key>
@@ -60,6 +64,8 @@
 	<string>This feature is off on %1$@</string>
 	<key>error.pairing_auth_failed</key>
 	<string>Pairing isn't secure — try again</string>
+	<key>error.pairing_failed</key>
+	<string>Pairing didn't finish. Try again.</string>
 	<key>error.session_auth_failed</key>
 	<string>Couldn't verify the phone</string>
 	<key>error.update_phone_app</key>

@@ -8,6 +8,8 @@
 	<string>Thiết bị này vừa có nội dung sao chép mới.</string>
 	<key>clipboard.conflict_title</key>
 	<string>Chưa ghi lên %1$@</string>
+	<key>clipboard.empty_or_not_text</key>
+	<string>Bảng nhớ tạm trống hoặc không phải văn bản</string>
 	<key>clipboard.image_receiving</key>
 	<string>Đang nhận ảnh từ %1$@ — %2$@</string>
 	<key>clipboard.image_sending</key>
@@ -24,6 +26,8 @@
 	<string>Đã chặn nội dung nhạy cảm</string>
 	<key>clipboard.sent_to</key>
 	<string>Đã gửi tới %1$@</string>
+	<key>clipboard.skipped_just_received</key>
+	<string>Không gửi: nội dung này vừa nhận từ %1$@.</string>
 	<key>common.agree</key>
 	<string>Đồng ý</string>
 	<key>common.cancel</key>
@@ -60,6 +64,8 @@
 	<string>Tính năng đang tắt trên %1$@</string>
 	<key>error.pairing_auth_failed</key>
 	<string>Ghép nối không an toàn, thử lại</string>
+	<key>error.pairing_failed</key>
+	<string>Không ghép nối được. Thử lại.</string>
 	<key>error.session_auth_failed</key>
 	<string>Không xác thực được điện thoại</string>
 	<key>error.update_phone_app</key>
