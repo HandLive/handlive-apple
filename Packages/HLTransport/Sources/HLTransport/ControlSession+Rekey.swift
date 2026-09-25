@@ -101,10 +101,3 @@ extension ControlSession {
         client < server
     }
 }
-
-extension HLJSON {
-    /// Any `Encodable` as a `JSONValue` (for `ack.data`).
-    static func convert<Value: Encodable>(from value: Value) throws -> JSONValue {
-        try decode(JSONValue.self, from: encode(value))
-    }
-}

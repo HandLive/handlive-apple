@@ -76,4 +76,9 @@ public enum HLJSON {
     public static func convert<T: Decodable>(_ value: JSONValue, to type: T.Type) throws -> T {
         try decode(type, from: encode(value))
     }
+
+    /// Any `Encodable` as a `JSONValue` (for `ack.data` and `ack.error.details`).
+    public static func convert<Value: Encodable>(from value: Value) throws -> JSONValue {
+        try decode(JSONValue.self, from: encode(value))
+    }
 }
