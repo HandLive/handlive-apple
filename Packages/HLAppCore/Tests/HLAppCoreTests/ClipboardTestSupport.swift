@@ -177,16 +177,18 @@ final class ClipboardHarness {
     }
 
     func makeEngine() -> ClipboardEngine {
+        // Weak: timers of the engine (auto-clear, idle transfer) may fire after the test ended.
         let engine = ClipboardEngine(access: pasteboard, settings: settings, deviceId: Self.macId,
-                                     deviceName: "MacBook của Lan", readingAllowed: { [unowned self] in readingAllowed },
-                                     now: { [unowned self] in clock },
+                                     deviceName: "MacBook của Lan",
+                                     readingAllowed: { [weak self] in self?.readingAllowed ?? false },
+                                     now: { [weak self] in self?.clock ?? Date() },
                                      temporaryDirectory: FileManager.default.temporaryDirectory
                                          .appendingPathComponent("handlive-clip-tests-\(UUID().uuidString)"))
-        engine.onNotice = { [unowned self] in notices.append($0) }
-        engine.onAlert = { [unowned self] in alerts.append($0) }
-        engine.onProgress = { [unowned self] direction, value in
-            progress[direction] = value
-            if value != nil { progressSeen = true }
+        engine.onNotice = { [weak self] in self?.notices.append($0) }
+        engine.onAlert = { [weak self] in self?.alerts.append($0) }
+        engine.onProgress = { [weak self] direction, value in
+            self?.progress[direction] = value
+            if value != nil { self?.progressSeen = true }
         }
         return engine
     }
