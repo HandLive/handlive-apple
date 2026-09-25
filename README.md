@@ -1,6 +1,8 @@
-# apple/ — HandLive cho macOS và iOS/iPadOS
+# handlive-apple
 
-Swift 6, macOS 13+ / iOS 16+. Đặc tả: `../docs/detailed-design/00-common-specs.md`; kế hoạch: `../plans/20260925-implementation/` (kho hub).
+Ứng dụng cho Mac, iPhone và iPad, viết bằng Swift 6 (macOS 13+, iOS 16+). Mac có app trên thanh menu, đủ clipboard, SMS, âm thanh cuộc gọi, camera và mic. iPhone và iPad nhận clipboard, SMS và thông tin cuộc gọi.
+
+Đặc tả: `../docs/detailed-design/00-common-specs.md`. Kế hoạch: `../plans/20260925-implementation/` (kho hub).
 
 Kho này là một phần của workspace HandLive: kho hub `handlive` (tài liệu, kế hoạch) là thư mục cha, `../shared` là kho `handlive-shared` (test vector, schema, design tokens). Clone cả bộ từ hub: `tools/workspace.sh clone <group-url>`. Xem `CLAUDE.md` của kho này.
 
