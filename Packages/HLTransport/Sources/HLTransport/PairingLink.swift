@@ -24,13 +24,13 @@ struct PairingLink: Sendable {
         let payload = try await nextPayload()
         switch PairOp(rawValue: payload.op) {
         case op:
-            guard let data = try? payload.decodeData(as: type) else { throw PairingRefusal.authFailed }
+            guard let data = try? payload.decodeData(as: type) else { throw PairingRefusal.authFailed(.malformed) }
             return data
         case .error:
             let error = try? payload.decodeData(as: PairErrorData.self)
             throw Self.failure(for: error?.code ?? .internal)
         default:
-            throw PairingRefusal.authFailed
+            throw PairingRefusal.authFailed(.malformed)
         }
     }
 
@@ -43,7 +43,7 @@ struct PairingLink: Sendable {
         }
         guard case .text(let text) = message, let envelope = try? Envelope.parse(Data(text.utf8)),
               envelope.type == .pair, let payload = try? Payload.parse(envelope.payloadBytes)
-        else { throw PairingRefusal.authFailed }
+        else { throw PairingRefusal.authFailed(.malformed) }
         return payload
     }
 

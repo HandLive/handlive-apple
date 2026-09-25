@@ -14,6 +14,9 @@ public struct PairingExchange: Sendable {
     public let doneTimeout: Duration
     /// `K_pin` parameters (0.6.2); tests use smaller ones.
     public var pinParameters = Argon2id.Parameters.pairingPIN
+    /// `nonce_c` and `pair_id` come from the system CSPRNG; the vector tests fix them.
+    var makeNonce: @Sendable () -> Data = { PairingCodes.newNonce() }
+    var makePairId: @Sendable () -> String = { UUID().uuidString.lowercased() }
 
     public init(identity: PairingIdentity, credential: PairingCredential, offerTimeout: Duration,
                 doneTimeout: Duration = TransportConstants.requestTimeout) {
@@ -29,11 +32,11 @@ public struct PairingExchange: Sendable {
                     now: @escaping @Sendable () -> Int64 = { HLUUID.currentTimeMs() }) async throws -> PairingResult {
         let link = PairingLink(channel: channel, now: now)
         do {
-            let clientNonce = PairingCodes.newNonce()
+            let clientNonce = makeNonce()
             try await link.send(.hello, hello(nonce: clientNonce))
             let offer = try await link.receive(.offer, as: PairOfferData.self, timeout: offerTimeout)
-            let accepted = try await check(offer, clientNonce: clientNonce, certificateSHA256: certificateSHA256)
-            let confirm = try accepted.confirm(identity: identity, createdAt: now())
+            let accepted = try await checkOffer(offer, clientNonce: clientNonce, certificateSHA256: certificateSHA256)
+            let confirm = try accepted.confirm(identity: identity, createdAt: now(), pairId: makePairId())
             try await link.send(.confirm, confirm.data)
             let done = try await link.receive(.done, as: PairDoneData.self, timeout: doneTimeout)
             let result = try accepted.finish(done, confirm: confirm, identity: identity)
@@ -51,7 +54,7 @@ public struct PairingExchange: Sendable {
         }
     }
 
-    private func hello(nonce: Data) -> PairHelloData {
+    func hello(nonce: Data) -> PairHelloData {
         PairHelloData(mode: credential.mode, deviceId: identity.deviceId, nonce: Base64Coding.encodeB64u(nonce),
                       name: identity.name, platform: identity.platform, model: identity.model,
                       ikSigPub: Base64Coding.encodeB64u(identity.signingPublicKey),
@@ -59,9 +62,8 @@ public struct PairingExchange: Sendable {
     }
 
     /// API 3 logic 3: `mac` → `device_id` matches `ik_sig_pub` → (LAN) `tls_sha256` is this connection's certificate.
-    private func check(_ offer: PairOfferData, clientNonce: Data,
-                       certificateSHA256: Data?) async throws -> AcceptedOffer {
-        guard let fields = OfferFields(offer) else { throw PairingRefusal.authFailed }
+    func checkOffer(_ offer: PairOfferData, clientNonce: Data, certificateSHA256: Data?) async throws -> AcceptedOffer {
+        guard let fields = OfferFields(offer) else { throw PairingRefusal.authFailed(.malformed) }
         let secret: Data
         switch credential {
         case .qr(let pairingSecret):
@@ -80,21 +82,37 @@ public struct PairingExchange: Sendable {
                                   dhPublicKey: fields.dhKey, name: offer.name)
         guard let transcript = try? PairingAuthDerivation.offerTranscript(client: client, server: server,
                                                                           tlsSHA256: fields.tlsSHA256)
-        else { throw PairingRefusal.authFailed }
+        else { throw PairingRefusal.authFailed(.malformed) }
         let authKey = PairingAuthDerivation.authKey(secret: secret, clientNonce: clientNonce, serverNonce: fields.nonce)
         let expected = PairingAuthDerivation.offerMac(authKey: authKey, transcript: transcript)
         guard HMACSHA256.constantTimeEquals(expected, fields.mac) else {
             if case .pin(_, let attemptsLeft) = credential { throw PairingRefusal.wrongPIN(attemptsLeft: attemptsLeft - 1) }
-            throw PairingRefusal.authFailed
+            throw PairingRefusal.authFailed(.offerMac)
         }
-        guard DeviceIdentity.matches(deviceId: offer.deviceId, signingPublicKey: fields.signingKey),
-              certificateSHA256.map({ HMACSHA256.constantTimeEquals($0, fields.tlsSHA256) }) ?? true,
-              let prk = try? PairingKeyDerivation.prk(ownDHPrivateKey: identity.dhPrivateKey,
-                                                      peerDHPublicKey: fields.dhKey, pairingSecret: secret,
-                                                      ownDeviceId: identity.deviceId, peerDeviceId: offer.deviceId)
-        else { throw PairingRefusal.authFailed }
+        guard DeviceIdentity.matches(deviceId: offer.deviceId, signingPublicKey: fields.signingKey) else {
+            throw PairingRefusal.authFailed(.offerDeviceId)
+        }
+        guard certificateSHA256.map({ HMACSHA256.constantTimeEquals($0, fields.tlsSHA256) }) ?? true else {
+            throw PairingRefusal.authFailed(.offerTLS)
+        }
+        guard let prk = try? PairingKeyDerivation.prk(ownDHPrivateKey: identity.dhPrivateKey, peerDHPublicKey: fields.dhKey,
+                                                      pairingSecret: secret, ownDeviceId: identity.deviceId,
+                                                      peerDeviceId: offer.deviceId)
+        else { throw PairingRefusal.authFailed(.malformed) }
         return AcceptedOffer(offer: offer, fields: fields, authKey: authKey, transcript: transcript, prk: prk)
     }
+}
+
+/// The check that refused a message (in the spec's order), for logs-free diagnostics in tests; the wire only ever says
+/// `AUTH_FAILED` (API 3 logic 3, API 6).
+enum PairingCheck: String, Sendable {
+    case malformed
+    case offerMac = "offer_mac"
+    case offerDeviceId = "offer_device_id"
+    case offerTLS = "offer_tls"
+    case doneMac = "done_mac"
+    case prkCheckS = "prk_check_s"
+    case sigS = "sig_s"
 }
 
 /// `pair/error` this side sends before closing: `AUTH_FAILED`, or `PIN_INVALID` with the attempts left.
@@ -102,12 +120,16 @@ struct PairingRefusal: Error {
     let code: ErrorCode
     let attemptsLeft: Int?
     let failure: PairingFailure
+    let check: PairingCheck
 
-    static let authFailed = PairingRefusal(code: .authFailed, attemptsLeft: nil, failure: .authFailed)
+    static func authFailed(_ check: PairingCheck) -> PairingRefusal {
+        PairingRefusal(code: .authFailed, attemptsLeft: nil, failure: .authFailed, check: check)
+    }
 
     static func wrongPIN(attemptsLeft: Int) -> PairingRefusal {
         let left = max(attemptsLeft, 0)
-        return PairingRefusal(code: .pinInvalid, attemptsLeft: left, failure: .pinInvalid(attemptsLeft: left))
+        return PairingRefusal(code: .pinInvalid, attemptsLeft: left, failure: .pinInvalid(attemptsLeft: left),
+                              check: .offerMac)
     }
 
     /// English diagnostics only (0.12.4), never which check failed.

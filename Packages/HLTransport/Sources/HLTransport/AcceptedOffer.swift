@@ -44,8 +44,7 @@ struct AcceptedOffer: Sendable {
     let prk: Data
 
     /// API 4: a UUIDv4 `pair_id`, the attestation signed with `ik_sig`, `prk_check` and the MAC over all of it.
-    func confirm(identity: PairingIdentity, createdAt: Int64) throws -> SentConfirm {
-        let pairId = UUID().uuidString.lowercased()
+    func confirm(identity: PairingIdentity, createdAt: Int64, pairId: String) throws -> SentConfirm {
         let attestation = try PairingAuthDerivation.attestation(PairingAttestationFields(
             pairId: pairId, androidDeviceId: offer.deviceId, clientDeviceId: identity.deviceId,
             androidSigningKey: fields.signingKey, clientSigningKey: identity.signingPublicKey, createdAt: createdAt))
@@ -65,11 +64,13 @@ struct AcceptedOffer: Sendable {
               let mac = OfferFields.bytes(done.mac),
               let expectedMac = try? PairingAuthDerivation.doneMac(authKey: authKey, pairId: pairId,
                                                                    serverSignature: signature),
-              HMACSHA256.constantTimeEquals(expectedMac, mac),
-              let expectedCheck = try? PairingAuthDerivation.prkCheck(prk: prk, pairId: pairId, role: .server),
-              HMACSHA256.constantTimeEquals(expectedCheck, check),
-              Ed25519.verify(signature, message: confirm.attestation, publicKey: fields.signingKey)
-        else { throw PairingRefusal.authFailed }
+              let expectedCheck = try? PairingAuthDerivation.prkCheck(prk: prk, pairId: pairId, role: .server)
+        else { throw PairingRefusal.authFailed(.malformed) }
+        guard HMACSHA256.constantTimeEquals(expectedMac, mac) else { throw PairingRefusal.authFailed(.doneMac) }
+        guard HMACSHA256.constantTimeEquals(expectedCheck, check) else { throw PairingRefusal.authFailed(.prkCheckS) }
+        guard Ed25519.verify(signature, message: confirm.attestation, publicKey: fields.signingKey) else {
+            throw PairingRefusal.authFailed(.sigS)
+        }
         return PairingResult(pairId: pairId, createdAt: confirm.data.createdAt, phoneDeviceId: offer.deviceId,
                              phoneName: offer.name, phoneModel: offer.model, phoneOSVersion: offer.osVersion,
                              phoneSigningPublicKey: fields.signingKey, phoneDHPublicKey: fields.dhKey,
