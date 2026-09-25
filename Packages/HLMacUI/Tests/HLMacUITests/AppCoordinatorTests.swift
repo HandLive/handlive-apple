@@ -31,4 +31,13 @@ struct AppCoordinatorTests {
         #expect(!WindowKeyMonitor.closes(keyCode: 13, modifiers: [.command, .shift], characters: "w"))
         #expect(!WindowKeyMonitor.closes(keyCode: 12, modifiers: .command, characters: "q"))
     }
+
+    @Test("The privacy page follows the display language, as on Android")
+    func privacyPage() {
+        #expect(PrivacyPage.url(displayLanguage: "vi")?.absoluteString
+            == "https://github.com/HandLive/handlive/blob/main/docs/privacy.vi.md")
+        #expect(PrivacyPage.url(displayLanguage: "en")?.absoluteString
+            == "https://github.com/HandLive/handlive/blob/main/docs/privacy.md")
+        #expect(PrivacyPage.url(displayLanguage: nil) == PrivacyPage.english)
+    }
 }
