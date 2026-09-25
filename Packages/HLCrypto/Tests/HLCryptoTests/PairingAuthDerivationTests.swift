@@ -101,3 +101,17 @@ struct PairingAuthDerivationTests {
 private extension Character {
     var isASCIIDigit: Bool { isASCII && isNumber }
 }
+
+@Suite("Constant-time comparison")
+struct ConstantTimeTests {
+    @Test("Equal, different in one bit, different lengths")
+    func equality() {
+        let value = Data(repeating: 0x5A, count: 32)
+        var flipped = value
+        flipped[31] ^= 0x01
+        #expect(HMACSHA256.constantTimeEquals(value, value))
+        #expect(!HMACSHA256.constantTimeEquals(value, flipped))
+        #expect(!HMACSHA256.constantTimeEquals(value, value.prefix(31)))
+        #expect(HMACSHA256.constantTimeEquals(Data(), Data()))
+    }
+}
