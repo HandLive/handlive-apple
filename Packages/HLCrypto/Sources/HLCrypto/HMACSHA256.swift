@@ -15,4 +15,12 @@ public enum HMACSHA256 {
     public static func sha256(_ data: Data) -> Data {
         Data(SHA256.hash(data: data))
     }
+
+    /// Constant-time equality for MACs and `prk_check` values (PAIR-01: HMAC comparison is constant-time).
+    public static func constantTimeEquals(_ lhs: Data, _ rhs: Data) -> Bool {
+        guard lhs.count == rhs.count else { return false }
+        var difference: UInt8 = 0
+        for (left, right) in zip(lhs, rhs) { difference |= left ^ right }
+        return difference == 0
+    }
 }
