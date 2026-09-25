@@ -15,12 +15,6 @@ public enum HLBrandFonts {
         }
     }
 
-    /// Weight Bold dùng khi người dùng bật Chữ đậm.
-    static let boldPostScriptName: String = HLTextStyle.allCases
-        .map(\.spec)
-        .first { $0.family == .brand && $0.weight == 700 }?
-        .postScriptName ?? ""
-
     private static let registration: Bool = {
         let urls = fontURLs
         guard urls.count == HLBrandFontFiles.postScriptNames.count else { return false }

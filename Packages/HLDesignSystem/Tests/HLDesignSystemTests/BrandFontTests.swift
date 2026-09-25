@@ -5,10 +5,20 @@ import Testing
 
 @Suite("Font Be Vietnam Pro")
 struct BrandFontTests {
-    @Test("Chỉ đóng gói weight token dùng: SemiBold (600) và Bold (700)")
-    func bundlesOnlyUsedWeights() {
-        #expect(HLBrandFontFiles.postScriptNames == ["BeVietnamPro-Bold", "BeVietnamPro-SemiBold"])
-        #expect(HLBrandFonts.fontURLs.count == 2)
+    @Test("Đóng gói weight token dùng (600, 700) và bậc Chữ đậm (800)")
+    func bundlesUsedWeightsAndBoldTextStep() {
+        #expect(HLBrandFontFiles.postScriptNames
+            == ["BeVietnamPro-Bold", "BeVietnamPro-ExtraBold", "BeVietnamPro-SemiBold"])
+        #expect(HLBrandFonts.fontURLs.count == 3)
+    }
+
+    @Test("Chữ đậm tăng một bậc weight: SemiBold → Bold, Bold → ExtraBold")
+    func boldTextStepsUpOneWeight() {
+        #expect(HLTextStyle.brandTitle.spec.brandPostScriptName(boldText: false) == "BeVietnamPro-SemiBold")
+        #expect(HLTextStyle.brandTitle.spec.brandPostScriptName(boldText: true) == "BeVietnamPro-Bold")
+        #expect(HLTextStyle.brandLargeTitle.spec.brandPostScriptName(boldText: true) == "BeVietnamPro-ExtraBold")
+        #expect(HLTextStyle.wordmark.spec.brandPostScriptName(boldText: true) == "BeVietnamPro-ExtraBold")
+        #expect(HLTextStyle.macBody.spec.brandPostScriptName(boldText: true) == nil)
     }
 
     @Test("Tên PostScript trong file font khớp tên sinh ra")

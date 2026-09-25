@@ -9,6 +9,8 @@ private struct DocumentedTextStyle {
     let size: CGFloat
     let lineHeight: CGFloat
     let weightName: String
+    /// Cột "Nhấn mạnh" (chỉ bảng macOS và iOS); `nil` với bảng không có cột này.
+    let emphasisName: String?
     let textStyle: Font.TextStyle?
 }
 
@@ -17,7 +19,7 @@ private let textStylesByName: [String: Font.TextStyle] = [
     "headline": .headline, "body": .body, "callout": .callout, "subheadline": .subheadline,
     "footnote": .footnote, "caption": .caption, "caption2": .caption2,
 ]
-private let weightsByName = ["Regular": 400, "Medium": 500, "Semibold": 600, "Bold": 700]
+private let weightsByName = ["Regular": 400, "Medium": 500, "Semibold": 600, "Bold": 700, "Heavy": 800]
 
 private func documentedTextStyles() throws -> [String: DocumentedTextStyle] {
     let text = try String(contentsOf: RepositoryPaths.typographyDoc, encoding: .utf8)
@@ -36,6 +38,8 @@ private func documentedTextStyles() throws -> [String: DocumentedTextStyle] {
         let styleName = match.flatMap { Range($0.range(at: 1), in: line) }.map { String(line[$0]) }
         result[token] = DocumentedTextStyle(
             token: token, size: sizes[0], lineHeight: sizes[1], weightName: cells[sizeIndex + 1],
+            emphasisName: cells.indices.contains(sizeIndex + 2) && weightsByName[cells[sizeIndex + 2]] != nil
+                ? cells[sizeIndex + 2] : nil,
             textStyle: styleName.flatMap { textStylesByName[$0] }
         )
     }
@@ -57,6 +61,9 @@ struct TextStyleMappingTests {
             #expect(spec.size == row.size, "\(style.rawValue) cỡ")
             #expect(spec.lineHeight == row.lineHeight, "\(style.rawValue) dòng")
             #expect(spec.weight == weightsByName[row.weightName], "\(style.rawValue) weight \(row.weightName)")
+            if let emphasis = row.emphasisName {
+                #expect(spec.emphasisWeight == weightsByName[emphasis], "\(style.rawValue) nhấn mạnh \(emphasis)")
+            }
             if let textStyle = row.textStyle {
                 #expect(spec.textStyle == textStyle, "\(style.rawValue) text style")
             }

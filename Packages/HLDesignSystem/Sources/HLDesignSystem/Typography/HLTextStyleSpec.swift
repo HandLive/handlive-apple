@@ -22,11 +22,20 @@ public struct HLTextStyleSpec: Hashable, Sendable {
     public let textStyle: Font.TextStyle
     /// Tên PostScript của file Be Vietnam Pro (chỉ họ `.brand`).
     public let postScriptName: String?
-    /// Chữ số đều bề rộng (`timer`).
+    /// Chữ số đều bề rộng (`fontFeatures` có `tnum` trong type-extras.json: `timer`, `code-pin`).
     public let monospacedDigit: Bool
+    /// Weight khi nhấn mạnh (cột "Nhấn mạnh" của 03-kieu-chu.md), dạng số CSS.
+    public let emphasisWeight: Int
+    /// Be Vietnam Pro tăng một bậc weight khi người dùng bật Chữ đậm (chỉ họ `.brand`).
+    public let boldTextPostScriptName: String?
 
-    public var fontWeight: Font.Weight {
-        switch weight {
+    public var fontWeight: Font.Weight { Self.fontWeight(weight) }
+
+    /// Weight SwiftUI của mức nhấn mạnh: `Text(…).fontWeight(spec.emphasisFontWeight)`.
+    public var emphasisFontWeight: Font.Weight { Self.fontWeight(emphasisWeight) }
+
+    static func fontWeight(_ cssWeight: Int) -> Font.Weight {
+        switch cssWeight {
         case ..<450: .regular
         case ..<550: .medium
         case ..<650: .semibold
@@ -40,14 +49,18 @@ public struct HLTextStyleSpec: Hashable, Sendable {
         family == .system ? 0 : letterSpacingEm * size
     }
 
+    /// Tên PostScript dùng thật: bật Chữ đậm thì tăng một bậc (SemiBold → Bold, Bold → ExtraBold).
+    public func brandPostScriptName(boldText: Bool) -> String? {
+        boldText ? boldTextPostScriptName ?? postScriptName : postScriptName
+    }
+
     /// Font SwiftUI. `boldText`: người dùng bật Chữ đậm — chữ thương hiệu tăng một bậc weight
-    /// trong phạm vi file đã đóng gói (Semibold → Bold); chữ hệ thống do SF tự xử lý.
+    /// (03-kieu-chu.md); chữ hệ thống do SF tự xử lý.
     public func font(boldText: Bool = false) -> Font {
         switch family {
         case .brand:
             HLBrandFonts.registerIfNeeded()
-            let name = boldText && weight < 700 ? HLBrandFonts.boldPostScriptName : postScriptName ?? ""
-            return Font.custom(name, size: size, relativeTo: textStyle)
+            return Font.custom(brandPostScriptName(boldText: boldText) ?? "", size: size, relativeTo: textStyle)
         case .monospaced:
             return Font.system(textStyle, design: .monospaced).weight(fontWeight)
         case .system:

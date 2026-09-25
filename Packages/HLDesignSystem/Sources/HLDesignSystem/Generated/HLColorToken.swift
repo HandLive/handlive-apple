@@ -222,7 +222,9 @@ public enum HLColorToken: String, CaseIterable, Sendable {
     }
 
     /// Màu hệ thống thay cho hex (01-mau-sac.md: không hard-code màu hệ thống trên Apple).
+    /// `nil`: nền tảng hoặc phiên bản không có API tương ứng → dùng `palette` của token.
     public var systemColor: Color? {
+        #if os(macOS)
         switch self {
         case .systemRed, .statusError, .badge: return Color.red
         case .systemOrange, .statusConnecting: return Color.orange
@@ -234,7 +236,62 @@ public enum HLColorToken: String, CaseIterable, Sendable {
         case .systemGray, .statusOffline: return Color.gray
         case .label: return Color.primary
         case .secondaryLabel: return Color.secondary
+        case .tertiaryLabel: return Color(nsColor: .tertiaryLabelColor)
+        case .quaternaryLabel: return Color(nsColor: .quaternaryLabelColor)
+        case .placeholderText: return Color(nsColor: .placeholderTextColor)
+        case .link: return Color.accentColor
+        case .separator: return Color(nsColor: .separatorColor)
+        case .systemFill:
+            if #available(macOS 14, *) { return Color(nsColor: .systemFill) }
+            return nil
+        case .secondarySystemFill:
+            if #available(macOS 14, *) { return Color(nsColor: .secondarySystemFill) }
+            return nil
+        case .tertiarySystemFill:
+            if #available(macOS 14, *) { return Color(nsColor: .tertiarySystemFill) }
+            return nil
+        case .quaternarySystemFill:
+            if #available(macOS 14, *) { return Color(nsColor: .quaternarySystemFill) }
+            return nil
+        case .windowBackground: return Color(nsColor: .windowBackgroundColor)
+        case .controlBackground: return Color(nsColor: .controlBackgroundColor)
         default: return nil
         }
+        #else
+        switch self {
+        case .systemRed, .statusError, .badge: return Color.red
+        case .systemOrange, .statusConnecting: return Color.orange
+        case .systemYellow: return Color.yellow
+        case .systemGreen, .statusConnected: return Color.green
+        case .systemPink: return Color.pink
+        case .systemPurple: return Color.purple
+        case .systemBrown: return Color.brown
+        case .systemGray, .statusOffline: return Color.gray
+        case .systemGray2: return Color(uiColor: .systemGray2)
+        case .systemGray3: return Color(uiColor: .systemGray3)
+        case .systemGray4: return Color(uiColor: .systemGray4)
+        case .systemGray5: return Color(uiColor: .systemGray5)
+        case .systemGray6: return Color(uiColor: .systemGray6)
+        case .label: return Color.primary
+        case .secondaryLabel: return Color.secondary
+        case .tertiaryLabel: return Color(uiColor: .tertiaryLabel)
+        case .quaternaryLabel: return Color(uiColor: .quaternaryLabel)
+        case .placeholderText: return Color(uiColor: .placeholderText)
+        case .link: return Color.accentColor
+        case .separator: return Color(uiColor: .separator)
+        case .opaqueSeparator: return Color(uiColor: .opaqueSeparator)
+        case .systemBackground: return Color(uiColor: .systemBackground)
+        case .secondarySystemBackground: return Color(uiColor: .secondarySystemBackground)
+        case .tertiarySystemBackground: return Color(uiColor: .tertiarySystemBackground)
+        case .systemGroupedBackground: return Color(uiColor: .systemGroupedBackground)
+        case .secondarySystemGroupedBackground: return Color(uiColor: .secondarySystemGroupedBackground)
+        case .tertiarySystemGroupedBackground: return Color(uiColor: .tertiarySystemGroupedBackground)
+        case .systemFill: return Color(uiColor: .systemFill)
+        case .secondarySystemFill: return Color(uiColor: .secondarySystemFill)
+        case .tertiarySystemFill: return Color(uiColor: .tertiarySystemFill)
+        case .quaternarySystemFill: return Color(uiColor: .quaternarySystemFill)
+        default: return nil
+        }
+        #endif
     }
 }

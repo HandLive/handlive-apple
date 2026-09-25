@@ -1,5 +1,8 @@
 import Foundation
 import SwiftUI
+#if canImport(AppKit)
+import AppKit
+#endif
 import Testing
 @testable import HLDesignSystem
 
@@ -75,9 +78,12 @@ struct ColorSetTests {
         }
     }
 
-    @Test("AccentColor = accent")
-    func accentColorMatchesAccentToken() throws {
-        #expect(try colorSet(named: "AccentColor") == colorSet(named: "accent"))
+    @Test("AccentColor = accent-fill, cả trong package và catalog của app")
+    func accentColorMatchesAccentFillToken() throws {
+        #expect(try colorSet(named: "AccentColor") == colorSet(named: "accent-fill"))
+        let appAccent = RepositoryPaths.appAssetCatalog.appendingPathComponent("AccentColor.colorset/Contents.json")
+        let packageAccent = RepositoryPaths.colorCatalog.appendingPathComponent("AccentColor.colorset/Contents.json")
+        #expect(try Data(contentsOf: appAccent) == Data(contentsOf: packageAccent))
     }
 
     @Test("Mã Swift sinh ra có cùng giá trị với tokens.json")
@@ -96,12 +102,48 @@ struct ColorSetTests {
 
     @Test("Màu hệ thống gọi API, không dùng hex", arguments: [
         (HLColorToken.statusConnected, Color.green), (.statusConnecting, .orange), (.statusOffline, .gray),
-        (.statusError, .red), (.badge, .red), (.secondaryLabel, .secondary),
+        (.statusError, .red), (.badge, .red), (.secondaryLabel, .secondary), (.label, .primary),
+        (.link, .accentColor),
     ])
     func systemColorsUseSystemAPI(token: HLColorToken, expected: Color) {
         #expect(token.systemColor == expected)
         #expect(token.resolved(colorScheme: .dark, contrast: .increased) == expected)
     }
+
+    #if os(macOS)
+    /// Bảng "Màu ngữ nghĩa và API" của 01-mau-sac.md, cột AppKit: màu có API thì gọi API, hex chỉ khi thiếu API.
+    @Test("Màu ngữ nghĩa trên Mac gọi NSColor", arguments: [
+        (HLColorToken.tertiaryLabel, NSColor.tertiaryLabelColor), (.quaternaryLabel, .quaternaryLabelColor),
+        (.placeholderText, .placeholderTextColor), (.separator, .separatorColor),
+        (.windowBackground, .windowBackgroundColor), (.controlBackground, .controlBackgroundColor),
+    ])
+    func semanticColorsUseAppKit(token: HLColorToken, expected: NSColor) {
+        #expect(token.systemColor == Color(nsColor: expected))
+    }
+
+    @Test("Nền tô systemFill… chỉ có API từ macOS 14; macOS 13 dùng hex của token")
+    func fillColorsNeedMacOS14() {
+        let fills: [HLColorToken] = [.systemFill, .secondarySystemFill, .tertiarySystemFill, .quaternarySystemFill]
+        for token in fills {
+            if #available(macOS 14, *) {
+                #expect(token.systemColor != nil, "\(token)")
+            } else {
+                #expect(token.systemColor == nil, "\(token)")
+            }
+        }
+    }
+
+    @Test("Token không có API AppKit giữ hex: nền iOS, Gray 2–6, màu thương hiệu")
+    func tokensWithoutAppKitAPIUseTokenValues() {
+        let hexOnly: [HLColorToken] = [
+            .systemBackground, .systemGroupedBackground, .opaqueSeparator, .systemGray2, .systemGray6,
+            .accent, .accentFill, .brandFire, .textRed, .destructiveText, .unread,
+        ]
+        for token in hexOnly {
+            #expect(token.systemColor == nil, "\(token)")
+        }
+    }
+    #endif
 
     @Test("Màu tự định nghĩa chọn đúng giao diện")
     func customColorResolvesPerAppearance() {

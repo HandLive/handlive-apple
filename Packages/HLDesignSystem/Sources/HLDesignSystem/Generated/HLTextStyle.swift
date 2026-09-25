@@ -61,38 +61,39 @@ public enum HLTextStyle: String, CaseIterable, Sendable {
 
     public var spec: HLTextStyleSpec {
         switch self {
-        case .brandLargeTitle: return HLTextStyleSpec(family: .brand, size: 34, lineHeight: 41, weight: 700, letterSpacingEm: -0.01, textStyle: .largeTitle, postScriptName: "BeVietnamPro-Bold", monospacedDigit: false)
-        case .brandTitle: return HLTextStyleSpec(family: .brand, size: 22, lineHeight: 28, weight: 600, letterSpacingEm: 0, textStyle: .title2, postScriptName: "BeVietnamPro-SemiBold", monospacedDigit: false)
-        case .wordmark: return HLTextStyleSpec(family: .brand, size: 20, lineHeight: 24, weight: 700, letterSpacingEm: -0.01, textStyle: .title3, postScriptName: "BeVietnamPro-Bold", monospacedDigit: false)
-        case .macLargeTitle: return HLTextStyleSpec(family: .system, size: 26, lineHeight: 32, weight: 400, letterSpacingEm: 0.008, textStyle: .largeTitle, postScriptName: nil, monospacedDigit: false)
-        case .macTitle1: return HLTextStyleSpec(family: .system, size: 22, lineHeight: 26, weight: 400, letterSpacingEm: -0.012, textStyle: .title, postScriptName: nil, monospacedDigit: false)
-        case .macTitle2: return HLTextStyleSpec(family: .system, size: 17, lineHeight: 22, weight: 400, letterSpacingEm: -0.026, textStyle: .title2, postScriptName: nil, monospacedDigit: false)
-        case .macTitle3: return HLTextStyleSpec(family: .system, size: 15, lineHeight: 20, weight: 400, letterSpacingEm: -0.016, textStyle: .title3, postScriptName: nil, monospacedDigit: false)
-        case .macHeadline: return HLTextStyleSpec(family: .system, size: 13, lineHeight: 16, weight: 700, letterSpacingEm: -0.006, textStyle: .headline, postScriptName: nil, monospacedDigit: false)
-        case .macBody: return HLTextStyleSpec(family: .system, size: 13, lineHeight: 16, weight: 400, letterSpacingEm: -0.006, textStyle: .body, postScriptName: nil, monospacedDigit: false)
-        case .macCallout: return HLTextStyleSpec(family: .system, size: 12, lineHeight: 15, weight: 400, letterSpacingEm: 0, textStyle: .callout, postScriptName: nil, monospacedDigit: false)
-        case .macSubheadline: return HLTextStyleSpec(family: .system, size: 11, lineHeight: 14, weight: 400, letterSpacingEm: 0.006, textStyle: .subheadline, postScriptName: nil, monospacedDigit: false)
-        case .macFootnote: return HLTextStyleSpec(family: .system, size: 10, lineHeight: 13, weight: 400, letterSpacingEm: 0.012, textStyle: .footnote, postScriptName: nil, monospacedDigit: false)
-        case .macCaption1: return HLTextStyleSpec(family: .system, size: 10, lineHeight: 13, weight: 400, letterSpacingEm: 0.012, textStyle: .caption, postScriptName: nil, monospacedDigit: false)
-        case .macCaption2: return HLTextStyleSpec(family: .system, size: 10, lineHeight: 13, weight: 500, letterSpacingEm: 0.012, textStyle: .caption2, postScriptName: nil, monospacedDigit: false)
-        case .iosLargeTitle: return HLTextStyleSpec(family: .system, size: 34, lineHeight: 41, weight: 400, letterSpacingEm: 0.012, textStyle: .largeTitle, postScriptName: nil, monospacedDigit: false)
-        case .iosTitle1: return HLTextStyleSpec(family: .system, size: 28, lineHeight: 34, weight: 400, letterSpacingEm: 0.014, textStyle: .title, postScriptName: nil, monospacedDigit: false)
-        case .iosTitle2: return HLTextStyleSpec(family: .system, size: 22, lineHeight: 28, weight: 400, letterSpacingEm: -0.012, textStyle: .title2, postScriptName: nil, monospacedDigit: false)
-        case .iosTitle3: return HLTextStyleSpec(family: .system, size: 20, lineHeight: 25, weight: 400, letterSpacingEm: -0.023, textStyle: .title3, postScriptName: nil, monospacedDigit: false)
-        case .iosHeadline: return HLTextStyleSpec(family: .system, size: 17, lineHeight: 22, weight: 600, letterSpacingEm: -0.026, textStyle: .headline, postScriptName: nil, monospacedDigit: false)
-        case .iosBody: return HLTextStyleSpec(family: .system, size: 17, lineHeight: 22, weight: 400, letterSpacingEm: -0.026, textStyle: .body, postScriptName: nil, monospacedDigit: false)
-        case .iosCallout: return HLTextStyleSpec(family: .system, size: 16, lineHeight: 21, weight: 400, letterSpacingEm: -0.02, textStyle: .callout, postScriptName: nil, monospacedDigit: false)
-        case .iosSubheadline: return HLTextStyleSpec(family: .system, size: 15, lineHeight: 20, weight: 400, letterSpacingEm: -0.016, textStyle: .subheadline, postScriptName: nil, monospacedDigit: false)
-        case .iosFootnote: return HLTextStyleSpec(family: .system, size: 13, lineHeight: 18, weight: 400, letterSpacingEm: -0.006, textStyle: .footnote, postScriptName: nil, monospacedDigit: false)
-        case .iosCaption1: return HLTextStyleSpec(family: .system, size: 12, lineHeight: 16, weight: 400, letterSpacingEm: 0, textStyle: .caption, postScriptName: nil, monospacedDigit: false)
-        case .iosCaption2: return HLTextStyleSpec(family: .system, size: 11, lineHeight: 13, weight: 400, letterSpacingEm: 0.006, textStyle: .caption2, postScriptName: nil, monospacedDigit: false)
-        case .codePin: return HLTextStyleSpec(family: .monospaced, size: 28, lineHeight: 34, weight: 600, letterSpacingEm: 0.15, textStyle: .title, postScriptName: nil, monospacedDigit: false)
-        case .timer: return HLTextStyleSpec(family: .system, size: 17, lineHeight: 22, weight: 500, letterSpacingEm: -0.026, textStyle: .body, postScriptName: nil, monospacedDigit: true)
+        case .brandLargeTitle: return HLTextStyleSpec(family: .brand, size: 34, lineHeight: 41, weight: 700, letterSpacingEm: -0.01, textStyle: .largeTitle, postScriptName: "BeVietnamPro-Bold", monospacedDigit: false, emphasisWeight: 800, boldTextPostScriptName: "BeVietnamPro-ExtraBold")
+        case .brandTitle: return HLTextStyleSpec(family: .brand, size: 22, lineHeight: 28, weight: 600, letterSpacingEm: 0, textStyle: .title2, postScriptName: "BeVietnamPro-SemiBold", monospacedDigit: false, emphasisWeight: 700, boldTextPostScriptName: "BeVietnamPro-Bold")
+        case .wordmark: return HLTextStyleSpec(family: .brand, size: 20, lineHeight: 24, weight: 700, letterSpacingEm: -0.01, textStyle: .title3, postScriptName: "BeVietnamPro-Bold", monospacedDigit: false, emphasisWeight: 800, boldTextPostScriptName: "BeVietnamPro-ExtraBold")
+        case .macLargeTitle: return HLTextStyleSpec(family: .system, size: 26, lineHeight: 32, weight: 400, letterSpacingEm: 0.008, textStyle: .largeTitle, postScriptName: nil, monospacedDigit: false, emphasisWeight: 700, boldTextPostScriptName: nil)
+        case .macTitle1: return HLTextStyleSpec(family: .system, size: 22, lineHeight: 26, weight: 400, letterSpacingEm: -0.012, textStyle: .title, postScriptName: nil, monospacedDigit: false, emphasisWeight: 700, boldTextPostScriptName: nil)
+        case .macTitle2: return HLTextStyleSpec(family: .system, size: 17, lineHeight: 22, weight: 400, letterSpacingEm: -0.026, textStyle: .title2, postScriptName: nil, monospacedDigit: false, emphasisWeight: 700, boldTextPostScriptName: nil)
+        case .macTitle3: return HLTextStyleSpec(family: .system, size: 15, lineHeight: 20, weight: 400, letterSpacingEm: -0.016, textStyle: .title3, postScriptName: nil, monospacedDigit: false, emphasisWeight: 600, boldTextPostScriptName: nil)
+        case .macHeadline: return HLTextStyleSpec(family: .system, size: 13, lineHeight: 16, weight: 700, letterSpacingEm: -0.006, textStyle: .headline, postScriptName: nil, monospacedDigit: false, emphasisWeight: 800, boldTextPostScriptName: nil)
+        case .macBody: return HLTextStyleSpec(family: .system, size: 13, lineHeight: 16, weight: 400, letterSpacingEm: -0.006, textStyle: .body, postScriptName: nil, monospacedDigit: false, emphasisWeight: 600, boldTextPostScriptName: nil)
+        case .macCallout: return HLTextStyleSpec(family: .system, size: 12, lineHeight: 15, weight: 400, letterSpacingEm: 0, textStyle: .callout, postScriptName: nil, monospacedDigit: false, emphasisWeight: 600, boldTextPostScriptName: nil)
+        case .macSubheadline: return HLTextStyleSpec(family: .system, size: 11, lineHeight: 14, weight: 400, letterSpacingEm: 0.006, textStyle: .subheadline, postScriptName: nil, monospacedDigit: false, emphasisWeight: 600, boldTextPostScriptName: nil)
+        case .macFootnote: return HLTextStyleSpec(family: .system, size: 10, lineHeight: 13, weight: 400, letterSpacingEm: 0.012, textStyle: .footnote, postScriptName: nil, monospacedDigit: false, emphasisWeight: 600, boldTextPostScriptName: nil)
+        case .macCaption1: return HLTextStyleSpec(family: .system, size: 10, lineHeight: 13, weight: 400, letterSpacingEm: 0.012, textStyle: .caption, postScriptName: nil, monospacedDigit: false, emphasisWeight: 500, boldTextPostScriptName: nil)
+        case .macCaption2: return HLTextStyleSpec(family: .system, size: 10, lineHeight: 13, weight: 500, letterSpacingEm: 0.012, textStyle: .caption2, postScriptName: nil, monospacedDigit: false, emphasisWeight: 600, boldTextPostScriptName: nil)
+        case .iosLargeTitle: return HLTextStyleSpec(family: .system, size: 34, lineHeight: 41, weight: 400, letterSpacingEm: 0.012, textStyle: .largeTitle, postScriptName: nil, monospacedDigit: false, emphasisWeight: 700, boldTextPostScriptName: nil)
+        case .iosTitle1: return HLTextStyleSpec(family: .system, size: 28, lineHeight: 34, weight: 400, letterSpacingEm: 0.014, textStyle: .title, postScriptName: nil, monospacedDigit: false, emphasisWeight: 700, boldTextPostScriptName: nil)
+        case .iosTitle2: return HLTextStyleSpec(family: .system, size: 22, lineHeight: 28, weight: 400, letterSpacingEm: -0.012, textStyle: .title2, postScriptName: nil, monospacedDigit: false, emphasisWeight: 700, boldTextPostScriptName: nil)
+        case .iosTitle3: return HLTextStyleSpec(family: .system, size: 20, lineHeight: 25, weight: 400, letterSpacingEm: -0.023, textStyle: .title3, postScriptName: nil, monospacedDigit: false, emphasisWeight: 600, boldTextPostScriptName: nil)
+        case .iosHeadline: return HLTextStyleSpec(family: .system, size: 17, lineHeight: 22, weight: 600, letterSpacingEm: -0.026, textStyle: .headline, postScriptName: nil, monospacedDigit: false, emphasisWeight: 600, boldTextPostScriptName: nil)
+        case .iosBody: return HLTextStyleSpec(family: .system, size: 17, lineHeight: 22, weight: 400, letterSpacingEm: -0.026, textStyle: .body, postScriptName: nil, monospacedDigit: false, emphasisWeight: 600, boldTextPostScriptName: nil)
+        case .iosCallout: return HLTextStyleSpec(family: .system, size: 16, lineHeight: 21, weight: 400, letterSpacingEm: -0.02, textStyle: .callout, postScriptName: nil, monospacedDigit: false, emphasisWeight: 600, boldTextPostScriptName: nil)
+        case .iosSubheadline: return HLTextStyleSpec(family: .system, size: 15, lineHeight: 20, weight: 400, letterSpacingEm: -0.016, textStyle: .subheadline, postScriptName: nil, monospacedDigit: false, emphasisWeight: 600, boldTextPostScriptName: nil)
+        case .iosFootnote: return HLTextStyleSpec(family: .system, size: 13, lineHeight: 18, weight: 400, letterSpacingEm: -0.006, textStyle: .footnote, postScriptName: nil, monospacedDigit: false, emphasisWeight: 600, boldTextPostScriptName: nil)
+        case .iosCaption1: return HLTextStyleSpec(family: .system, size: 12, lineHeight: 16, weight: 400, letterSpacingEm: 0, textStyle: .caption, postScriptName: nil, monospacedDigit: false, emphasisWeight: 600, boldTextPostScriptName: nil)
+        case .iosCaption2: return HLTextStyleSpec(family: .system, size: 11, lineHeight: 13, weight: 400, letterSpacingEm: 0.006, textStyle: .caption2, postScriptName: nil, monospacedDigit: false, emphasisWeight: 600, boldTextPostScriptName: nil)
+        case .codePin: return HLTextStyleSpec(family: .monospaced, size: 28, lineHeight: 34, weight: 600, letterSpacingEm: 0.15, textStyle: .title, postScriptName: nil, monospacedDigit: true, emphasisWeight: 700, boldTextPostScriptName: nil)
+        case .timer: return HLTextStyleSpec(family: .system, size: 17, lineHeight: 22, weight: 500, letterSpacingEm: -0.026, textStyle: .body, postScriptName: nil, monospacedDigit: true, emphasisWeight: 600, boldTextPostScriptName: nil)
         }
     }
 }
 
-/// Tên PostScript của các file Be Vietnam Pro được đóng gói (chỉ weight token dùng).
+/// Tên PostScript của các file Be Vietnam Pro được đóng gói: weight token dùng và weight tăng một bậc
+/// khi người dùng bật Chữ đậm.
 public enum HLBrandFontFiles {
-    public static let postScriptNames: [String] = ["BeVietnamPro-Bold", "BeVietnamPro-SemiBold"]
+    public static let postScriptNames: [String] = ["BeVietnamPro-Bold", "BeVietnamPro-ExtraBold", "BeVietnamPro-SemiBold"]
 }

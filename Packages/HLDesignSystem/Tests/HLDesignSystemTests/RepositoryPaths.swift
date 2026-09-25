@@ -10,6 +10,10 @@ enum RepositoryPaths {
     static let typographyDoc = repositoryRoot.appendingPathComponent("docs/design-system/1-foundations/03-kieu-chu.md")
     static let generatorScript = packageRoot.appendingPathComponent("Scripts/generate-design-tokens.py")
     static let colorCatalog = packageRoot.appendingPathComponent("Sources/HLDesignSystem/Resources/Colors.xcassets")
+    /// Catalog của target app macOS (màu nhấn toàn app).
+    static let appAssetCatalog = packageRoot
+        .deletingLastPathComponent().deletingLastPathComponent()
+        .appendingPathComponent("macOS/HandLive/Resources/Assets.xcassets")
 
     /// Python của kho shared (`shared/tools/.venv`) nếu có, không thì python3 của hệ thống; script chỉ dùng thư viện chuẩn.
     static var python: URL {

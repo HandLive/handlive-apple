@@ -36,6 +36,8 @@ targets:
         INFOPLIST_KEY_LSUIElement: YES
         INFOPLIST_KEY_CFBundleDisplayName: HandLive
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
+        # Màu nhấn toàn app = Color Set AccentColor (accent-fill, sinh bởi generate-design-tokens.py).
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
     dependencies:
       - package: HLProtocol
       - package: HLCrypto

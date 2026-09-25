@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Sinh Color Sets và mã Swift của HLDesignSystem từ shared/design-tokens/tokens.json.
+"""Sinh Color Sets và mã Swift của HLDesignSystem từ shared/design-tokens/tokens.json và type-extras.json.
 
 Cách dùng (từ bất kỳ thư mục nào):
     python3 apple/Packages/HLDesignSystem/Scripts/generate-design-tokens.py          # ghi file
@@ -23,6 +23,7 @@ from design_tokens_swift_sources import GENERATED_DIR, render_swift_sources  # n
 PACKAGE_DIR = SCRIPT_DIR.parent
 REPO_ROOT = PACKAGE_DIR.parent.parent.parent
 DEFAULT_TOKENS = REPO_ROOT / "shared/design-tokens/tokens.json"
+TYPE_EXTRAS = "type-extras.json"  # cạnh tokens.json
 FONTS_DIR = PACKAGE_DIR / "Sources/HLDesignSystem/Resources/Fonts"
 OWNED_DIRS = (CATALOG_DIR, GENERATED_DIR)  # thư mục do script sở hữu hoàn toàn
 
@@ -30,12 +31,10 @@ OWNED_DIRS = (CATALOG_DIR, GENERATED_DIR)  # thư mục do script sở hữu ho�
 def render_all(tokens_path: Path) -> dict[str, str]:
     tokens = load_tokens(tokens_path)
     colors = load_colors(tokens)
-    styles = load_text_styles(tokens)
+    styles = load_text_styles(tokens, load_tokens(tokens_path.with_name(TYPE_EXTRAS)))
     metrics = {family: load_metrics(tokens, family) for family in ("spacing", "radius", "size", "duration")}
-    missing = sorted(
-        {s.postscript_name for s in styles if s.postscript_name}
-        - {path.stem for path in FONTS_DIR.glob("*.ttf")}
-    )
+    needed = {name for s in styles for name in (s.postscript_name, s.bold_text_postscript_name) if name}
+    missing = sorted(needed - {path.stem for path in FONTS_DIR.glob("*.ttf")})
     if missing:
         raise SystemExit(f"Thiếu file font trong {FONTS_DIR}: {', '.join(missing)}")
     return {**render_asset_catalog(colors), **render_swift_sources(colors, styles, metrics)}
