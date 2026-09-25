@@ -23,6 +23,10 @@ packages:
     path: Packages/HLDesignSystem
   HLLocalization:
     path: Packages/HLLocalization
+  HLAppCore:
+    path: Packages/HLAppCore
+  HLMacUI:
+    path: Packages/HLMacUI
 targets:
   HandLive:
     type: application
@@ -44,9 +48,13 @@ targets:
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
         # Màu nhấn toàn app = Color Set AccentColor (accent-fill, sinh bởi generate-design-tokens.py).
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        # keychain-access-groups: the data-protection keychain of 0.6.1 needs it once the app is signed (Developer ID).
+        CODE_SIGN_ENTITLEMENTS: macOS/HandLive.entitlements
     dependencies:
       - package: HLProtocol
       - package: HLCrypto
       - package: HLTransport
       - package: HLDesignSystem
       - package: HLLocalization
+      - package: HLAppCore
+      - package: HLMacUI
