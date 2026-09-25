@@ -8,18 +8,16 @@ import SwiftUI
 /// their phases.
 public struct SettingsView: View {
     @ObservedObject var model: AppModel
-    let actions: AppActions
 
-    public init(model: AppModel, actions: AppActions) {
+    public init(model: AppModel) {
         self.model = model
-        self.actions = actions
     }
 
     public var body: some View {
         TabView {
             GeneralSettingsPane(model: model)
                 .tabItem { Label(L10n.Settings.general, systemImage: "gearshape") }
-            DevicesSettingsPane(model: model, actions: actions)
+            DevicesSettingsPane(model: model)
                 .tabItem { Label(L10n.Pairing.devices, systemImage: "candybarphone") }
             ClipboardSettingsPane(model: model)
                 .tabItem { Label(L10n.Settings.clipboard, systemImage: "doc.on.clipboard") }

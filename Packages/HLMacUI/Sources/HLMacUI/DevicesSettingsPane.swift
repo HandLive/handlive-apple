@@ -7,9 +7,11 @@ import SwiftUI
 /// the empty state with "Add Phone…".
 struct DevicesSettingsPane: View {
     @ObservedObject var model: AppModel
-    let actions: AppActions
     @State private var showingDetails = false
     @State private var confirmingUnpair = false
+    @State private var pairing = false
+    /// Feedback after pairing from Settings: a short status line in the open window (Feedback README, macOS).
+    @State private var pairedName: String?
 
     var body: some View {
         Form {
@@ -32,11 +34,27 @@ struct DevicesSettingsPane: View {
                 }
             } else {
                 Section {
-                    EmptyPhoneState(actions: actions)
+                    EmptyPhoneState { pairing = true }
+                }
+            }
+            if let pairedName {
+                Section {
+                    Label(L10n.Pairing.pairedWith(deviceName: pairedName), systemImage: "checkmark.circle.fill")
+                        .foregroundStyle(HLColorToken.statusConnected.color)
                 }
             }
         }
         .formStyle(.grouped)
+        .sheet(isPresented: $pairing) {
+            PairingSheet(model: model, onPaired: { name in
+                pairing = false
+                pairedName = name
+                Task {
+                    try? await Task.sleep(for: .seconds(4))
+                    pairedName = nil
+                }
+            }, cancel: { pairing = false })
+        }
         .sheet(isPresented: $showingDetails) {
             if let device = model.pairedDevice {
                 DeviceDetailView(model: model, device: device, confirmingUnpair: $confirmingUnpair) {
@@ -50,13 +68,13 @@ struct DevicesSettingsPane: View {
 
 /// "No Phone Yet" with the next step (05-phan-hoi-va-tai.md, empty states).
 struct EmptyPhoneState: View {
-    let actions: AppActions
+    let addPhone: () -> Void
 
     var body: some View {
         VStack(spacing: HLSpacing.space12) {
             Text(L10n.Pairing.emptyTitleClient).hlTextStyle(.brandTitle)
             Text(L10n.Pairing.emptyBodyClient).multilineTextAlignment(.center).foregroundStyle(.secondary)
-            Button(L10n.Pairing.addPhone) { actions.showPairing() }
+            Button(L10n.Pairing.addPhone, action: addPhone)
                 .hlButtonStyle(.prominent)
         }
         .frame(maxWidth: .infinity)

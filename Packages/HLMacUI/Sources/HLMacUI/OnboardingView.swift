@@ -9,13 +9,11 @@ import SwiftUI
 public struct OnboardingView: View {
     @ObservedObject var model: AppModel
     @ObservedObject var flow: OnboardingFlow
-    let pairing: () -> AnyView
     let close: () -> Void
 
-    public init(model: AppModel, flow: OnboardingFlow, pairing: @escaping () -> AnyView, close: @escaping () -> Void) {
+    public init(model: AppModel, flow: OnboardingFlow, close: @escaping () -> Void) {
         self.model = model
         self.flow = flow
-        self.pairing = pairing
         self.close = close
     }
 
@@ -58,7 +56,7 @@ public struct OnboardingView: View {
         case .pasteGuide:
             GuideStep(text: L10n.Settings.pastePermissionHint, pane: .privacyAndSecurity) { flow.afterPasteGuide() }
         case .pairing:
-            pairing()
+            PairingStep(model: model, flow: flow)
         case .paired(let name):
             PairedStep(name: name, close: close)
         }
@@ -121,6 +119,34 @@ struct GuideStep: View {
                        secondaryAction: pane.open) {
             Label(text, systemImage: "info.circle").hlTextStyle(.macBody).fixedSize(horizontal: false, vertical: true)
         }
+    }
+}
+
+/// Step 7 of the welcome window: the pairing sheet opens over it at once; after Cancel the page offers
+/// "Add Phone…" again (PAIR-01 step 1).
+struct PairingStep: View {
+    @ObservedObject var model: AppModel
+    @ObservedObject var flow: OnboardingFlow
+    @State private var showingSheet = true
+
+    var body: some View {
+        OnboardingPage(primary: L10n.Pairing.addPhone, action: showSheet) {
+            Image(systemName: "candybarphone").font(.system(size: 48)).foregroundStyle(.secondary)
+                .accessibilityHidden(true)
+            Text(L10n.Pairing.emptyTitleClient).hlTextStyle(.brandTitle)
+            Text(L10n.Pairing.emptyBodyClient).hlTextStyle(.macBody).multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .sheet(isPresented: $showingSheet) {
+            PairingSheet(model: model, onPaired: { name in
+                showingSheet = false
+                flow.paired(with: name)
+            }, cancel: { showingSheet = false })
+        }
+    }
+
+    private func showSheet() {
+        showingSheet = true
     }
 }
 
