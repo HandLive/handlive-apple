@@ -38,28 +38,3 @@ public struct CapabilityData: Codable, Equatable, Sendable {
         case permissionsMissing = "permissions_missing"
     }
 }
-
-public struct Features: Codable, Equatable, Sendable {
-    public var clipboard: ClipboardFeature?
-    public var sms: SmsFeature?
-    public var call: CallFeature?
-    public var callAudio: CallAudioFeature?
-    public var camera: CameraFeature?
-    public var relay: RelayFeature?
-
-    public init(clipboard: ClipboardFeature? = nil, sms: SmsFeature? = nil, call: CallFeature? = nil,
-                callAudio: CallAudioFeature? = nil, camera: CameraFeature? = nil, relay: RelayFeature? = nil) {
-        self.clipboard = clipboard
-        self.sms = sms
-        self.call = call
-        self.callAudio = callAudio
-        self.camera = camera
-        self.relay = relay
-    }
-
-    enum CodingKeys: String, CodingKey {
-        case clipboard, sms, call
-        case callAudio = "call_audio"
-        case camera, relay
-    }
-}
