@@ -18,7 +18,7 @@ Kho này là một phần của workspace HandLive: kho hub `handlive` (tài li�
 | `macOS/Info.plist` | `NSBonjourServices` và purpose string tiếng Anh (bộ sinh chuỗi ghi) |
 | `Packages/HLProtocol` | Envelope, `{op, data}`, Ack, `ErrorCode` (0.8.1), khung HL (0.5.2), plaintext nhị phân `clipboard/chunk`, UUIDv7, b64/b64u, AAD, kiểu `session`/`capability` |
 | `Packages/HLCrypto` | HChaCha20 tự cài + CryptoKit `ChaChaPoly` = XChaCha20-Poly1305; X25519, Ed25519, HKDF/HMAC-SHA256; `device_id`; PRK; bắt tay/rekey/`K_stream`; mã hóa envelope và khung HL; Keychain sau protocol `SecretStore` |
-| `Packages/HLTransport` | Máy trạng thái 0.11 cùng các cạnh lỗi, `RECONNECT_BACKOFF`, mã đóng và phản ứng của client, bắt tay phía client |
+| `Packages/HLTransport` | `ConnectionManager` (máy trạng thái 0.11, đường nhanh `last_host`, khám phá mDNS theo hint từng giờ bằng `NWBrowser`, `NWPathMonitor`, `RECONNECT_BACKOFF`, ngủ/thức), `WebSocketConnector` (TLS 1.3, ghim chứng chỉ, WebSocket của Network.framework), `ControlSession` (bắt tay `/v1/ctl`, capability, ack, chống trùng, rekey, giữ kết nối), mã đóng và phản ứng của client, log `HLBENCH/1` ở bản debug |
 | `Packages/HLDesignSystem` | Màu (API hệ thống, hex chỉ khi nền tảng không có API), kiểu chữ, số đo, `StatusIndicator`, `GroupedList`, kiểu nút; `Scripts/generate-design-tokens.py` sinh token từ `../shared/design-tokens` |
 | `Packages/HLLocalization` | `Localizable.xcstrings` và accessor `L10n` an toàn kiểu, sinh từ `../shared/strings/ui-strings.json` bằng `Scripts/generate-strings.py` (kèm `InfoPlist.xcstrings` và purpose string trong Info.plist của app); mã không viết câu chữ giao diện |
 

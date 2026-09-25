@@ -18,7 +18,7 @@ This repository is one part of the HandLive workspace: the hub repository `handl
 | `macOS/Info.plist` | `NSBonjourServices` and the English purpose strings (written by the string generator) |
 | `Packages/HLProtocol` | Envelope, `{op, data}`, Ack, `ErrorCode` (0.8.1), HL frames (0.5.2), binary `clipboard/chunk` plaintext, UUIDv7, b64/b64u, AAD, `session`/`capability` types |
 | `Packages/HLCrypto` | Hand-written HChaCha20 + CryptoKit `ChaChaPoly` = XChaCha20-Poly1305; X25519, Ed25519, HKDF/HMAC-SHA256; `device_id`; PRK; handshake/rekey/`K_stream`; envelope and HL frame encryption; Keychain behind the `SecretStore` protocol |
-| `Packages/HLTransport` | State machine 0.11 with its error edges, `RECONNECT_BACKOFF`, close codes and the client's reaction, client-side handshake |
+| `Packages/HLTransport` | `ConnectionManager` (0.11 state machine, `last_host` fast path, mDNS discovery by hourly hint with `NWBrowser`, `NWPathMonitor`, `RECONNECT_BACKOFF`, sleep/wake), `WebSocketConnector` (TLS 1.3, certificate pinning, Network.framework WebSocket), `ControlSession` (`/v1/ctl` handshake, capability, acks, de-duplication, rekey, keepalive), close codes and the client's reaction, `HLBENCH/1` debug logging |
 | `Packages/HLDesignSystem` | Colors (system APIs, hex only where the platform has none), text styles, metrics, `StatusIndicator`, `GroupedList`, button styles; `Scripts/generate-design-tokens.py` generates tokens from `../shared/design-tokens` |
 | `Packages/HLLocalization` | `Localizable.xcstrings` and type-safe `L10n` accessors generated from `../shared/strings/ui-strings.json` by `Scripts/generate-strings.py` (also the app's `InfoPlist.xcstrings` and Info.plist purpose strings); no UI text is written in code |
 
