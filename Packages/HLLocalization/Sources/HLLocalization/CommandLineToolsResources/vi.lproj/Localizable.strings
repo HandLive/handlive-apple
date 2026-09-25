@@ -8,6 +8,8 @@
 	<string>Thiết bị này vừa có nội dung sao chép mới.</string>
 	<key>clipboard.conflict_title</key>
 	<string>Chưa ghi lên %1$@</string>
+	<key>clipboard.image_receiving</key>
+	<string>Đang nhận ảnh từ %1$@ — %2$@</string>
 	<key>clipboard.image_sending</key>
 	<string>Đang gửi ảnh tới %1$@ — %2$@</string>
 	<key>clipboard.not_connected_will_send</key>
@@ -102,6 +104,8 @@
 	<string>Đã ghép nối</string>
 	<key>pairing.paired_with</key>
 	<string>Đã ghép nối với %1$@</string>
+	<key>pairing.phone_not_found</key>
+	<string>Không tìm thấy điện thoại. Để hai máy cùng mạng Wi-Fi rồi thử lại.</string>
 	<key>pairing.qr_code_changes_in</key>
 	<string>Mã đổi sau %1$@</string>
 	<key>pairing.qr_instructions</key>

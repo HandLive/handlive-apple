@@ -13,6 +13,10 @@ public enum L10n {
         public static func conflictTitle(deviceName: String) -> String {
             L10nLookup.format("clipboard.conflict_title", deviceName)
         }
+        /// Receiving image from {device_name} — {percent}
+        public static func imageReceiving(deviceName: String, percent: String) -> String {
+            L10nLookup.format("clipboard.image_receiving", deviceName, percent)
+        }
         /// Sending image to {device_name} — {percent}
         public static func imageSending(deviceName: String, percent: String) -> String {
             L10nLookup.format("clipboard.image_sending", deviceName, percent)
@@ -125,6 +129,8 @@ public enum L10n {
         public static func pairedWith(deviceName: String) -> String {
             L10nLookup.format("pairing.paired_with", deviceName)
         }
+        /// Couldn't find the phone. Put both devices on the same Wi-Fi network and try again.
+        public static var phoneNotFound: String { L10nLookup.string("pairing.phone_not_found") }
         /// Code changes in {time}
         public static func qrCodeChangesIn(time: String) -> String {
             L10nLookup.format("pairing.qr_code_changes_in", time)

@@ -8,6 +8,8 @@
 	<string>That device just copied something new.</string>
 	<key>clipboard.conflict_title</key>
 	<string>Clipboard Not Updated on %1$@</string>
+	<key>clipboard.image_receiving</key>
+	<string>Receiving image from %1$@ — %2$@</string>
 	<key>clipboard.image_sending</key>
 	<string>Sending image to %1$@ — %2$@</string>
 	<key>clipboard.not_connected_will_send</key>
@@ -102,6 +104,8 @@
 	<string>Paired</string>
 	<key>pairing.paired_with</key>
 	<string>Paired with %1$@</string>
+	<key>pairing.phone_not_found</key>
+	<string>Couldn't find the phone. Put both devices on the same Wi-Fi network and try again.</string>
 	<key>pairing.qr_code_changes_in</key>
 	<string>Code changes in %1$@</string>
 	<key>pairing.qr_instructions</key>

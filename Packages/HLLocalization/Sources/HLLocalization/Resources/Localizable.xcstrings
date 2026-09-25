@@ -55,6 +55,24 @@
         }
       }
     },
+    "clipboard.image_receiving" : {
+      "comment" : "Progress of an incoming image over 1 MiB (Android notification, Mac menu bar menu); {percent} is formatted by the system",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Receiving image from %1$@ — %2$@"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang nhận ảnh từ %1$@ — %2$@"
+          }
+        }
+      }
+    },
     "clipboard.image_sending" : {
       "comment" : "Progress of an image over 1 MiB (Android notification, Mac menu bar menu) with a Cancel button; {percent} is formatted by the system",
       "extractionState" : "manual",
@@ -897,6 +915,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Đã ghép nối với %1$@"
+          }
+        }
+      }
+    },
+    "pairing.phone_not_found" : {
+      "comment" : "PAIR-01 E3 on the Mac or iPhone: no LAN instance and no relay within 20 s",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't find the phone. Put both devices on the same Wi-Fi network and try again."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không tìm thấy điện thoại. Để hai máy cùng mạng Wi-Fi rồi thử lại."
           }
         }
       }

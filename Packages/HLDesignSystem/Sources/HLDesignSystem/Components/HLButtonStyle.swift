@@ -102,7 +102,7 @@ private extension View {
 struct HLButtonStylePreviewGallery: View {
     var body: some View {
         VStack(alignment: .leading, spacing: HLSpacing.space12) {
-            Button(L10n.Pairing.pairPhone) {}.hlButtonStyle(.prominent)
+            Button(L10n.Pairing.addPhone) {}.hlButtonStyle(.prominent)
             Button(L10n.Menu.settings) {}.hlButtonStyle(.glass)
             Button(L10n.Common.openSystemSettings) {}.hlButtonStyle(.tinted)
             Button(L10n.Menu.sendClipboardToPhone) {}.hlButtonStyle(.plain)
