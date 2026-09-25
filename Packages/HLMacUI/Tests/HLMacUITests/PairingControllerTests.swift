@@ -173,7 +173,7 @@ struct PairingControllerTests {
     func withoutKeys() {
         let pairing = PairingController(model: makeModel(), search: search) { _ in }
         pairing.start()
-        #expect(pairing.notice == .saveFailed && pairing.qrURI.isEmpty && search.all.isEmpty)
+        #expect(pairing.notice == .keysMissing && pairing.qrURI.isEmpty && search.all.isEmpty)
     }
 
     @Test("PIN digits are grouped by three")

@@ -20,15 +20,18 @@ public final class PairingController: ObservableObject {
         case phoneNotFound
         /// SET-03 E4: no local network access, with "Open System Settings".
         case localNetworkDenied
-        /// The pair could not be stored (Keychain, SET-03 E1 wording).
+        /// The pair could not be stored (field 10: a failure without its own text).
         case saveFailed
+        /// The keys of this Mac are not loaded (SET-03 E1).
+        case keysMissing
 
         public var text: String {
             switch self {
             case .insecure: L10n.Error.pairingAuthFailed
             case .phoneNotFound: L10n.Pairing.phoneNotFound
             case .localNetworkDenied: L10n.Setup.localNetworkDeniedMac
-            case .saveFailed: L10n.Setup.keysFailed
+            case .saveFailed: L10n.Error.pairingFailed
+            case .keysMissing: L10n.Setup.keysFailed
             }
         }
     }
@@ -72,7 +75,7 @@ public final class PairingController: ObservableObject {
     /// PAIR-01 step 2: the first code, the search and the countdown.
     public func start() {
         guard ticker == nil, identity != nil else {
-            if identity == nil { notice = .saveFailed }
+            if identity == nil { notice = .keysMissing }
             return
         }
         newCode()
@@ -165,7 +168,7 @@ public final class PairingController: ObservableObject {
         switch value {
         case .phoneUnreachable: notice = .phoneNotFound
         case .localNetworkDenied: notice = .localNetworkDenied
-        case .verifying: if notice != nil, notice != .saveFailed { notice = nil }
+        case .verifying: if notice != nil, notice != .saveFailed, notice != .keysMissing { notice = nil }
         case .waitingForPhone: if notice == .localNetworkDenied { notice = nil }
         case .connecting: break
         }
