@@ -1,3 +1,4 @@
+import HLLocalization
 import SwiftUI
 
 /// Danh sách nhóm kiểu Cài đặt (`GroupedList/README.md`): iOS/iPadOS `List` `.insetGrouped`,
@@ -137,27 +138,26 @@ public struct GroupedActionRow: View {
     }
 }
 
-/// Mẫu xem trước: nhãn lấy nguyên văn từ 2-patterns/04-cai-dat.md.
+/// Preview sample: the Clipboard pane of the Mac Settings (2-patterns/04-cai-dat.md), labels from the catalog.
 struct GroupedListPreviewGallery: View {
     var body: some View {
         GroupedList {
-            GroupedSection("Bảng nhớ tạm") {
+            GroupedSection(L10n.Settings.clipboard, footer: L10n.Settings.autoClearFooter) {
                 Toggle(isOn: .constant(true)) {
-                    GroupedRowLabel("Đồng bộ bảng nhớ tạm", systemImage: "doc.on.clipboard", feature: .clipboard)
+                    GroupedRowLabel(L10n.Settings.syncClipboard, systemImage: "doc.on.clipboard", feature: .clipboard)
                 }
-                Toggle(isOn: .constant(false)) { GroupedRowLabel("Đồng bộ ảnh") }
-            }
-            GroupedSection("Tin nhắn",
-                           footer: "Đánh dấu đã đọc trên máy này không đổi trạng thái trên điện thoại.") {
+                Toggle(isOn: .constant(false)) { GroupedRowLabel(L10n.Settings.syncImages) }
                 Toggle(isOn: .constant(true)) {
-                    GroupedRowLabel("Tin nhắn SMS", systemImage: "message", feature: .messages,
-                                    unavailableReason: "Thiếu quyền SMS trên điện thoại")
+                    GroupedRowLabel(L10n.Settings.blockSensitive,
+                                    unavailableReason: L10n.Pairing.reasonMissingPermission)
                 }
                 .disabled(true)
-                GroupedActionRow("Đồng bộ lại toàn bộ SMS") {}
             }
-            GroupedSection("Dữ liệu") {
-                GroupedActionRow("Xóa toàn bộ dữ liệu HandLive", role: .destructive) {}
+            GroupedSection(L10n.Settings.pasteFromOtherApps, footer: L10n.Settings.pastePermissionHint) {
+                GroupedActionRow(L10n.Common.openSystemSettings) {}
+            }
+            GroupedSection {
+                GroupedActionRow(L10n.Pairing.unpairEllipsis, role: .destructive) {}
             }
         }
         .frame(minHeight: 420)
@@ -165,8 +165,8 @@ struct GroupedListPreviewGallery: View {
 }
 
 #if !HL_COMMAND_LINE_TOOLS_ONLY
-#Preview("Sáng") { GroupedListPreviewGallery().hlPreviewAppearance(.light) }
-#Preview("Tối") { GroupedListPreviewGallery().hlPreviewAppearance(.dark) }
-#Preview("Sáng · tương phản cao") { GroupedListPreviewGallery().hlPreviewAppearance(.lightHighContrast) }
-#Preview("Tối · tương phản cao") { GroupedListPreviewGallery().hlPreviewAppearance(.darkHighContrast) }
+#Preview("Light") { GroupedListPreviewGallery().hlPreviewAppearance(.light) }
+#Preview("Dark") { GroupedListPreviewGallery().hlPreviewAppearance(.dark) }
+#Preview("Light · High Contrast") { GroupedListPreviewGallery().hlPreviewAppearance(.lightHighContrast) }
+#Preview("Dark · High Contrast") { GroupedListPreviewGallery().hlPreviewAppearance(.darkHighContrast) }
 #endif

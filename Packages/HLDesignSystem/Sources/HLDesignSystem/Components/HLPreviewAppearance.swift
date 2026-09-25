@@ -5,10 +5,10 @@ import SwiftUI
 /// của SwiftUI, ghi được; `\.colorSchemeContrast` công khai chỉ đọc). Trong Xcode còn có thể đổi bằng
 /// Environment Overrides hoặc biến thể "Color Scheme" của canvas.
 enum HLPreviewAppearance: String, CaseIterable, Identifiable {
-    case light = "Sáng"
-    case dark = "Tối"
-    case lightHighContrast = "Sáng · tương phản cao"
-    case darkHighContrast = "Tối · tương phản cao"
+    case light = "Light"
+    case dark = "Dark"
+    case lightHighContrast = "Light · High Contrast"
+    case darkHighContrast = "Dark · High Contrast"
 
     var id: String { rawValue }
     var colorScheme: ColorScheme { self == .dark || self == .darkHighContrast ? .dark : .light }

@@ -1,3 +1,4 @@
+import HLLocalization
 import SwiftUI
 
 /// Kiểu nút theo `docs/design-system/components/Button/README.md`: dùng kiểu nút của hệ thống,
@@ -97,20 +98,20 @@ private extension View {
     }
 }
 
-/// Mẫu xem trước: nhãn lấy nguyên văn từ Button/README.md.
+/// Preview sample: labels from the string catalog.
 struct HLButtonStylePreviewGallery: View {
     var body: some View {
         VStack(alignment: .leading, spacing: HLSpacing.space12) {
-            Button("Ghép nối") {}.hlButtonStyle(.prominent)
-            Button("Cài đặt…") {}.hlButtonStyle(.glass)
-            Button("Mở cài đặt") {}.hlButtonStyle(.tinted)
-            Button("Gửi bảng nhớ tạm") {}.hlButtonStyle(.plain)
-            Button("Hủy ghép nối", role: .destructive) {}.hlButtonStyle(.destructive)
-            // Đang xử lý: đổi nhãn sang tiến trình, kèm ProgressView nhỏ, không đổi cỡ nút.
+            Button(L10n.Pairing.pairPhone) {}.hlButtonStyle(.prominent)
+            Button(L10n.Menu.settings) {}.hlButtonStyle(.glass)
+            Button(L10n.Common.openSystemSettings) {}.hlButtonStyle(.tinted)
+            Button(L10n.Menu.sendClipboardToPhone) {}.hlButtonStyle(.plain)
+            Button(L10n.Pairing.unpairEllipsis, role: .destructive) {}.hlButtonStyle(.destructive)
+            // In progress: the label turns into progress with a small ProgressView; the button keeps its size.
             Button {} label: {
                 HStack(spacing: HLSpacing.space8) {
                     ProgressView().controlSize(.small)
-                    Text("Đang ghép nối…")
+                    Text(L10n.Pairing.inProgress)
                 }
             }
             .hlButtonStyle(.prominent)
@@ -119,8 +120,8 @@ struct HLButtonStylePreviewGallery: View {
 }
 
 #if !HL_COMMAND_LINE_TOOLS_ONLY
-#Preview("Sáng") { HLButtonStylePreviewGallery().hlPreviewAppearance(.light) }
-#Preview("Tối") { HLButtonStylePreviewGallery().hlPreviewAppearance(.dark) }
-#Preview("Sáng · tương phản cao") { HLButtonStylePreviewGallery().hlPreviewAppearance(.lightHighContrast) }
-#Preview("Tối · tương phản cao") { HLButtonStylePreviewGallery().hlPreviewAppearance(.darkHighContrast) }
+#Preview("Light") { HLButtonStylePreviewGallery().hlPreviewAppearance(.light) }
+#Preview("Dark") { HLButtonStylePreviewGallery().hlPreviewAppearance(.dark) }
+#Preview("Light · High Contrast") { HLButtonStylePreviewGallery().hlPreviewAppearance(.lightHighContrast) }
+#Preview("Dark · High Contrast") { HLButtonStylePreviewGallery().hlPreviewAppearance(.darkHighContrast) }
 #endif

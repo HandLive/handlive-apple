@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Chỉ báo liên kết giữa hai máy (`StatusIndicator/README.md`): biểu tượng tô màu trạng thái đi kèm chữ,
-/// không bao giờ chỉ có chấm màu. VoiceOver đọc cả câu, ví dụ "Đã kết nối qua Wi-Fi với Pixel 8 của Lan".
+/// không bao giờ chỉ có chấm màu. VoiceOver đọc cả câu (`status.connected_wifi_to`).
 public struct StatusIndicator: View {
     public enum Variant: Sendable {
         /// Biểu tượng màu + chữ `secondary-label`.
@@ -48,7 +48,7 @@ public struct StatusIndicator: View {
         } else if let symbol = status.symbolName {
             Image(systemName: symbol).foregroundStyle(tint)
         } else if status.pulses && !reduceMotion {
-            // Nhịp `duration-pulse` chỉ cho "Đang kết nối…" và "Đang phát camera"; Giảm chuyển động thì đứng yên.
+            // `duration-pulse` rhythm only while connecting; still under Reduce Motion.
             TimelineView(.animation(minimumInterval: 1.0 / 30)) { context in
                 dot(tint).opacity(Self.pulseOpacity(at: context.date))
             }
@@ -73,24 +73,25 @@ public struct StatusIndicator: View {
     }
 }
 
-/// Mẫu xem trước: đủ các trạng thái trong README, cả dạng viên.
+/// Preview sample: every state of the README, and the pill variant. The device name is sample user content.
 struct StatusIndicatorPreviewGallery: View {
+    private static let sampleDevice = "Pixel 8"
     private let statuses: [HLConnectionStatus] = [
         .connectedWiFi, .connectedInternet, .usb, .connecting, .phoneOffline(lastSeen: "14:05"),
-        .networkLost, .needsRepair, .cameraStreaming,
+        .networkLost, .needsRepair, .notPaired,
     ]
 
     var body: some View {
         VStack(alignment: .leading, spacing: HLSpacing.space8) {
-            ForEach(statuses, id: \.self) { StatusIndicator($0, deviceName: "Pixel 8 của Lan") }
-            StatusIndicator(.connectedWiFi, deviceName: "Pixel 8 của Lan", variant: .pill)
+            ForEach(statuses, id: \.self) { StatusIndicator($0, deviceName: Self.sampleDevice) }
+            StatusIndicator(.connectedWiFi, deviceName: Self.sampleDevice, variant: .pill)
         }
     }
 }
 
 #if !HL_COMMAND_LINE_TOOLS_ONLY
-#Preview("Sáng") { StatusIndicatorPreviewGallery().hlPreviewAppearance(.light) }
-#Preview("Tối") { StatusIndicatorPreviewGallery().hlPreviewAppearance(.dark) }
-#Preview("Sáng · tương phản cao") { StatusIndicatorPreviewGallery().hlPreviewAppearance(.lightHighContrast) }
-#Preview("Tối · tương phản cao") { StatusIndicatorPreviewGallery().hlPreviewAppearance(.darkHighContrast) }
+#Preview("Light") { StatusIndicatorPreviewGallery().hlPreviewAppearance(.light) }
+#Preview("Dark") { StatusIndicatorPreviewGallery().hlPreviewAppearance(.dark) }
+#Preview("Light · High Contrast") { StatusIndicatorPreviewGallery().hlPreviewAppearance(.lightHighContrast) }
+#Preview("Dark · High Contrast") { StatusIndicatorPreviewGallery().hlPreviewAppearance(.darkHighContrast) }
 #endif

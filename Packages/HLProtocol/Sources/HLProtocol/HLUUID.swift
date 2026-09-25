@@ -24,7 +24,7 @@ public enum HLUUID {
 
     /// 16 byte → chuỗi uuid chữ thường.
     public static func string(from bytes: Data) -> String {
-        precondition(bytes.count == 16, "uuid phải đúng 16 byte")
+        precondition(bytes.count == 16, "a uuid is 16 bytes")
         let hex = bytes.map { String(format: "%02x", $0) }.joined()
         let parts = [0..<8, 8..<12, 12..<16, 16..<20, 20..<32].map { range -> String in
             let start = hex.index(hex.startIndex, offsetBy: range.lowerBound)
