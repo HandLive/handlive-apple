@@ -1,6 +1,8 @@
 # apple/ — HandLive cho macOS và iOS/iPadOS
 
-Swift 6, macOS 13+ / iOS 16+. Đặc tả: `docs/detailed-design/00-common-specs.md`; kế hoạch: `plans/20260925-implementation/phase-00-khung-va-dung-chung.md`.
+Swift 6, macOS 13+ / iOS 16+. Đặc tả: `../docs/detailed-design/00-common-specs.md`; kế hoạch: `../plans/20260925-implementation/` (kho hub).
+
+Kho này là một phần của workspace HandLive: kho hub `handlive` (tài liệu, kế hoạch) là thư mục cha, `../shared` là kho `handlive-shared` (test vector, schema, design tokens). Clone cả bộ từ hub: `tools/workspace.sh clone <group-url>`. Xem `CLAUDE.md` của kho này.
 
 ## Bố cục
 
@@ -25,7 +27,7 @@ open HandLive.xcworkspace
 
 ## Test
 
-Test dùng swift-testing (`import Testing`) và đọc thẳng `shared/test-vectors/*.json`, `shared/schemas/*.json` theo đường dẫn tương đối tới gốc kho.
+Test dùng swift-testing (`import Testing`) và đọc thẳng `shared/test-vectors/*.json`, `shared/schemas/*.json` theo đường dẫn tương đối tới gốc workspace (thư mục cha chứa `apple/`, `shared/` và `docs/` của kho hub).
 
 ```sh
 # Có Xcode (CI): dùng Testing đi kèm Xcode
