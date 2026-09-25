@@ -2,6 +2,8 @@
 public struct ReconnectBackoff: Sendable {
     public static let steps: [Double] = [0.5, 1, 2, 4, 8, 16, 30]
     public static let jitter = 0.2
+    /// After `AUTH_FAILED` the client waits 5 minutes and does not retry in a loop (CONN-01 E3, API 6).
+    public static let authFailedDelay: Double = 300
 
     public private(set) var attempt = 0
 
