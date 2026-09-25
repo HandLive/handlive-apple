@@ -1,54 +1,56 @@
+English | [Tiếng Việt](README.vi.md)
+
 # handlive-apple
 
-Ứng dụng cho Mac, iPhone và iPad, viết bằng Swift 6 (macOS 13+, iOS 16+). Mac có app trên thanh menu, đủ clipboard, SMS, âm thanh cuộc gọi, camera và mic. iPhone và iPad nhận clipboard, SMS và thông tin cuộc gọi.
+The HandLive apps for Mac, iPhone and iPad, written in Swift 6 (macOS 13+, iOS 16+). The Mac app lives in the menu bar and handles the clipboard, SMS, call audio, and the phone's camera and microphone. iPhone and iPad receive the clipboard, SMS and call details. The UI is multilingual: English by default, Vietnamese as the second language (strings come from `../shared/strings`, detailed design 0.12).
 
-Đặc tả: `../docs/detailed-design/00-common-specs.md`. Kế hoạch: `../plans/20260925-implementation/` (kho hub).
+Specification: `../docs/detailed-design/00-common-specs.md`. Plan: `../plans/20260925-implementation/` (hub repository).
 
-Kho này là một phần của workspace HandLive: kho hub `handlive` (tài liệu, kế hoạch) là thư mục cha, `../shared` là kho `handlive-shared` (test vector, schema, design tokens). Clone cả bộ từ hub: `tools/workspace.sh clone <group-url>`. Xem `CLAUDE.md` của kho này.
+This repository is one part of the HandLive workspace: the hub repository `handlive` (docs, plans) is the parent directory, and `../shared` is the `handlive-shared` repository (test vectors, schemas, design tokens). Clone the whole set from the hub with `tools/workspace.sh clone <group-url>`. See this repository's `CLAUDE.md`.
 
-## Bố cục
+## Layout
 
-| Đường dẫn | Nội dung |
-|-----------|----------|
-| `project.yml` | XcodeGen: target app `HandLive` (menu bar, bundle `app.handlive.mac`) + 4 local package. Không cấu hình ký |
-| `HandLive.xcworkspace` | Workspace tham chiếu `HandLive.xcodeproj` (sinh ra) và các package |
-| `macOS/HandLive/` | App menu bar (placeholder Phase 0, tính năng từ Phase 1) |
-| `Packages/HLProtocol` | Envelope, `{op, data}`, Ack, `ErrorCode` (0.8.1), khung HL (0.5.2), plaintext nhị phân `clipboard/chunk`, UUIDv7, b64/b64u, AAD, kiểu `session`/`capability` |
-| `Packages/HLCrypto` | HChaCha20 tự cài + CryptoKit `ChaChaPoly` = XChaCha20-Poly1305; X25519, Ed25519, HKDF/HMAC-SHA256; `device_id`; PRK; bắt tay/rekey/`K_stream`; mã hóa envelope và khung HL; Keychain sau protocol `SecretStore` |
-| `Packages/HLTransport` | Máy trạng thái 0.11, `RECONNECT_BACKOFF`, bắt tay phía client (thuần logic; mạng thật từ Phase 1) |
-| `Packages/HLDesignSystem` | Token giao diện (thẻ M0.2) |
+| Path | Contents |
+|------|----------|
+| `project.yml` | XcodeGen: app target `HandLive` (menu bar, bundle `app.handlive.mac`) and 4 local packages. No signing configuration |
+| `HandLive.xcworkspace` | Workspace referencing the generated `HandLive.xcodeproj` and the packages |
+| `macOS/HandLive/` | Menu bar app (Phase 0 placeholder; features start in Phase 1) |
+| `Packages/HLProtocol` | Envelope, `{op, data}`, Ack, `ErrorCode` (0.8.1), HL frames (0.5.2), binary `clipboard/chunk` plaintext, UUIDv7, b64/b64u, AAD, `session`/`capability` types |
+| `Packages/HLCrypto` | Hand-written HChaCha20 + CryptoKit `ChaChaPoly` = XChaCha20-Poly1305; X25519, Ed25519, HKDF/HMAC-SHA256; `device_id`; PRK; handshake/rekey/`K_stream`; envelope and HL frame encryption; Keychain behind the `SecretStore` protocol |
+| `Packages/HLTransport` | State machine 0.11, `RECONNECT_BACKOFF`, client-side handshake (pure logic; real networking from Phase 1) |
+| `Packages/HLDesignSystem` | UI tokens (card M0.2) |
 
-Phụ thuộc: `HLTransport → HLCrypto → HLProtocol`.
+Dependencies: `HLTransport → HLCrypto → HLProtocol`.
 
-## Sinh project Xcode
+## Generate the Xcode project
 
 ```sh
-cd apple && xcodegen generate     # tạo HandLive.xcodeproj (không commit, đã có trong .gitignore)
+cd apple && xcodegen generate     # creates HandLive.xcodeproj (not committed, listed in .gitignore)
 open HandLive.xcworkspace
 ```
 
-## Test
+## Tests
 
-Test dùng swift-testing (`import Testing`) và đọc thẳng `shared/test-vectors/*.json`, `shared/schemas/*.json` theo đường dẫn tương đối tới gốc workspace (thư mục cha chứa `apple/`, `shared/` và `docs/` của kho hub).
+Tests use swift-testing (`import Testing`) and read `shared/test-vectors/*.json` and `shared/schemas/*.json` through paths relative to the workspace root (the parent directory holding `apple/`, `shared/` and the hub's `docs/`).
 
 ```sh
-# Có Xcode (CI): dùng Testing đi kèm Xcode
+# With Xcode (CI): uses the Testing module bundled with Xcode
 cd apple/Packages/HLCrypto && swift test
 xcodebuild test -workspace apple/HandLive.xcworkspace -scheme HLCrypto -destination 'platform=macOS'
 
-# Chỉ có Command Line Tools: kéo gói swift-testing (release/6.2)
+# Command Line Tools only: pulls the swift-testing package (release/6.2)
 cd apple/Packages/HLCrypto && HL_SWIFT_TESTING_PACKAGE=1 swift test
 ```
 
-Vector liên nền tảng: `HL_WRITE_ROUNDTRIP=1` (trong `HLCrypto`) ghi lại `shared/test-vectors/envelope-roundtrip-apple.json`; test thường luôn giải mã file đó và `envelope-roundtrip.json` của Android nếu có.
+Cross-platform vectors: `HL_WRITE_ROUNDTRIP=1` (in `HLCrypto`) rewrites `shared/test-vectors/envelope-roundtrip-apple.json`; regular test runs always decrypt that file and Android's `envelope-roundtrip.json` when present.
 
 ## Lint
 
 ```sh
 cd apple && swiftlint lint --strict
-# chỉ có Command Line Tools: TOOLCHAIN_DIR=/Library/Developer/CommandLineTools swiftlint lint --strict
+# Command Line Tools only: TOOLCHAIN_DIR=/Library/Developer/CommandLineTools swiftlint lint --strict
 ```
 
-## Giấy phép
+## License
 
-Apache License 2.0 — xem [LICENSE](LICENSE); font đóng gói theo giấy phép riêng ghi trong [NOTICE](NOTICE). Đóng góp theo [CONTRIBUTING](https://github.com/HandLive/.github/blob/main/CONTRIBUTING.md) (commit nhỏ, đứng tên người thật, ký DCO bằng `git commit -s`); báo lỗi bảo mật kín theo [SECURITY](https://github.com/HandLive/.github/blob/main/SECURITY.md).
+Apache License 2.0 — see [LICENSE](LICENSE); the bundled font keeps its own license, listed in [NOTICE](NOTICE). Contributions follow [CONTRIBUTING](https://github.com/HandLive/.github/blob/main/CONTRIBUTING.md) (small commits under a real name, DCO sign-off with `git commit -s`); report vulnerabilities privately as described in [SECURITY](https://github.com/HandLive/.github/blob/main/SECURITY.md).
