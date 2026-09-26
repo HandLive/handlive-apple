@@ -65,7 +65,7 @@ targets:
       - package: HLAppCore
       - package: HLMacUI
   # iPhone and iPad (SET-03, CLIP-04, SMS-01…05): thin app sources over HLiOSUI; builds on CI for the simulator
-  # without signing. The App Group group.app.handlive holds the settings suite and the keychain group.
+  # without signing. The App Group group.app.handlive is shared with the extension (settings suite, keychain group).
   HandLiveiOS:
     type: application
     platform: iOS
@@ -96,3 +96,27 @@ targets:
         CODE_SIGN_ENTITLEMENTS: iOS/HandLive.entitlements
     dependencies:
       - package: HLiOSUI
+      - target: HandLiveNotificationService
+  # I-NSE (CONN-04 step 9b): decrypts `hl` with K_push while unlocked; no database, no network.
+  HandLiveNotificationService:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: iOS/NotificationService
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.handlive.ios.nse
+        PRODUCT_NAME: HandLiveNotificationService
+        MARKETING_VERSION: "0.0.1"
+        CURRENT_PROJECT_VERSION: "1"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_FILE: iOS/NotificationService-Info.plist
+        CODE_SIGN_ENTITLEMENTS: iOS/NotificationService.entitlements
+    dependencies:
+      - package: HLSMS
+        product: HLSMSNotifications
+      - package: HLProtocol
+      - package: HLCrypto
+      - package: HLAppCore
+      - package: HLTransport
