@@ -1,0 +1,78 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "push.call_incoming" : {
+      "comment" : "APNs aps.alert.loc-key for reason call_incoming when the extension cannot decrypt (iPhone locked)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Incoming call on your phone"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuộc gọi đến trên điện thoại"
+          }
+        }
+      }
+    },
+    "push.call_missed" : {
+      "comment" : "APNs aps.alert.loc-key for reason call_missed when the extension cannot decrypt",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Missed call on your phone"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuộc gọi nhỡ trên điện thoại"
+          }
+        }
+      }
+    },
+    "push.generic" : {
+      "comment" : "Body the notification service extension shows when it cannot read the key or decrypt",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New notification from your phone"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Có thông báo mới từ điện thoại"
+          }
+        }
+      }
+    },
+    "push.sms_new" : {
+      "comment" : "APNs aps.alert.loc-key for reason sms_new when the extension cannot decrypt; no title (the system shows the app name)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New SMS message"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tin nhắn SMS mới"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}
