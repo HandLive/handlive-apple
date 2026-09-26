@@ -37,6 +37,16 @@ struct AppSettingsTests {
         settings.setupCompletedAt = nil
         #expect(settings.setupCompletedAt == nil)
     }
+
+    @Test("Delete All removes every key; the 0.9.5 defaults apply again")
+    func removeAll() {
+        let settings = AppSettings(defaults: freshDefaults())
+        settings.relayEnabled = false
+        settings.smsPreview = false
+        settings.setupCompletedAt = 1_727_151_000_123
+        settings.removeAll()
+        #expect(settings.relayEnabled && settings.smsPreview && settings.setupCompletedAt == nil)
+    }
 }
 
 @Suite("Identity keys (SET-03 API 1)")

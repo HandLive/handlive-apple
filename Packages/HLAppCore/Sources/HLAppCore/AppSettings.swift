@@ -53,6 +53,11 @@ public final class AppSettings: @unchecked Sendable {
         defaults.register(defaults: Self.registeredDefaults)
     }
 
+    /// "Delete All HandLive Data" (SET-02 API 7): every key of 0.9.5 goes; the registered defaults apply again.
+    public func removeAll() {
+        for key in SettingsKey.allCases { defaults.removeObject(forKey: key.rawValue) }
+    }
+
     public func bool(_ key: SettingsKey) -> Bool { defaults.bool(forKey: key.rawValue) }
     public func set(_ value: Bool, _ key: SettingsKey) { defaults.set(value, forKey: key.rawValue) }
 
