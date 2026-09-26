@@ -2,7 +2,7 @@ English | [Tiếng Việt](README.vi.md)
 
 # handlive-apple
 
-The HandLive apps for Mac, iPhone and iPad, written in Swift 6 (macOS 13+, iOS 16+). The Mac app lives in the menu bar and handles the clipboard, SMS, call audio, and the phone's camera and microphone. iPhone and iPad receive the clipboard, SMS and call details. The UI is multilingual: English by default, Vietnamese as the second language (strings come from `../shared/strings`, detailed design 0.12).
+The HandLive apps for Mac, iPhone and iPad, written in Swift 6 (macOS 13+, iOS 16+). The apps receive data from Android and send data back. The Mac app lives in the menu bar and handles the clipboard, SMS, call audio, and the phone camera and microphone. iPhone and iPad sync the clipboard, SMS and call details. The UI is multilingual: English by default, Vietnamese as the second language (strings come from `../shared/strings`, detailed design 0.12).
 
 Specification: `../docs/detailed-design/00-common-specs.md`. Plan: `../plans/20260925-implementation/` (hub repository).
 
