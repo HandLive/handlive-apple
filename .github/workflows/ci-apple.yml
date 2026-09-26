@@ -116,8 +116,10 @@ jobs:
           set -euo pipefail
           for pkg in HLProtocol HLCrypto HLTransport HLDesignSystem HLLocalization HLAppCore HLSMS HLSMSUI HLMacUI HLiOSUI; do
             echo "::group::xcodebuild test $pkg"
+            # A package with several products (HLSMS: HLSMS + HLSMSNotifications) runs its tests in "<name>-Package".
+            scheme="$pkg"; [ "$pkg" = HLSMS ] && scheme="HLSMS-Package"
             (cd "apple/Packages/$pkg" && xcodebuild test \
-              -scheme "$pkg" \
+              -scheme "$scheme" \
               -destination 'platform=macOS' \
               -derivedDataPath "$DERIVED_DATA/$pkg")
             echo "::endgroup::"
