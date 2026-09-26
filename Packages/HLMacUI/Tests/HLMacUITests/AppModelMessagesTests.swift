@@ -4,6 +4,7 @@ import HLLocalization
 import HLProtocol
 import HLSMS
 import HLSMSNotifications
+import HLSMSUI
 import HLTransport
 import Testing
 @testable import HLMacUI
@@ -115,17 +116,29 @@ struct AppModelMessagesTests {
         let model = makeModel()
         model.launch()
         try model.completePairing(PairingControllerTests.result(name: "Pixel của Lan"))
-        #expect(model.smsUnavailableReason == nil && !model.phoneMissesContactsPermission && !model.canResyncSms)
+        #expect(model.smsPhoneProblem == nil && !model.phoneMissesContactsPermission && !model.canResyncSms)
         model.updatePairRecord { $0.peerCapability = Self.capability(smsOn: false, missing: []) }
-        #expect(model.smsUnavailableReason == L10n.Pairing.reasonOffOnDevice(deviceName: "Pixel của Lan"))
+        #expect(model.smsPhoneProblem == .offOnPhone(name: "Pixel của Lan"))
         model.updatePairRecord {
             $0.peerCapability = Self.capability(smsOn: true, missing: ["android.permission.READ_SMS", "READ_CONTACTS"])
         }
-        #expect(model.smsUnavailableReason == L10n.Pairing.reasonMissingSmsPermission)
+        #expect(model.smsPhoneProblem == .missingPermission && model.smsPhoneProblem?.hasInstructions == true)
         #expect(model.phoneMissesContactsPermission)
+        #expect(model.smsFeatureReason == L10n.Pairing.reasonMissingSmsPermission) // PAIR-02 field 8
         model.setSmsEnabled(false)
-        #expect(model.smsUnavailableReason == nil) // the switch itself says it is off
+        #expect(model.smsPhoneProblem == nil) // the switch itself says it is off
+        #expect(model.smsFeatureReason == L10n.Pairing.reasonOffOnDevice(deviceName: model.device.name))
         #expect(!SmsSyncSection.relative(1_727_150_000_000, now: Date(timeIntervalSince1970: 1_727_150_300)).isEmpty)
+    }
+
+    @Test("The menu bar icon reads the status, then the unread conversations (SMS-02 field 6)")
+    func menuBarLabel() {
+        let model = makeModel()
+        model.launch()
+        let status = model.connectionStatus.accessibilityText(deviceName: nil)
+        #expect(model.menuBarAccessibilityLabel == status)
+        model.handleSmsEvent(.badge(3))
+        #expect(model.menuBarAccessibilityLabel == status + ", " + L10n.A11y.unreadConversations(count: 3))
     }
 
     static func capability(smsOn: Bool, missing: [String]) -> CapabilityData {

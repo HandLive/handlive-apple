@@ -14,10 +14,8 @@ struct MessagesSettingsPane: View {
             Section {
                 Toggle(L10n.Settings.smsMessages, isOn: Binding(get: { model.smsEnabled }, set: { model.setSmsEnabled($0) }))
                     .toggleStyle(.switch).controlSize(.mini)
-                if let reason = model.smsUnavailableReason {
-                    Label(reason, systemImage: "info.circle")
-                        .hlTextStyle(.macFootnote)
-                        .foregroundStyle(HLColorToken.textOrange.color)
+                if let problem = model.smsPhoneProblem {
+                    SmsPhoneProblemRow(problem) // with "View Instructions" for a missing permission (SMS-01 field 7)
                 }
                 Group {
                     Toggle(L10n.Settings.smsNotify, isOn: Binding(get: { model.smsNotify }, set: { model.setSmsNotify($0) }))

@@ -1,6 +1,7 @@
 import AppKit
 import Foundation
 import HLAppCore
+import HLDesignSystem
 import HLLocalization
 import HLProtocol
 import HLSMS
@@ -78,14 +79,10 @@ extension AppModel {
         }
     }
 
-    /// Why SMS does not work with the phone while it is on here (2-patterns/04-cai-dat.md), or `nil`.
-    public var smsUnavailableReason: String? {
-        guard smsEnabled, let device = pairedDevice, let capability = device.peerCapability else { return nil }
-        if capability.features.sms?.enabled != true { return L10n.Pairing.reasonOffOnDevice(deviceName: device.peerName) }
-        if (capability.permissionsMissing ?? []).contains(where: { $0.hasSuffix("READ_SMS") }) {
-            return L10n.Pairing.reasonMissingSmsPermission
-        }
-        return nil
+    /// Why SMS does not work with the phone while it is on here (2-patterns/04-cai-dat.md, PAIR-02 field 8), or `nil`.
+    public var smsPhoneProblem: SmsPhoneProblem? {
+        guard smsEnabled, let device = pairedDevice else { return nil }
+        return SmsPhoneProblem.of(device.peerCapability, phoneName: device.peerName)
     }
 
     /// "Resync All SMS…" needs a session to the phone and SMS active (SET-02 field 25).
@@ -94,14 +91,30 @@ extension AppModel {
         return smsEngine?.isActive == true
     }
 
+    /// PAIR-02 field 8: why SMS is not in use with the phone — off on this Mac, off on the phone, or a missing
+    /// permission there — or `nil` when it is.
+    public var smsFeatureReason: String? {
+        guard pairedDevice != nil else { return nil }
+        guard smsEnabled else { return L10n.Pairing.reasonOffOnDevice(deviceName: device.name) }
+        return smsPhoneProblem?.text
+    }
+
     /// SMS-01 field 8: names can't be shown because the phone may not read contacts.
     public var phoneMissesContactsPermission: Bool {
-        (pairedDevice?.peerCapability?.permissionsMissing ?? []).contains { $0.hasSuffix("READ_CONTACTS") }
+        SmsPermissions.contactsMissing(in: pairedDevice?.peerCapability?.permissionsMissing ?? [])
     }
 
     /// "New Message" can be opened: a paired phone and the SMS database.
     public var canComposeMessage: Bool {
         pairedDevice != nil && messages != nil
+    }
+
+    /// VoiceOver label of the menu bar icon: the connection status, then "3 unread conversations" when there are some
+    /// (SMS-02 field 6).
+    public var menuBarAccessibilityLabel: String {
+        let status = connectionStatus.accessibilityText(deviceName: pairedDevice?.peerName)
+        guard unreadThreads > 0 else { return status }
+        return [status, L10n.A11y.unreadConversations(count: unreadThreads)].joined(separator: ", ")
     }
 
     /// The menu bar icon's count of unread conversations: "2", above 99 "99+" (MenuBarMenu README).

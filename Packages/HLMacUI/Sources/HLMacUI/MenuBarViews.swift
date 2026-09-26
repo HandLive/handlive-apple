@@ -24,7 +24,7 @@ public struct MenuBarIcon: View {
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text(status.accessibilityText(deviceName: model.pairedDevice?.peerName)))
+        .accessibilityLabel(Text(model.menuBarAccessibilityLabel))
     }
 
     @ViewBuilder
