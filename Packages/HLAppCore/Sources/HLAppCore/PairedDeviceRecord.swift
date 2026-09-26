@@ -49,9 +49,20 @@ public struct PairedDeviceRecord: Codable, Sendable, Equatable {
         HMACSHA256.sha256(attestation).prefix(4).map { String(format: "%02x", $0) }.joined()
     }
 
-    /// What the connection manager needs, with the `PRK` loaded from the Keychain.
+    /// What the connection manager needs, with the `PRK` loaded from the Keychain: the phone's relay switch from its last
+    /// capability and, while `relay_registered = 0`, the registration of the pair (PAIR-01 API 8).
     public func pairedPhone(clientDeviceId: String, prk: Data) -> PairedPhone {
         PairedPhone(pair: PairContext(pairId: pairId, clientDeviceId: clientDeviceId, serverDeviceId: peerDeviceId, prk: prk),
-                    certificateSHA256: peerCertificateSHA256, lastHost: lastHost, lastPort: lastPort)
+                    certificateSHA256: peerCertificateSHA256, lastHost: lastHost, lastPort: lastPort,
+                    relayEnabled: peerCapability.map { $0.features.relay?.enabled ?? false } ?? true,
+                    relayRegistration: relayRegistered ? nil : relayRegistration(clientDeviceId: clientDeviceId))
+    }
+
+    /// `POST /v1/pairs` of this pair: the attestation of 0.6.2 with the phone's (`sig_a`) and this device's (`sig_b`)
+    /// signatures.
+    public func relayRegistration(clientDeviceId: String) -> RelayPairRegistration {
+        RelayPairRegistration(pairId: pairId, deviceA: peerDeviceId, deviceB: clientDeviceId, createdAt: createdAt,
+                              attestation: Base64Coding.encodeB64u(attestation),
+                              sigA: Base64Coding.encodeB64u(signaturePeer), sigB: Base64Coding.encodeB64u(signatureSelf))
     }
 }
