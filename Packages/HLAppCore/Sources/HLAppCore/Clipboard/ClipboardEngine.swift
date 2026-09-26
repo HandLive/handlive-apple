@@ -3,7 +3,13 @@ import HLCrypto
 import HLProtocol
 import HLTransport
 
-/// Clipboard sync with the phone on the Mac (CLIP-01…03, CLIP-05): polls `changeCount`, reads and sends local clips,
+/// Where the engine runs: the Mac polls and reads the clipboard itself (C10); the iPhone and iPad never read it and
+/// send only what the user pastes with the system Paste button (CLIP-04).
+public enum ClipboardPlatform: Sendable {
+    case mac, ios
+}
+
+/// Clipboard sync with the phone (CLIP-01…05): on the Mac polls `changeCount`, reads and sends local clips; everywhere
 /// writes the phone's clips, keeps the latest unacknowledged clip for replay, resolves conflicts and clears received
 /// content. Content lives only in memory and in temporary transfer files; it is never logged (QC2).
 @MainActor
@@ -22,8 +28,11 @@ public final class ClipboardEngine {
     public var onAlert: (ClipboardAlert) -> Void = { _ in }
     /// Progress of the transfer in one direction; `nil` when it ended.
     public var onProgress: (ClipboardProgress.Direction, ClipboardProgress?) -> Void = { _, _ in }
+    /// iPhone/iPad: locally copied content not sent yet appeared or went away (the suggestion banner, CLIP-04 field 3).
+    public var onUnsentLocalContent: (Bool) -> Void = { _ in }
 
     let access: any ClipboardAccess
+    let platform: ClipboardPlatform
     let settings: AppSettings
     let deviceId: String
     let deviceName: String
@@ -50,19 +59,25 @@ public final class ClipboardEngine {
     var pollTask: Task<Void, Never>?
     var autoClearTask: Task<Void, Never>?
     var pasteGuideShown = false
+    /// iPhone/iPad: when the phone's session started, for the 5 s rule of CLIP-04 E2.
+    var sessionStartedAt: Date?
+    /// iPhone/iPad: content copied here and not sent yet (CLIP-04 step 2, E2).
+    public internal(set) var unsentLocalContent = false
 
     public init(access: any ClipboardAccess, settings: AppSettings, deviceId: String, deviceName: String,
-                readingAllowed: @escaping () -> Bool, now: @escaping () -> Date = Date.init,
+                platform: ClipboardPlatform = .mac, readingAllowed: @escaping () -> Bool,
+                now: @escaping () -> Date = Date.init,
                 temporaryDirectory: URL = FileManager.default.temporaryDirectory
                     .appendingPathComponent("HandLive/clip", isDirectory: true)) {
         self.access = access
+        self.platform = platform
         self.settings = settings
         self.deviceId = deviceId
         self.deviceName = deviceName
         self.readingAllowed = readingAllowed
         self.now = now
         self.temporaryDirectory = temporaryDirectory
-        lastSeenChangeCount = access.changeCount
+        lastSeenChangeCount = platform == .ios ? settings.seenChangeCount : access.changeCount
         rearmAutoClearAfterRestart()
     }
 
@@ -87,8 +102,10 @@ public final class ClipboardEngine {
 
     public var isPolling: Bool { pollTask != nil }
 
-    /// One poll: nothing is read while `changeCount` is unchanged or HandLive wrote the change (E1).
+    /// One poll: nothing is read while `changeCount` is unchanged or HandLive wrote the change (E1). The iPhone and
+    /// iPad never read: a new `changeCount` only marks unsent local content.
     public func poll() {
+        guard platform == .mac else { return localChangeSeen() }
         let count = access.changeCount
         guard count != lastSeenChangeCount else { return }
         lastSeenChangeCount = count

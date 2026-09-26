@@ -23,6 +23,10 @@ public enum ClipboardNotice: Equatable, Sendable {
     case imageNoSpace
     /// macOS asks or refuses paste access: automatic sending is off (C10, CLIP-02 E2), once per launch.
     case pasteAccessNeeded
+    /// iPhone/iPad: no `ack` within 10 s; not replayed (CLIP-04 E9).
+    case sendFailed
+    /// iPhone/iPad: the pasted content is not text, a URL or a supported image (CLIP-04 E3).
+    case unsupportedContent
 }
 
 /// System notifications with a button (QC3, CLIP-01 API 6); a new one replaces the old one of the same kind.

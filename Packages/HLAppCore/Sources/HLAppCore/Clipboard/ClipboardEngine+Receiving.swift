@@ -75,6 +75,10 @@ extension ClipboardEngine {
     /// QC8, then the write (CLIP-01 API 7, CLIP-03 API 7), the QC4 trace, CLIP-05 and the `ack`.
     func apply(_ content: ClipContent, push: ClipboardPushData, requestId: String) {
         noticeUnseenLocalChange()
+        if keepsUnsentLocalContent() {
+            ledger.record(push.clipId, .ignored, now: now())
+            return reply(requestId, .ignored(push.clipId, .conflict))
+        }
         switch ConflictPolicy.decide(originTs: push.originTs, originDeviceId: push.originDeviceId,
                                      local: unacknowledgedLocalChange(), now: now()) {
         case .keepLocalAndReport:
@@ -119,6 +123,7 @@ extension ClipboardEngine {
         if let clip = latestLocal, !clip.acknowledged {
             return LocalChange(detectedAt: clip.createdAt, originTs: clip.originTs, originDeviceId: deviceId)
         }
+        guard platform == .mac else { return nil } // iOS copies count only through E2 (never read, maybe never sent)
         return detectedLocalChange.map {
             LocalChange(detectedAt: $0, originTs: Self.milliseconds($0), originDeviceId: deviceId)
         }

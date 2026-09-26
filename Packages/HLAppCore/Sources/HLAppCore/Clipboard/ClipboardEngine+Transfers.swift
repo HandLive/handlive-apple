@@ -149,9 +149,11 @@ extension ClipboardEngine {
         scheduleAutoClear()
     }
 
-    /// E4: a HandLive clip still on the clipboard after a restart gets a full interval again.
+    /// E4: a HandLive clip still on the clipboard after a restart gets a full interval again. The iPhone and iPad never
+    /// look: their clip carries its own `expirationDate` (CLIP-04 API 1).
     func rearmAutoClearAfterRestart() {
-        guard readingAllowed(), let types = access.firstItemTypes(), types.contains(PasteboardTypeID.clipId) else { return }
+        guard platform == .mac, readingAllowed(), let types = access.firstItemTypes(), types.contains(PasteboardTypeID.clipId)
+        else { return }
         ownWrite = OwnWrite(changeCount: access.changeCount,
                             clipId: access.string(forType: PasteboardTypeID.clipId) ?? "", writtenAt: now())
         scheduleAutoClear()

@@ -13,6 +13,7 @@ public enum SettingsKey: String, CaseIterable, Sendable {
     case clipSendImages = "clip.send_images"
     case clipBlockSensitive = "clip.block_sensitive"
     case clipAutoClearSeconds = "clip.auto_clear_s"
+    case clipSeenChangeCount = "clip.seen_change_count"
     case smsNotify = "sms.notify"
     case smsPreview = "sms.preview"
     case callNotify = "call.notify"
@@ -114,6 +115,13 @@ public final class AppSettings: @unchecked Sendable {
             let value = Self.autoClearChoices.contains(newValue) ? newValue : 60
             defaults.set(value, forKey: SettingsKey.clipAutoClearSeconds.rawValue)
         }
+    }
+
+    /// `clip.seen_change_count` (iOS): the `UIPasteboard.changeCount` already seen, so sending is only suggested for
+    /// new content (CLIP-04 step 2).
+    public var seenChangeCount: Int {
+        get { defaults.integer(forKey: SettingsKey.clipSeenChangeCount.rawValue) }
+        set { defaults.set(newValue, forKey: SettingsKey.clipSeenChangeCount.rawValue) }
     }
 
     /// `setup.started_at` / `setup.completed_at` as Unix milliseconds (0.9.5 `timestamp`).

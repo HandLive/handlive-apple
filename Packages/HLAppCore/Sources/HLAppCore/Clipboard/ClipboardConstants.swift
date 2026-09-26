@@ -20,6 +20,8 @@ public enum ClipboardConstants {
     public static let staleAfter: TimeInterval = 120
     /// `CLIP_TRANSFER_IDLE_TIMEOUT` (CLIP-03 E7).
     public static let transferIdleTimeout: Duration = .seconds(30)
+    /// iPhone/iPad: a push this soon after the session started does not overwrite unsent local content (CLIP-04 E2).
+    public static let unsentLocalWindow: TimeInterval = 5
     /// Progress is shown for images larger than this (CLIP-03 field 2).
     public static let progressThreshold = 1_048_576
     /// De-duplication by `clip_id`: the latest 256 for 10 minutes (QC6).

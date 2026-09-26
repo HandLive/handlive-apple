@@ -76,6 +76,8 @@ extension ClipboardNotice {
         case .imageSendFailed: L10n.Error.clipImageSendFailed
         case .imageNoSpace: L10n.Error.clipImageNoSpace
         case .pasteAccessNeeded: L10n.Settings.pastePermissionHint
+        case .sendFailed: L10n.Error.clipSendFailed // iPhone/iPad only
+        case .unsupportedContent: L10n.Error.clipUnsupportedMime // iPhone/iPad only
         }
     }
 }
