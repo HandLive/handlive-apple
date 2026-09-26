@@ -72,6 +72,11 @@ public struct ConversationView: View {
                     Text(L10n.Error.smsHistoryFailed)
                     Button(L10n.Common.retry) { model.retryHistory() }
                 }
+            case .unavailable(.permissionMissing)?: // SMS-03 E5: the reason as in SMS-01 E2
+                HStack(spacing: HLSpacing.space8) {
+                    Text(L10n.Pairing.reasonMissingSmsPermission)
+                    SmsInstructionsButton()
+                }
             case .unavailable?, .ready?, nil: EmptyView()
             }
         }

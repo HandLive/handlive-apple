@@ -18,7 +18,11 @@ public struct ThreadListView: View {
     public var body: some View {
         List(selection: $model.selection) {
             if let banner = SmsDisplay.syncBanner(model.syncStatus) {
-                Text(banner).font(.footnote).foregroundStyle(Color.secondary)
+                VStack(alignment: .leading, spacing: HLSpacing.space4) {
+                    Text(banner).font(.footnote).foregroundStyle(Color.secondary)
+                    // SMS-01 field 7, E2: the missing permission comes with its instructions.
+                    if model.syncStatus == .failed(.permissionMissing) { SmsInstructionsButton().font(.footnote) }
+                }
             }
             if model.threads.isEmpty {
                 emptyState
