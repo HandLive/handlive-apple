@@ -55,11 +55,9 @@ struct RelayFrameVectorTests {
 
     @Test("Frames and wrappers the relay refuses are refused here too")
     func invalid() throws {
-        for vector in file.invalidVectors {
-            if vector["kind"] as? String == "frame" {
-                let bytes = try Self.hex(try vector.string("frame"))
-                #expect(throws: ProtocolError.self, "\(vector.label)") { try HRFrame.parse(bytes) }
-            }
+        for vector in file.invalidVectors where vector["kind"] as? String == "frame" {
+            let bytes = try Self.hex(try vector.string("frame"))
+            #expect(throws: ProtocolError.self, "\(vector.label)") { try HRFrame.parse(bytes) }
         }
         let envelope = Envelope(type: .sms, id: HLUUID.v7(), ts: 1, payload: "AAAA")
         #expect(throws: ProtocolError.invalidField("to")) { try RelayFrame.forward(to: "phone", envelope: envelope) }
