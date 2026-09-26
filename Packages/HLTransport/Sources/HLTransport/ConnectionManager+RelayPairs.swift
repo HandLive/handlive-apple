@@ -5,13 +5,14 @@ extension ConnectionManager {
     // MARK: - The pair on the relay (PAIR-01 API 8, PAIR-02 API 1, CONN-03 E4)
 
     /// PAIR-01 API 8: success → `relay_registered = 1`; a failure keeps it at 0 for the next connection (E8). The API
-    /// already registered this device again after a first 404; a second 404 (the phone is unknown to the relay) waits
-    /// 24 h (logic 6).
+    /// already registered this device again after a first 404; a second 404 (the phone is unknown to the relay) or any
+    /// other 4xx waits 24 h (logic 6); a network or server error tries again at the next connection.
     func registerPair(_ registration: RelayPairRegistration, _ relay: RelayServices) async {
         if let until = pairRegistrationPausedUntil[registration.pairId], ContinuousClock.now < until { return }
         do {
             try await relay.api.registerPair(registration)
-        } catch RelayAPIError.http(404, _, _) {
+        } catch RelayAPIError.http(let status, _, _) where (400..<500).contains(status) {
+            // The second 404, or any other 4xx: no new call for 24 h.
             pairRegistrationPausedUntil[registration.pairId] = .now.advanced(by: configuration.pairRegistrationPause)
             return
         } catch {

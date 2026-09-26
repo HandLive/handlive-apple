@@ -100,6 +100,23 @@ struct ConnectionManagerRelayTests {
         await setup.manager.stop()
     }
 
+    @Test("Any 4xx on POST /v1/pairs waits 24 h; a server error tries again at the next connection")
+    func pairRegistrationRefusals() async throws {
+        let registration = RelayPairRegistration(pairId: SessionHarness.pair().pairId, deviceA: "a", deviceB: "b",
+                                                 createdAt: 1, attestation: "x", sigA: "y", sigB: "z")
+        let setup = await RelayHarness.make(phoneOnline: true, registration: registration)
+        let relay = RelayServices(api: setup.api, sockets: setup.relay)
+        setup.api.pairRegistrationFailure = .http(status: 503, code: .unrecognized, retryAfter: nil)
+        await setup.manager.registerPair(registration, relay)
+        await setup.manager.registerPair(registration, relay)
+        #expect(setup.api.pairRegistrationTries == 2) // not paused by a server error
+        setup.api.pairRegistrationFailure = .http(status: 409, code: .unrecognized, retryAfter: nil)
+        await setup.manager.registerPair(registration, relay)
+        await setup.manager.registerPair(registration, relay)
+        #expect(setup.api.pairRegistrationTries == 3) // paused for 24 h after the 409
+        await setup.manager.stop()
+    }
+
     @Test("Two 404s on POST /v1/pairs wait 24 h; GET /v1/pairs listing the pair marks it registered (PAIR-02 logic 3)")
     func pairRegistrationWait() async throws {
         let registration = RelayPairRegistration(pairId: SessionHarness.pair().pairId, deviceA: "a", deviceB: "b",
