@@ -37,6 +37,7 @@ public struct ThreadRow: View {
     }
 
     private let model: Model
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     public init(_ model: Model) {
         self.model = model
@@ -53,28 +54,59 @@ public struct ThreadRow: View {
     #endif
 
     public var body: some View {
-        HStack(alignment: .top, spacing: HLSpacing.space8) {
-            Circle()
-                .fill(model.isUnread ? Color.hl(.unread) : Color.clear)
-                .frame(width: 10, height: 10)
-                .padding(.top, avatarSide / 2 - 5)
-            ThreadAvatar(avatar: model.avatar, side: avatarSide)
-            VStack(alignment: .leading, spacing: 2) {
-                HStack(alignment: .firstTextBaseline) {
-                    Text(model.title)
-                        .hlTextStyle(titleStyle)
-                        .fontWeight(model.isUnread ? .bold : .semibold)
-                        .lineLimit(1)
-                        .truncationMode(.tail)
-                    Spacer(minLength: HLSpacing.space4)
-                    Text(model.time).hlTextStyle(detailStyle).foregroundStyle(Color.secondary)
-                }
-                excerpt
-            }
+        Group {
+            if typeSize.isAccessibilitySize { stacked } else { row }
         }
         .padding(.vertical, HLSpacing.space4)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(Text(accessibilityText))
+    }
+
+    private var row: some View {
+        HStack(alignment: .top, spacing: HLSpacing.space8) {
+            unreadDot.padding(.top, avatarSide / 2 - 5)
+            ThreadAvatar(avatar: model.avatar, side: avatarSide)
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(alignment: .firstTextBaseline) {
+                    title
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                    Spacer(minLength: HLSpacing.space4)
+                    time
+                }
+                excerpt
+            }
+        }
+    }
+
+    /// Accessibility text sizes (ThreadRow README, 02-ios-ipados.md): the parts stack so the name and time wrap
+    /// instead of being cut.
+    private var stacked: some View {
+        VStack(alignment: .leading, spacing: HLSpacing.space4) {
+            HStack(spacing: HLSpacing.space8) {
+                unreadDot
+                ThreadAvatar(avatar: model.avatar, side: avatarSide)
+            }
+            title.fixedSize(horizontal: false, vertical: true)
+            time
+            excerpt
+        }
+    }
+
+    private var unreadDot: some View {
+        Circle()
+            .fill(model.isUnread ? Color.hl(.unread) : Color.clear)
+            .frame(width: 10, height: 10)
+    }
+
+    private var title: some View {
+        Text(model.title)
+            .hlTextStyle(titleStyle)
+            .fontWeight(model.isUnread ? .bold : .semibold)
+    }
+
+    private var time: some View {
+        Text(model.time).hlTextStyle(detailStyle).foregroundStyle(Color.secondary)
     }
 
     @ViewBuilder
