@@ -41,13 +41,14 @@ enum SessionHarness {
         let clientCapabilitySeenByPhone: CapabilityData
     }
 
-    static func connect(_ configuration: SessionConfiguration = quick(), clientFirst: Bool = true) async throws -> Connected {
+    static func connect(_ configuration: SessionConfiguration = quick(), clientFirst: Bool = true,
+                        route: ConnectionRoute = .lan) async throws -> Connected {
         let pair = pair(clientFirst: clientFirst)
         let (client, phoneChannel) = InMemoryChannel.pair()
         let phone = FakePhone(channel: phoneChannel, pair: pair)
         async let accepted = phone.accept()
         let session = try await ControlSession.establish(over: client, pair: pair, localCapability: macCapability,
-                                                         route: .lan, configuration: configuration)
+                                                         route: route, configuration: configuration)
         let seen = try await accepted
         return Connected(session: session, phone: phone, client: client, phoneChannel: phoneChannel,
                          events: EventRecorder(session.events), clientCapabilitySeenByPhone: seen)

@@ -123,6 +123,34 @@ struct ControlSessionMessagingTests {
         }
     }
 
+    @Test("A relayed session always says session/bye before it ends: shutdown by default, once, never after the phone's")
+    func relayedEndings() async throws {
+        let quiet = try await SessionHarness.connect(route: .relay)
+        await quiet.session.close(bye: nil) // e.g. the relay switched off or the LAN took over
+        let (_, first) = try await quiet.phone.receiveJSON()
+        let firstReason = try first.decodeData(as: SessionByeData.self).reason
+        #expect(first.op == "bye" && firstReason == .shutdown)
+        #expect(await quiet.events.ended() == .local(.normal))
+
+        let revoked = try await SessionHarness.connect(route: .relay)
+        await revoked.session.close(bye: .revoked)
+        let (_, only) = try await revoked.phone.receiveJSON()
+        #expect(try only.decodeData(as: SessionByeData.self).reason == .revoked)
+        await #expect(throws: (any Error).self) { _ = try await revoked.phone.receiveJSON() }
+
+        let garbled = try await SessionHarness.connect(route: .relay)
+        try await garbled.phone.sendPlaintext(.clipboard, Data("{}".utf8), key: Data(repeating: 7, count: 32))
+        let (_, afterFailure) = try await garbled.phone.receiveJSON()
+        #expect(try afterFailure.decodeData(as: SessionByeData.self).reason == .shutdown) // instead of 4400
+        #expect(await garbled.events.ended() == .decryptFailed)
+
+        let byPhone = try await SessionHarness.connect(route: .relay)
+        try await byPhone.phone.send(.session, op: "bye", data: SessionByeData(reason: .replaced))
+        #expect(await byPhone.events.ended() == .peerBye(.replaced)) // counts as 4409: no reconnect
+        await #expect(throws: (any Error).self) { _ = try await byPhone.phone.receiveJSON() }
+        #expect(ControlSession.relayBye(for: .peerClosed(nil)) == nil && ControlSession.relayBye(for: .rekeyFailed) == .shutdown)
+    }
+
     @Test("close(bye: .shutdown) sends session/bye then closes 1000")
     func shutdown() async throws {
         let connected = try await SessionHarness.connect()

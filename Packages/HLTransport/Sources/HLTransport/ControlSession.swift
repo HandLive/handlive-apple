@@ -20,6 +20,8 @@ public actor ControlSession {
     var pendingAcks: [String: PendingAck] = [:]
     var recentIDs: RecentEnvelopeIDs
     var ending: SessionEnd?
+    /// `session/bye` already went out (relayed sessions always say it before they end, CONN-02 API 4).
+    var byeSent = false
     var loops: [Task<Void, Never>] = []
     var outgoingRekey: OutgoingRekey?
     /// Round trip of the last end-to-end `ping/ping` over the relay (diagnostics, CONN-02 API 2).
@@ -97,10 +99,25 @@ public actor ControlSession {
     /// CONN-02 step 8, PAIR-03 API 2), then close 1000.
     public func close(bye reason: SessionByeData.Reason?) async {
         guard ending == nil else { return }
-        if let reason, cipher != nil {
-            try? await send(.session, op: SessionOp.bye.rawValue, data: SessionByeData(reason: reason))
-        }
+        if let reason { await sendBye(reason) }
         await end(.local(.normal), closing: .normal)
+    }
+
+    /// `session/bye` once, while the keys still work.
+    func sendBye(_ reason: SessionByeData.Reason) async {
+        guard !byeSent, cipher != nil else { return }
+        byeSent = true
+        try? await send(.session, op: SessionOp.bye.rawValue, data: SessionByeData(reason: reason))
+    }
+
+    /// The `session/bye` a relayed session sends when it ends for `reason`: no close code reaches the phone through the
+    /// relay, so every end from this side says `shutdown` (idle, failed rekey, 4400, a lost E2E ping, relay off…);
+    /// nothing is said when the phone ended it or the channel is already gone (CONN-02 API 4, CONN-03 API 6 logic 7).
+    static func relayBye(for reason: SessionEnd) -> SessionByeData.Reason? {
+        switch reason {
+        case .peerClosed, .peerBye: nil
+        case .pongTimeout, .decryptFailed, .rekeyFailed, .local: .shutdown
+        }
     }
 
     /// Pings at once with a short deadline; a dead link ends the session. Used after the default network changes,
@@ -139,6 +156,10 @@ public actor ControlSession {
     /// Ends the session once: fails pending requests, stops the loops, closes the channel when asked, reports why.
     func end(_ reason: SessionEnd, closing code: CloseCode?) async {
         guard ending == nil else { return }
+        if route == .relay, let bye = Self.relayBye(for: reason), !byeSent {
+            await sendBye(bye) // before `ending`: sealing stops once the session is over
+            guard ending == nil else { return }
+        }
         ending = reason
         for pending in pendingAcks.values { pending.resolve(.failure(SessionError.ended)) }
         pendingAcks.removeAll()
