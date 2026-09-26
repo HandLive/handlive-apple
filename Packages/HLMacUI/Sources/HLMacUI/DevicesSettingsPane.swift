@@ -45,6 +45,7 @@ struct DevicesSettingsPane: View {
             }
         }
         .formStyle(.grouped)
+        .onAppear { model.refreshPairOnRelay() }
         .sheet(isPresented: $pairing) {
             PairingSheet(model: model, onPaired: { name in
                 pairing = false

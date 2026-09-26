@@ -46,6 +46,8 @@ extension AppModel {
             updatePairRecord { $0.relayRegistered = true }
         case .relayPairMissing(let pairId) where pairId == pairedDevice?.pairId:
             updatePairRecord { $0.relayRegistered = false }
+            let phone = activePhone() // carries the registration again, retried when a network is there
+            Task { await manager?.setPhone(phone) }
         case .relayDeviceRevoked:
             settings.relayEnabled = false
             relayEnabled = false
@@ -53,6 +55,11 @@ extension AppModel {
         default:
             break
         }
+    }
+
+    /// PAIR-02 step 4: what the relay says about the pair, when the device screens open (at most once a minute).
+    public func refreshPairOnRelay() {
+        Task { await manager?.refreshPairOnRelay() }
     }
 
     func updatePairRecord(_ change: (inout PairedDeviceRecord) -> Void) {
