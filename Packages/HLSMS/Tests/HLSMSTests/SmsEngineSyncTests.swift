@@ -45,7 +45,7 @@ struct SmsEngineSyncTests {
         #expect(requests == [SmsSyncRequest(cursor: nil), SmsSyncRequest(cursor: nil, pageToken: "p1")])
         #expect(try await store.cursor(pairId: pairId) == "c9")
         #expect(log.events.contains(.syncStatus(.syncing(downloaded: 1, firstSync: true))))
-        #expect(log.events.contains(.badge(1)))
+        #expect(await log.wait { $0 == .badge(1) } != nil) // published after `done`, once the count is read
         #expect(log.events.contains(.removeNotifications(pairId: pairId, threadId: 1, upToTs: 19)))
         #expect(log.events.contains(.removeGenericNotifications))
         #expect(!log.events.contains { if case .notify = $0 { true } else { false } }) // no notifications from sync
