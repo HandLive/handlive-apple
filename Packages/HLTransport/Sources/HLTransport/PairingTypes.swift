@@ -30,7 +30,8 @@ public struct PairingIdentity: Sendable {
 
 /// What authenticates the exchange: the QR code's `pairing_secret`, or the PIN shown on this device (A1–A5).
 public enum PairingCredential: Sendable, Equatable {
-    case qr(secret: Data)
+    /// With a rendezvous joined on the relay, the QR code carries its `rv` and the phone may pair through it (P2).
+    case qr(secret: Data, rendezvous: PairingRendezvous? = nil)
     /// `attemptsLeft` counts this attempt: 3 for a new PIN; a wrong PIN leaves one fewer (E7).
     case pin(String, attemptsLeft: Int)
 

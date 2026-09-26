@@ -66,7 +66,7 @@ public struct PairingExchange: Sendable {
         guard let fields = OfferFields(offer) else { throw PairingRefusal.authFailed(.malformed) }
         let secret: Data
         switch credential {
-        case .qr(let pairingSecret):
+        case .qr(let pairingSecret, _):
             secret = pairingSecret
         case .pin(let pin, _):
             // Argon2id, 64 MiB: off the caller's executor.

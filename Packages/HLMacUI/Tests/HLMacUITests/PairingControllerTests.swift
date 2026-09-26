@@ -89,7 +89,7 @@ struct PairingControllerTests {
         pairing.start()
         #expect(await eventually { search.all.count == 1 })
         let identity = try #require(model.pairingIdentity())
-        guard case .qr(let secret) = try #require(search.all.first).credential else {
+        guard case .qr(let secret, _) = try #require(search.all.first).credential else {
             Issue.record("expected a QR credential")
             return
         }
