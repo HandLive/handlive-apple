@@ -11,7 +11,6 @@ import UIKit
 struct SettingsTabView: View {
     @ObservedObject var model: IOSAppModel
     let pair: () -> Void
-    @State private var confirmingUnpair = false
     @State private var unpairResult: String?
 
     var body: some View {
@@ -34,21 +33,25 @@ struct SettingsTabView: View {
         .onAppear { model.refreshPairOnRelay() }
     }
 
+    /// The phone's `DeviceRow`, which opens its details (PAIR-02); "Unpair" lives there (DeviceRow README).
     private var phoneSection: some View {
         GroupedSection(L10n.Settings.phone) {
             if let device = model.pairedDevice {
-                VStack(alignment: .leading, spacing: HLSpacing.space4) {
-                    Text(verbatim: device.peerName).font(.headline)
-                    StatusIndicator(model.connectionStatus, deviceName: device.peerName).font(.subheadline)
-                }
-                GroupedActionRow(L10n.Pairing.unpair, role: .destructive) { confirmingUnpair = true }
-                    .confirmationDialog(L10n.Pairing.unpairConfirmTitle(deviceName: device.peerName),
-                                        isPresented: $confirmingUnpair, titleVisibility: .visible) {
-                        Button(L10n.Pairing.unpair, role: .destructive) { unpair(device.peerName) }
-                        Button(L10n.Common.cancel, role: .cancel) {}
-                    } message: {
-                        Text(L10n.Pairing.unpairConfirmMessage(deviceName: model.device.name))
+                NavigationLink {
+                    PhoneDetailsView(model: model, device: device) { result in unpairResult = result }
+                } label: {
+                    HStack(spacing: HLSpacing.space12) {
+                        Image(systemName: "candybarphone")
+                            .font(.title2)
+                            .frame(width: HLSize.avatar, height: HLSize.avatar)
+                            .background(Circle().fill(HLColorToken.tertiarySystemFill.color))
+                            .accessibilityHidden(true)
+                        VStack(alignment: .leading, spacing: HLSpacing.space4) {
+                            Text(verbatim: device.peerName).font(.headline).lineLimit(1).truncationMode(.tail)
+                            StatusIndicator(model.connectionStatus, deviceName: device.peerName).font(.subheadline)
+                        }
                     }
+                }
             } else {
                 GroupedActionRow(L10n.Pairing.addPhone, action: pair)
             }
@@ -99,12 +102,6 @@ struct SettingsTabView: View {
         }
     }
 
-    private func unpair(_ name: String) {
-        Task {
-            let result = await model.unpair()
-            unpairResult = result == .done ? L10n.Pairing.unpaired : L10n.Pairing.unpairedPending(deviceName: name)
-        }
-    }
 }
 
 /// Messages (SET-02 fields 7–9 and 25; SMS-01 fields 4–6 and 8): the switches, "Resync All SMS" with its
