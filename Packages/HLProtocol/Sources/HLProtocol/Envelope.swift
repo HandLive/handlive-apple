@@ -50,6 +50,11 @@ public struct Envelope: Codable, Equatable, Sendable {
         guard let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             throw ProtocolError.invalidJSON
         }
+        return try parse(object: object)
+    }
+
+    /// Same checks on an already parsed JSON object (the `env` of a relay frame, 0.4.3).
+    static func parse(object: [String: Any]) throws -> Envelope {
         try checkKeys(object)
         guard let version = JSONNumber.integer(object["v"]) else { throw ProtocolError.invalidField("v") }
         guard version == Int64(currentVersion) else { throw ProtocolError.unsupportedVersion(Int(clamping: version)) }
