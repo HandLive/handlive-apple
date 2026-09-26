@@ -60,6 +60,25 @@ struct ClipboardIOSTests {
         #expect(harness.pasteboard.writes.map(\.content) == [.text("mới")])
     }
 
+    @Test("The last received clip is kept for the card and can be copied again as HandLive's own write")
+    func lastReceived() async throws {
+        let harness = ClipboardHarness(platform: .ios)
+        var shown: [ReceivedClip] = []
+        harness.engine.onReceived = { shown.append($0) }
+        harness.advance(6) // past the first 5 s: the clipboard's first changeCount counts as unsent content (E2)
+        let request = harness.receive(ClipboardHarness.textPush("mã 123456", sensitive: true))
+        #expect(await harness.reply(to: request)?.clipboardData?.status == .applied)
+        let clip = try #require(harness.engine.lastReceived)
+        #expect(clip.content == .text("mã 123456") && clip.sensitive && clip.deviceName == "Pixel của Lan")
+        #expect(shown == [clip])
+        harness.pasteboard.copy(text: "khác")
+        #expect(harness.engine.copyLastReceivedAgain())
+        #expect(harness.pasteboard.writes.count == 2 && harness.pasteboard.writes.last?.sensitive == true)
+        harness.engine.localChangeSeen()
+        #expect(!harness.engine.unsentLocalContent) // the copy again is HandLive's own write
+        #expect(!LocalDevice.current(name: "iPhone", platform: .ios).model.isEmpty)
+    }
+
     @Test("E9: no ack in time says Couldn't send and never replays")
     func noAck() async throws {
         let harness = ClipboardHarness(platform: .ios)
