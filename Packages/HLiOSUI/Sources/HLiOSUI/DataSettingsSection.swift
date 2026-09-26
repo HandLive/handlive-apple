@@ -17,7 +17,7 @@ struct DataSettingsSection: View {
         GroupedSection(L10n.Settings.data) {
             GroupedActionRow(L10n.Settings.removeFromServer) { confirmingRemove = true }
                 .disabled(!model.canRemoveFromServer || working)
-                .confirmationDialog(L10n.Settings.removeFromServer, isPresented: $confirmingRemove,
+                .confirmationDialog(L10n.Settings.removeFromServerTitle, isPresented: $confirmingRemove,
                                     titleVisibility: .visible) {
                     Button(L10n.Settings.removeFromServerConfirm, role: .destructive) { removeFromServer() }
                     Button(L10n.Common.cancel, role: .cancel) {}
@@ -26,7 +26,7 @@ struct DataSettingsSection: View {
                 }
             GroupedActionRow(L10n.Settings.deleteAllData, role: .destructive) { confirmingDelete = true }
                 .disabled(working)
-                .confirmationDialog(L10n.Settings.deleteAllData, isPresented: $confirmingDelete,
+                .confirmationDialog(L10n.Settings.deleteAllDataTitle, isPresented: $confirmingDelete,
                                     titleVisibility: .visible) {
                     Button(L10n.Settings.deleteAllConfirm, role: .destructive) { deleteAll(evenIfOffline: false) }
                     Button(L10n.Common.cancel, role: .cancel) {}
