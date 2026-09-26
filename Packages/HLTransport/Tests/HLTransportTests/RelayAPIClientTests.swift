@@ -189,6 +189,32 @@ struct RelayAPIClientTests {
         }
     }
 
+    @Test("PAIR-01 API 8 logic 6: a 404 registers this device again and retries once; a second 404 is reported")
+    func registerPairAfterNotFound() async throws {
+        let registration = RelayPairRegistration(pairId: "3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d",
+                                                 deviceA: "8c7d6e5f-4a3b-8c2d-9e1f-0a1b2c3d4e5f",
+                                                 deviceB: "5b1f8c2e-9a4d-8e6f-a1b2-c3d4e5f60718", createdAt: 1,
+                                                 attestation: "YQ", sigA: "Yg", sigB: "Yw")
+        let posts = Counter()
+        let once = ScriptedRelayHTTP { request in
+            if request.url?.path == "/v1/pairs", request.httpMethod == "POST" {
+                return posts.next() < 1 ? ScriptedRelayHTTP.error(404, "DEVICE_NOT_FOUND")
+                    : ScriptedRelayHTTP.json(201, #"{"pair_id":"3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d","created_at":1}"#)
+            }
+            return Self.standard(request)
+        }
+        try await Self.client(once).registerPair(registration)
+        #expect(once.paths.filter { !$0.contains("/auth/") }
+            == ["POST /v1/pairs", "POST /v1/devices", "POST /v1/pairs"])
+        let never = ScriptedRelayHTTP { request in
+            request.url?.path == "/v1/pairs" ? ScriptedRelayHTTP.error(404, "DEVICE_NOT_FOUND") : Self.standard(request)
+        }
+        await #expect(throws: RelayAPIError.http(status: 404, code: .deviceNotFound, retryAfter: nil)) {
+            try await Self.client(never).registerPair(registration)
+        }
+        #expect(never.paths.filter { $0 == "POST /v1/pairs" }.count == 2)
+    }
+
     @Test("PAIR-03 API 3: a pair the relay does not know counts as revoked")
     func revokeUnknownPair() async throws {
         let http = ScriptedRelayHTTP { request in

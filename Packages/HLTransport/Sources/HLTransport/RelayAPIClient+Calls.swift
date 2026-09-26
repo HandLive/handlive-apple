@@ -4,8 +4,15 @@ import HLProtocol
 extension RelayAPIClient {
     // MARK: - Endpoints (0.7.4)
 
+    /// PAIR-01 API 8 logic 6: a 404 `DEVICE_NOT_FOUND` (this device or the phone unknown to the relay) registers this
+    /// device again once and retries; a second 404 is thrown so the caller waits 24 h.
     public func registerPair(_ registration: RelayPairRegistration) async throws {
-        _ = try await call("POST", "pairs", body: registration, authorized: true, as: RelayPairRegistered.self)
+        do {
+            _ = try await call("POST", "pairs", body: registration, authorized: true, as: RelayPairRegistered.self)
+        } catch RelayAPIError.http(404, _, _) {
+            try await registerDevice()
+            _ = try await call("POST", "pairs", body: registration, authorized: true, as: RelayPairRegistered.self)
+        }
     }
 
     public func pairs() async throws -> RelayPairList {
