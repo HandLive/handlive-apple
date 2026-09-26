@@ -164,14 +164,18 @@ final class ClipboardHarness {
     private(set) var progress: [ClipboardProgress.Direction: ClipboardProgress] = [:]
     private(set) var progressSeen = false
     var engine: ClipboardEngine!
+    let platform: ClipboardPlatform
+    private(set) var unsentBanner: [Bool] = []
     static let macId = "5b1f8c2e-9a4d-8e6f-a1b2-c3d4e5f60718"
     static let phoneId = "8c7d6e5f-4a3b-8c2d-9e1f-0a1b2c3d4e5f"
 
-    init(connected: Bool = true, feature: ClipboardFeature? = ClipboardFeature(
+    init(connected: Bool = true, platform: ClipboardPlatform = .mac, feature: ClipboardFeature? = ClipboardFeature(
         enabled: true, autoSend: true, maxTextBytes: 1_048_576, maxImageBytes: 10_485_760,
         mimes: [ClipMime.text, ClipMime.png, ClipMime.jpeg])) {
         let name = "app.handlive.tests.\(UUID().uuidString)"
         settings = AppSettings(defaults: UserDefaults(suiteName: name)!)
+        self.platform = platform
+        readingAllowed = platform == .mac
         engine = makeEngine()
         if connected { connect(feature: feature) }
     }
@@ -179,13 +183,14 @@ final class ClipboardHarness {
     func makeEngine() -> ClipboardEngine {
         // Weak: timers of the engine (auto-clear, idle transfer) may fire after the test ended.
         let engine = ClipboardEngine(access: pasteboard, settings: settings, deviceId: Self.macId,
-                                     deviceName: "MacBook của Lan",
+                                     deviceName: "MacBook của Lan", platform: platform,
                                      readingAllowed: { [weak self] in self?.readingAllowed ?? false },
                                      now: { [weak self] in self?.clock ?? Date() },
                                      temporaryDirectory: FileManager.default.temporaryDirectory
                                          .appendingPathComponent("handlive-clip-tests-\(UUID().uuidString)"))
         engine.onNotice = { [weak self] in self?.notices.append($0) }
         engine.onAlert = { [weak self] in self?.alerts.append($0) }
+        engine.onUnsentLocalContent = { [weak self] in self?.unsentBanner.append($0) }
         engine.onProgress = { [weak self] direction, value in
             self?.progress[direction] = value
             if value != nil { self?.progressSeen = true }
@@ -240,11 +245,5 @@ final class ClipboardHarness {
                          sensitive: Bool = false) -> ClipboardPushData {
         ClipboardPushData(clipId: clipId, kind: .text, mime: ClipMime.text, text: text, sensitive: sensitive,
                           originTs: originTs, source: .auto, originDeviceId: phoneId)
-    }
-}
-
-extension Ack {
-    var clipboardData: ClipboardAckData? {
-        (ok ? data : error?.details).flatMap { try? HLJSON.convert($0, to: ClipboardAckData.self) }
     }
 }
