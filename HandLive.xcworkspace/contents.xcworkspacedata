@@ -26,6 +26,9 @@
       location = "group:Packages/HLSMS">
    </FileRef>
    <FileRef
+      location = "group:Packages/HLSMSUI">
+   </FileRef>
+   <FileRef
       location = "group:Packages/HLMacUI">
    </FileRef>
 </Workspace>
