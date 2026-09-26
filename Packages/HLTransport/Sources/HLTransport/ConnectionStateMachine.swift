@@ -60,8 +60,12 @@ public enum ConnectionEvent: Equatable, Hashable, Sendable {
     case relayConnectionLost
     /// `presence` online.
     case peerOnline
+    /// Over the relay, the phone left: relay `error NOT_CONNECTED` or its channel closed while the relay stays up
+    /// (CONN-03 E8).
+    case peerOffline
     case connectionLost
-    /// Session goes through the relay and the phone shows up on the LAN (upgrade).
+    /// Session goes through the relay and the phone shows up on the LAN (upgrade); while waiting for the phone on the
+    /// relay, the phone shows up on the LAN.
     case lanAvailable
     case backoffElapsed
     case networkChanged
@@ -104,6 +108,8 @@ public struct ConnectionStateMachine: Sendable {
         case (.connectingRelay, .relayFailed): return .backoff
         case (.connectingRelay, .peerOnline), (.waitingPeer, .peerOnline): return .handshaking(.relay)
         case (.waitingPeer, .relayConnectionLost): return .backoff
+        case (.waitingPeer, .lanAvailable): return .discovering
+        case (.connected(.relay), .peerOffline), (.handshaking(.relay), .peerOffline): return .waitingPeer
         case (.handshaking(let route), .handshakeSucceeded): return .connected(route)
         case (.handshaking, .handshakeFailed): return .backoff
         case (.connected, .connectionLost): return .backoff
