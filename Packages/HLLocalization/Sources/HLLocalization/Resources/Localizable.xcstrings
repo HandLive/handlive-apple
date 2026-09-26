@@ -920,7 +920,7 @@
       }
     },
     "error.relay_pin_mismatch" : {
-      "comment" : "The relay certificate does not match the pinned keys; nothing was sent (CONN-03 E7, field 4)",
+      "comment" : "The relay certificate does not match the pinned keys; nothing was sent (CONN-03 E7, field 4); Android shows it under Internet Connection (SET-02 field 21)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
