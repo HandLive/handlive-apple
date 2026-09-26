@@ -64,6 +64,22 @@ struct SmsDisplayTests {
             == L10n.A11y.smsBubbleReceived(sender: PhoneNumberDisplay.format("+84900000123"), time: time))
     }
 
+    @Test("The phone's SMS problem: off there, or READ_SMS/SEND_SMS missing with instructions; none when SMS works")
+    func phoneProblem() {
+        func capability(sms: Bool, missing: [String]) -> CapabilityData {
+            CapabilityData(appVersion: "1.0.0 (100)", platform: .android, osVersion: "15", model: "Pixel 8",
+                           features: Features(sms: SmsFeature(enabled: sms, canSend: true)), permissionsMissing: missing)
+        }
+        #expect(SmsPhoneProblem.of(nil, phoneName: "Pixel") == nil)
+        #expect(SmsPhoneProblem.of(capability(sms: true, missing: ["READ_CONTACTS"]), phoneName: "Pixel") == nil)
+        let off = SmsPhoneProblem.of(capability(sms: false, missing: []), phoneName: "Pixel của Lan")
+        #expect(off == .offOnPhone(name: "Pixel của Lan") && off?.hasInstructions == false)
+        #expect(off?.text == L10n.Pairing.reasonOffOnDevice(deviceName: "Pixel của Lan"))
+        let missing = SmsPhoneProblem.of(capability(sms: true, missing: ["SEND_SMS"]), phoneName: "Pixel")
+        #expect(missing == .missingPermission && missing?.hasInstructions == true)
+        #expect(missing?.text == L10n.Pairing.reasonMissingSmsPermission)
+    }
+
     @Test("List time: today's time, a day marker for yesterday, the date otherwise")
     func times() {
         let now = Date(timeIntervalSince1970: 1_727_150_000)
