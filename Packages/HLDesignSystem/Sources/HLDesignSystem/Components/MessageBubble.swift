@@ -19,7 +19,7 @@ public struct MessageBubble: View {
         public var status: Status?
         /// Time and SIM under the last message of a cluster ("2:05 PM · SIM 2"); `nil` elsewhere.
         public var footnote: String?
-        /// Sender, time and status for VoiceOver (SMS-03 special requirements).
+        /// "{sender}, {time}" or "You, {time}, {status}" for VoiceOver; the text is the value (SMS-03 special requirements).
         public var accessibilityLabel: String
 
         public init(text: String, isIncoming: Bool, status: Status? = nil, footnote: String? = nil,
@@ -68,6 +68,7 @@ public struct MessageBubble: View {
             }
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(Text(model.accessibilityLabel))
+            .accessibilityValue(Text(model.text))
             footer
         }
     }
