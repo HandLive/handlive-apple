@@ -3,12 +3,13 @@ import HLLocalization
 import SwiftUI
 
 /// The app's own windows: the fixed-size welcome window (SET-03, `Onboarding`), which also hosts the pairing sheet
-/// after setup (PAIR-01 step 1), and the way to the `Settings` scene from code.
+/// after setup (PAIR-01 step 1), the Messages window, and the way to the `Settings` scene from code.
 @MainActor
 public final class WindowPresenter {
     private let model: AppModel
     private var welcomeWindow: NSWindow?
     private var flow: OnboardingFlow?
+    private var messagesWindow: MessagesWindowController?
 
     public init(model: AppModel) {
         self.model = model
@@ -44,6 +45,19 @@ public final class WindowPresenter {
     /// Settings › Devices and the rest (`Settings` scene).
     public func showSettings() {
         SettingsOpener.open()
+    }
+
+    /// The Messages window (SMS-03 step 1); without the SMS database (SMS-01 E7) there is nothing to show.
+    public func showMessages() {
+        guard let messages = model.messages else { return }
+        if messagesWindow == nil { messagesWindow = MessagesWindowController(model: model, messages: messages) }
+        messagesWindow?.show()
+    }
+
+    /// "New Message" (File ⌘N, the Dock menu): the Messages window with the compose screen.
+    public func newMessage() {
+        showMessages()
+        model.messages?.startNewMessage()
     }
 
     private func hostingController() -> NSViewController {
