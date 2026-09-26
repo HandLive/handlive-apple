@@ -68,6 +68,18 @@ public enum PairingAuthDerivation {
         Argon2id.hash(password: Data(pin.utf8), salt: clientNonce + serverNonce, parameters: parameters)
     }
 
+    /// `pinKey` on a Dispatch worker thread: a 64 MiB memory-hard hash must not hold a thread of Swift's cooperative
+    /// pool, where it would stall every other task for its duration.
+    public static func pinKeyOffPool(pin: String, clientNonce: Data, serverNonce: Data,
+                                     parameters: Argon2id.Parameters = .pairingPIN) async -> Data {
+        await withCheckedContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                continuation.resume(returning: pinKey(pin: pin, clientNonce: clientNonce, serverNonce: serverNonce,
+                                                      parameters: parameters))
+            }
+        }
+    }
+
     /// `T_offer` = "HL1|offer|" ‖ `device_id` C ‖ `nonce_c` ‖ `ik_sig_pub` C ‖ `ik_dh_pub` C ‖ str(`name` C) ‖
     /// `device_id` S ‖ `nonce_s` ‖ `ik_sig_pub` S ‖ `ik_dh_pub` S ‖ `tls_sha256` ‖ str(`name` S).
     public static func offerTranscript(client: PairingParty, server: PairingParty, tlsSHA256: Data) throws -> Data {

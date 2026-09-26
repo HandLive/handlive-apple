@@ -69,11 +69,9 @@ public struct PairingExchange: Sendable {
         case .qr(let pairingSecret, _):
             secret = pairingSecret
         case .pin(let pin, _):
-            // Argon2id, 64 MiB: off the caller's executor.
-            secret = await Task.detached(priority: .userInitiated) { [pinParameters] in
-                PairingAuthDerivation.pinKey(pin: pin, clientNonce: clientNonce, serverNonce: fields.nonce,
-                                             parameters: pinParameters)
-            }.value
+            // Argon2id, 64 MiB: on a Dispatch worker, off the cooperative pool.
+            secret = await PairingAuthDerivation.pinKeyOffPool(pin: pin, clientNonce: clientNonce,
+                                                               serverNonce: fields.nonce, parameters: pinParameters)
         }
         let client = PairingParty(deviceId: identity.deviceId, nonce: clientNonce,
                                   signingPublicKey: identity.signingPublicKey, dhPublicKey: identity.dhPublicKey,
