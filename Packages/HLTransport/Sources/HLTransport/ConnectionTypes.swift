@@ -9,12 +9,21 @@ public struct PairedPhone: Sendable, Equatable {
     /// `last_host` / `last_port`: tried first, in parallel with mDNS (CONN-01 step 2).
     public var lastHost: String?
     public var lastPort: UInt16?
+    /// `features.relay.enabled` of the phone's last capability; `false` → never reach it through the relay (SET-02
+    /// API 1 logic 4). Unknown counts as on.
+    public var relayEnabled: Bool
+    /// Present while `relay_registered = 0`: the pair is registered with `POST /v1/pairs` before the relay is used
+    /// (CONN-03 step 3, PAIR-01 E8).
+    public var relayRegistration: RelayPairRegistration?
 
-    public init(pair: PairContext, certificateSHA256: Data, lastHost: String? = nil, lastPort: UInt16? = nil) {
+    public init(pair: PairContext, certificateSHA256: Data, lastHost: String? = nil, lastPort: UInt16? = nil,
+                relayEnabled: Bool = true, relayRegistration: RelayPairRegistration? = nil) {
         self.pair = pair
         self.certificateSHA256 = certificateSHA256
         self.lastHost = lastHost
         self.lastPort = lastPort
+        self.relayEnabled = relayEnabled
+        self.relayRegistration = relayRegistration
     }
 }
 
@@ -28,6 +37,11 @@ public enum LinkIssue: Sendable, Equatable {
     case updateThisApp
     /// Local network access denied: the phone cannot be found on the LAN.
     case localNetworkDenied
+    /// The relay's TLS chain carries none of the pinned keys: not used (CONN-03 E7).
+    case relayUntrusted
+    /// `410 DEVICE_REVOKED`: "This device was removed from the internet service"; the relay stays off until the user
+    /// turns it on again (CONN-03 E3).
+    case relayDeviceRemoved
 }
 
 /// What the UI shows (StatusIndicator, menu bar menu, CONN-02 fields 1–4).
@@ -48,8 +62,9 @@ public struct LinkStatus: Sendable, Equatable {
 /// Where the connected session goes, to store as `last_host`, `last_port`, `features_json` (CONN-01 step 10).
 public struct LinkDetails: Sendable, Equatable {
     public let route: ConnectionRoute
-    public let host: String
-    public let port: UInt16
+    /// Address of a LAN session (`last_host` / `last_port`); `nil` through the relay.
+    public let host: String?
+    public let port: UInt16?
     public let peerCapability: CapabilityData
 }
 
@@ -73,6 +88,13 @@ public enum LinkEvent: Sendable {
     /// The current session ended.
     case disconnected
     case pairRemoved(PairRemoval)
+    /// `POST /v1/pairs` succeeded: set `relay_registered = 1` (PAIR-01 API 8 logic 5).
+    case relayPairRegistered(pairId: String)
+    /// The relay no longer lists the pair although it was registered (the phone left the relay, C16): set
+    /// `relay_registered = 0` and keep the pair for the LAN (PAIR-02 API 1 logic 3).
+    case relayPairMissing(pairId: String)
+    /// `410 DEVICE_REVOKED`: turn `relay.enabled` off until the user turns it on again (CONN-03 E3).
+    case relayDeviceRevoked
 }
 
 /// Timings of the manager; defaults follow 0.10, tests shorten them.
@@ -84,8 +106,12 @@ public struct ConnectionConfiguration: Sendable {
     public var fastPathTimeout: Duration = .milliseconds(1500)
     /// Multiplies `RECONNECT_BACKOFF` and the AUTH_FAILED wait (tests use a small factor).
     public var delayScale = 1.0
-    /// Relay client (CONN-03) arrives in Phase 2; until then the grace ends in `Backoff`.
-    public var relayAvailable = false
+    /// Waiting for the relay's first `presence` of the pair after connecting (CONN-03 step 6).
+    public var presenceWait: Duration = .seconds(3)
+    /// A `wake` push for the same reason goes out at most this often (CONN-03 E5, CONN-04 step 5a).
+    public var wakeInterval: Duration = .seconds(300)
+    /// An old relay session keeps delivering what was in flight this long after the LAN took over (CONN-02 step 7).
+    public var upgradeGrace: Duration = .seconds(5)
     public var session = SessionConfiguration()
 
     public init() {}

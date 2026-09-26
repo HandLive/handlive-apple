@@ -8,8 +8,12 @@ enum ManagerSignal: Sendable, Equatable {
     case reconnectNow
     case sleep
     case wake
-    case sessionEnded(SessionEnd)
-    case pairRevoked
+    /// The session with this token ended; an older session's end is ignored.
+    case sessionEnded(SessionEnd, token: UInt64)
+    case pairRevoked(token: UInt64)
+    /// An event of the relay connection (presence, `pair_revoked`, errors, closed).
+    case relay(RelayLinkEvent)
+    case relaySettingChanged
 }
 
 /// Signals queued for the manager's loop, which waits for the next one with an optional timeout.

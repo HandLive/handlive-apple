@@ -13,8 +13,10 @@ extension AppModel {
             link = status
         case .connected(let session, let details):
             updatePairRecord { record in
-                record.lastHost = details.host
-                record.lastPort = details.port
+                if let host = details.host, let port = details.port { // a relay session keeps the LAN address
+                    record.lastHost = host
+                    record.lastPort = port
+                }
                 record.lastSeenAt = HLUUID.currentTimeMs()
                 record.peerCapability = details.peerCapability
             }
@@ -29,6 +31,23 @@ extension AppModel {
             if envelope.type == .clipboard { clipboard?.receive(envelope) }
         case .pairRemoved:
             forgetPair()
+        case .relayPairRegistered, .relayPairMissing, .relayDeviceRevoked:
+            handleRelayAccountEvent(event)
+        }
+    }
+
+    /// `relay_registered` follows the relay (PAIR-01 API 8, PAIR-02 API 1 logic 3); `410` turns the relay off (CONN-03 E3).
+    private func handleRelayAccountEvent(_ event: LinkEvent) {
+        switch event {
+        case .relayPairRegistered(let pairId) where pairId == pairedDevice?.pairId:
+            updatePairRecord { $0.relayRegistered = true }
+        case .relayPairMissing(let pairId) where pairId == pairedDevice?.pairId:
+            updatePairRecord { $0.relayRegistered = false }
+        case .relayDeviceRevoked:
+            settings.relayEnabled = false
+            relayEnabled = false
+        default:
+            break
         }
     }
 

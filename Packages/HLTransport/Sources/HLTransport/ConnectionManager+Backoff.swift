@@ -10,7 +10,12 @@ extension ConnectionManager {
         nextRetry = delay.map { Date().addingTimeInterval($0.timeInterval) }
         publishStatus()
         let deadline = delay.map { ContinuousClock.now.advanced(by: $0) }
-        signals.drain { if case .sessionEnded = $0 { false } else { $0 != .discovery && $0 != .network } }
+        signals.drain { signal in
+            switch signal {
+            case .sessionEnded, .pairRevoked, .relay, .discovery, .network: false
+            default: true
+            }
+        }
         while machine.state == .backoff && !Task.isCancelled {
             if sleeping {
                 if await signals.next(timeout: nil) == .wake { apply(.backoffElapsed) }
@@ -31,15 +36,14 @@ extension ConnectionManager {
         case .network?: return networkUp ? .networkChanged : .networkLost
         case .discovery?: return issue != .authFailed && freshCandidateVisible ? .backoffElapsed : nil
         case .phoneChanged?: return phone == nil ? .unpaired : nil
+        case .relaySettingChanged?: return relayUsable ? .backoffElapsed : nil
         default: return nil
         }
     }
 
     /// A phone with a current hint is visible (it just came back on the LAN).
     private var freshCandidateVisible: Bool {
-        guard let phone, let hints = try? DiscoveryHint.acceptedHints(prk: phone.pair.prk, nowMs: HLUUID.currentTimeMs())
-        else { return false }
-        return discovered.contains { $0.speaksProtocolV1 && DiscoveryHint.matches(txtValue: $0.hints, accepted: hints) }
+        !matchingCandidates().isEmpty
     }
 
     /// Chooses the wait of the next `Backoff` from the reaction (CONN-01 E3, E5; CONN-02).
