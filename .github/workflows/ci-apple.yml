@@ -102,7 +102,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.DERIVED_DATA }}
-          key: apple-dd-${{ runner.os }}-${{ hashFiles('apple/Packages/*/Package.swift', 'apple/project.yml') }}
+          key: apple-dd-${{ runner.os }}-${{ hashFiles('apple/Packages/*/Package.swift', 'apple/ThirdParty/*/Package.swift', 'apple/project.yml') }}
           restore-keys: apple-dd-${{ runner.os }}-
 
       # Chạy xcodebuild trong thư mục package (không cần .xcodeproj): scheme tự sinh của package
@@ -110,7 +110,7 @@ jobs:
       - name: xcodebuild test (every package)
         run: |
           set -euo pipefail
-          for pkg in HLProtocol HLCrypto HLTransport HLDesignSystem HLLocalization HLAppCore HLMacUI; do
+          for pkg in HLProtocol HLCrypto HLTransport HLDesignSystem HLLocalization HLAppCore HLSMS HLMacUI; do
             echo "::group::xcodebuild test $pkg"
             (cd "apple/Packages/$pkg" && xcodebuild test \
               -scheme "$pkg" \

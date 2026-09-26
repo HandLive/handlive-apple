@@ -25,6 +25,8 @@ packages:
     path: Packages/HLLocalization
   HLAppCore:
     path: Packages/HLAppCore
+  HLSMS:
+    path: Packages/HLSMS
   HLMacUI:
     path: Packages/HLMacUI
 targets:
