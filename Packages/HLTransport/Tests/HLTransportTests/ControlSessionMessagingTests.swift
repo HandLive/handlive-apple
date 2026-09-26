@@ -65,7 +65,7 @@ struct ControlSessionMessagingTests {
         let request = try await connected.phone.send(.callEvent, op: "action", data: ClipText(text: "x"))
         let ack = try await connected.phone.receiveAck()
         #expect(ack.re == request.id && ack.error?.code == .unsupportedType)
-        try await connected.phone.send(.sms, op: "new", data: ClipText(text: "x"))
+        try await connected.phone.send(.callEvent, op: "state", data: ClipText(text: "x"))
         try await Task.sleep(for: .milliseconds(50))
         #expect(await connected.events.events.isEmpty)
     }
