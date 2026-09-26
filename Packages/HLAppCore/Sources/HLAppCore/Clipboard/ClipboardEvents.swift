@@ -57,6 +57,25 @@ public struct ClipboardProgress: Equatable, Sendable {
     }
 }
 
+/// The latest clip written from the phone: the card of the Clipboard tab on iPhone and iPad (PasteCard, CLIP-04 field
+/// 10). Only the most recent one is kept, in memory.
+public struct ReceivedClip: Equatable, Sendable {
+    public let clipId: String
+    public let content: ClipContent
+    /// Shown as "Sensitive content hidden".
+    public let sensitive: Bool
+    public let deviceName: String
+    public let receivedAt: Date
+
+    public init(clipId: String, content: ClipContent, sensitive: Bool, deviceName: String, receivedAt: Date) {
+        self.clipId = clipId
+        self.content = content
+        self.sensitive = sensitive
+        self.deviceName = deviceName
+        self.receivedAt = receivedAt
+    }
+}
+
 /// A clip copied on this device, the latest one kept for replay until the phone acknowledges it (QC7).
 final class OutgoingClip {
     let clipId: String

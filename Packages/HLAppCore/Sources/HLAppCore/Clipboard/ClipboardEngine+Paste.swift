@@ -27,6 +27,22 @@ extension ClipboardEngine {
         send(content, sensitive: false, manual: true)
     }
 
+    /// "Copy" on the card of the last received clip: written again as HandLive's own clip (QC4), with a fresh
+    /// auto-clear interval; `false` when the system refused the write.
+    @discardableResult
+    public func copyLastReceivedAgain() -> Bool {
+        guard let clip = lastReceived,
+              let count = access.write(clip.content, clipId: clip.clipId, sensitive: clip.sensitive) else { return false }
+        ownWrite = OwnWrite(changeCount: count, clipId: clip.clipId, writtenAt: now())
+        lastSeenChangeCount = count
+        if platform == .ios {
+            settings.seenChangeCount = count
+            setUnsentLocalContent(false)
+        }
+        scheduleAutoClear()
+        return true
+    }
+
     /// The banner's close button: the content stays on the clipboard, the suggestion goes.
     public func dismissUnsentLocalContent() {
         setUnsentLocalContent(false)

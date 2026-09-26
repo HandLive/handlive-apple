@@ -30,6 +30,10 @@ public final class ClipboardEngine {
     public var onProgress: (ClipboardProgress.Direction, ClipboardProgress?) -> Void = { _, _ in }
     /// iPhone/iPad: locally copied content not sent yet appeared or went away (the suggestion banner, CLIP-04 field 3).
     public var onUnsentLocalContent: (Bool) -> Void = { _ in }
+    /// A clip from the phone was written to the clipboard.
+    public var onReceived: (ReceivedClip) -> Void = { _ in }
+    /// The latest clip written from the phone (PasteCard on iPhone and iPad).
+    public internal(set) var lastReceived: ReceivedClip?
 
     let access: any ClipboardAccess
     let platform: ClipboardPlatform

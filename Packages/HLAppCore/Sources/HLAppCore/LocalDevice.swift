@@ -28,8 +28,18 @@ public struct LocalDevice: Sendable, Equatable {
         let os = ProcessInfo.processInfo.operatingSystemVersion
         let osVersion = os.patchVersion == 0 ? "\(os.majorVersion).\(os.minorVersion)"
             : "\(os.majorVersion).\(os.minorVersion).\(os.patchVersion)"
-        return LocalDevice(appVersion: "\(version) (\(build))", osVersion: osVersion, model: hardwareModel(),
+        let model = platform == .ios || platform == .ipados ? machineIdentifier() : hardwareModel()
+        return LocalDevice(appVersion: "\(version) (\(build))", osVersion: osVersion, model: model,
                            name: name, platform: platform)
+    }
+
+    /// `uname` machine, e.g. `iPhone15,2` (`hw.model` names the board on iPhone and iPad).
+    static func machineIdentifier() -> String {
+        var info = utsname()
+        uname(&info)
+        return withUnsafeBytes(of: &info.machine) { bytes in
+            String(bytes: bytes.prefix { $0 != 0 }, encoding: .utf8) ?? ""
+        }
     }
 
     /// `sysctl hw.model`, e.g. `Mac15,3`.

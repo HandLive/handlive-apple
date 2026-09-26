@@ -104,6 +104,10 @@ extension ClipboardEngine {
         let writtenAt = now()
         ownWrite = OwnWrite(changeCount: count, clipId: push.clipId, writtenAt: writtenAt)
         lastSeenChangeCount = count
+        if platform == .ios {
+            settings.seenChangeCount = count
+            setUnsentLocalContent(false) // what was copied here is gone from the clipboard now
+        }
         received = (content.sha256, writtenAt)
         // The phone's clip won: an older local clip is not replayed over it.
         latestLocal = nil
@@ -111,6 +115,10 @@ extension ClipboardEngine {
         ledger.record(push.clipId, .applied, now: writtenAt)
         scheduleAutoClear()
         reply(requestId, .applied(push.clipId))
+        let clip = ReceivedClip(clipId: push.clipId, content: content, sensitive: push.sensitive,
+                                deviceName: phone?.name ?? "", receivedAt: writtenAt)
+        lastReceived = clip
+        onReceived(clip)
     }
 
     /// A change `poll` has not seen yet is a local change right now: poll first so QC8 (a) protects it.
