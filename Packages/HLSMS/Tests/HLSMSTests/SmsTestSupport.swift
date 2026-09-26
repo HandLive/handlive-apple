@@ -72,6 +72,8 @@ final class FakeSmsPeer: SmsPeer, @unchecked Sendable {
         return try record(request)(request)
     }
 
+    var route: ConnectionRoute { .lan }
+
     private func record(_ request: Request) -> Handler {
         lock.lock()
         defer { lock.unlock() }

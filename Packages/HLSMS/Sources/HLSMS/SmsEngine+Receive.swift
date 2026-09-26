@@ -1,5 +1,6 @@
 import Foundation
 import HLProtocol
+import HLTransport
 
 extension SmsEngine {
     // MARK: - SMS-02, SMS-04 API 2 and 4, SMS-05
@@ -26,7 +27,10 @@ extension SmsEngine {
         }
         guard let state else { return }
         let error = state == .failed ? (data.errorCode ?? .smsGenericFailure).rawValue : nil
-        _ = try? await store.transition(localId: data.localId, to: state, error: error, now: now())
+        guard (try? await store.transition(localId: data.localId, to: state, error: error, now: now())) != nil else { return }
+        var fields = [("local", data.localId), ("status", data.status.rawValue)]
+        if let code = data.errorCode { fields.append(("code", code.rawValue)) }
+        BenchLog.event("sms_status_received", fields: fields)
     }
 
     /// SMS-05 steps 6–7: the phone's read state; read notifications go away, the badge follows.

@@ -39,7 +39,9 @@ extension SmsEngine {
         guard let body = Self.validText(text) else { throw SmsComposeError.invalidText }
         let draft = SmsDraft(threadId: threadId, addresses: [address], body: body, subId: subId ?? defaultSubId)
         let localId = draft.localId
+        BenchLog.event("sms_send_tap", ["local": localId])
         try await store.enqueue(draft, pairId: pairId, now: now())
+        BenchLog.event("sms_bubble", ["local": localId]) // the database observation shows it right after this write
         if phone == nil {
             onEvent(.needsPhone)
         } else {
@@ -113,14 +115,19 @@ extension SmsEngine {
         envelopeIds[entry.localId] = envelopeId
         let request = SmsSendRequest(localId: entry.localId, threadId: entry.threadId, addresses: entry.addresses,
                                      body: entry.body, subId: entry.subId)
-        for delay in [Duration.zero] + retryDelays {
+        for (attempt, delay) in ([Duration.zero] + retryDelays).enumerated() {
             if delay > .zero {
                 try? await Task.sleep(for: delay)
                 guard !Task.isCancelled, phone != nil else { return false }
             }
             try? await store.recordAttempt(localId: entry.localId, now: now())
+            BenchLog.event("sms_send_sent", ["local": entry.localId, "peer": benchPeer, "attempt": "\(attempt + 1)",
+                                             "via": peer.route == .relay ? "relay" : "lan"])
             do {
                 let ack = try await peer.request(.send, data: request, id: envelopeId, timeout: requestTimeout)
+                var fields = [("local", entry.localId), ("peer", benchPeer), ("ok", "\(ack.ok)")]
+                if let code = ack.error?.code { fields.append(("code", code.rawValue)) }
+                BenchLog.event("sms_send_ack_received", fields: fields)
                 let state: SmsSendState = ack.ok ? .sending : .failed // step 7, or E2–E6 with the code
                 let error = ack.error?.code.rawValue
                 _ = try? await store.transition(localId: entry.localId, to: state, error: error, now: now())

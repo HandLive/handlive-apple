@@ -6,6 +6,8 @@ import HLTransport
 /// of `sms/send` repeats the first `id` (SMS-04 step 5).
 public protocol SmsPeer: Sendable {
     func request<Body: Encodable & Sendable>(_ op: SmsOp, data: Body, id: String, timeout: Duration) async throws -> Ack
+    /// `lan` or `relay`: the `via` of the bench lines.
+    var route: ConnectionRoute { get }
 }
 
 /// The current control session as the SMS peer.
@@ -20,6 +22,8 @@ public struct SessionSmsPeer: SmsPeer {
                                                     timeout: Duration) async throws -> Ack {
         try await session.sendRequest(.sms, op: op.rawValue, data: data, id: id).response(timeout: timeout)
     }
+
+    public var route: ConnectionRoute { session.route }
 }
 
 /// Status banner above the conversation list (SMS-01 field 1) with the count of the first sync (field 2).

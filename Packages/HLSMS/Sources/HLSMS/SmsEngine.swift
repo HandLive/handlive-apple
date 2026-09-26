@@ -41,6 +41,8 @@ public final class SmsEngine {
     var unanswered: Set<String> = []
     /// `features.sms` of the phone's last capability, kept while it is offline.
     var knownFeature: SmsFeature?
+    /// `peer` of the bench lines: the phone's first 8 hex digits.
+    var benchPeer = "00000000"
     /// Envelope `id` of each message's first try, reused by its retries while the app runs (API 1 logic 7).
     var envelopeIds: [String: String] = [:]
     var historyLoading: Set<Int64> = []
@@ -58,8 +60,9 @@ public final class SmsEngine {
 
     /// The active pair changed (or was removed): state of the old pair is dropped. `capability` is the phone's last
     /// stored one (`features_json`): the SIMs and the default SIM while the phone is offline.
-    public func setPair(_ pairId: String?, capability: CapabilityData? = nil) {
+    public func setPair(_ pairId: String?, phoneDeviceId: String? = nil, capability: CapabilityData? = nil) {
         knownFeature = capability?.features.sms
+        benchPeer = phoneDeviceId.map { String($0.replacingOccurrences(of: "-", with: "").prefix(8)) } ?? "00000000"
         guard pairId != self.pairId else { return }
         disconnected()
         self.pairId = pairId
@@ -138,7 +141,10 @@ public final class SmsEngine {
         guard envelope.type == .sms, case .json(let payload) = envelope.body, pairId != nil else { return }
         Task {
             switch SmsOp(rawValue: payload.op) {
-            case .new?: if let data = try? payload.decodeData(as: SmsNewData.self) { await self.applyNew(data) }
+            case .new?:
+                guard let data = try? payload.decodeData(as: SmsNewData.self) else { return }
+                BenchLog.event("sms_new_received", ["msg": data.message.messageKey, "peer": self.benchPeer])
+                await self.applyNew(data)
             case .status?: if let data = try? payload.decodeData(as: SmsStatusData.self) { await self.applyStatus(data) }
             case .readChanged?:
                 if let data = try? payload.decodeData(as: SmsReadState.self) { await self.applyReadChanged(data) }
