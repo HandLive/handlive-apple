@@ -21,7 +21,13 @@ extension AppModel {
         smsEngine = engine
         messages = MessagesModel(engine: engine, store: store)
         pairChangedForMessages()
-        Task { try? await store.expireOutbox(now: HLUUID.currentTimeMs()) } // SMS-04: waiting > 24 h → failed
+        outboxExpiry?.cancel()
+        outboxExpiry = Task {
+            while !Task.isCancelled {
+                try? await store.expireOutbox(now: HLUUID.currentTimeMs())
+                try? await Task.sleep(for: .seconds(3600))
+            }
+        }
     }
 
     /// The engine and the screens follow the active pair.

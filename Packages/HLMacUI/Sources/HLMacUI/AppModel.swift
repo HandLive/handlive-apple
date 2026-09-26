@@ -67,6 +67,8 @@ public final class AppModel: ObservableObject {
     let relayConfiguration: RelayConfiguration?
     var relay: RelayServices?
     var smsEngine: SmsEngine?
+    /// Hourly check of the outbox: a message waiting more than 24 h becomes "Not sent" (SMS-04 E1).
+    var outboxExpiry: Task<Void, Never>?
     let smsNotifier: any SmsNotifying
     /// The Messages window is open: the app shows its Dock icon and menu bar (SET-03 step 6).
     var messagesWindowOpen = false
