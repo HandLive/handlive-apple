@@ -48,9 +48,15 @@ public final class SmsDatabase: Sendable {
         return support.appendingPathComponent(bundleIdentifier, isDirectory: true).appendingPathComponent(fileName)
     }
 
-    /// Closes the pool and deletes the file with its `-wal` and `-shm` companions (SET-02 API 7).
+    /// Closes the pool and deletes the file with its `-wal` and `-shm` companions (SET-02 API 7). The files go even
+    /// when a connection cannot close: `db_key` is deleted first, so what is left cannot be read anyway.
     public func deleteFiles() throws {
-        try pool.close()
+        try? pool.close()
+        try Self.removeFiles(at: url)
+    }
+
+    /// Deletes a database's files without opening it (no key, or it could not be opened); missing files are fine.
+    public static func removeFiles(at url: URL) throws {
         for suffix in ["", "-wal", "-shm"] {
             let file = URL(fileURLWithPath: url.path + suffix)
             if FileManager.default.fileExists(atPath: file.path) { try FileManager.default.removeItem(at: file) }
