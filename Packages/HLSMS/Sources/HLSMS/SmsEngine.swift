@@ -114,7 +114,7 @@ public final class SmsEngine {
     /// SMS is active for the pair: on here, on the phone, and the phone may read SMS (SMS-01 step 2).
     public var isActive: Bool {
         guard let phone, enabledHere(), phone.feature?.enabled == true else { return false }
-        return !phone.permissionsMissing.contains { $0 == Self.readSmsPermission || $0 == Self.readSmsPermissionFull }
+        return !phone.permissionsMissing.contains { SmsPermissions.matches($0, SmsPermissions.read) }
     }
 
     /// The phone can send (`features.sms.can_send`, SMS-04 precondition 1).
@@ -125,9 +125,6 @@ public final class SmsEngine {
     /// Active SIMs of the phone for the SIM picker (SMS-04 field 4), from the last capability.
     public var sims: [SimInfo] { knownFeature?.sims ?? [] }
     public var defaultSubId: Int32? { knownFeature?.defaultSubId }
-
-    static let readSmsPermission = "READ_SMS"
-    static let readSmsPermissionFull = "android.permission.READ_SMS"
 
     var inactiveStatus: SmsSyncStatus {
         guard let phone, enabledHere(), phone.feature?.enabled == true else { return .failed(.featureOff) }
