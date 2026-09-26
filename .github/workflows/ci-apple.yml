@@ -144,3 +144,13 @@ jobs:
             -destination 'generic/platform=macOS' \
             -derivedDataPath "$DERIVED_DATA/app" \
             CODE_SIGNING_ALLOWED=NO
+
+      # The iPhone/iPad app with its Notification Service Extension, for the simulator, unsigned.
+      - name: Build app iOS + Notification Service Extension (simulator, unsigned)
+        run: |
+          xcodebuild build \
+            -project apple/HandLive.xcodeproj \
+            -scheme HandLiveiOS \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath "$DERIVED_DATA/app-ios" \
+            CODE_SIGNING_ALLOWED=NO
