@@ -1,7 +1,6 @@
 import AppKit
 import Foundation
 import ServiceManagement
-import UserNotifications
 
 /// "Open at login" through `SMAppService.mainApp` (SET-03 API 3, SET-02 field 22); the real state is always read
 /// from `status`, never kept in a setting.
@@ -103,26 +102,6 @@ public enum ApplicationLocation: Equatable, Sendable {
         let old = URL(fileURLWithPath: arguments[index + 1])
         guard of(old) != .applications else { return }
         try? FileManager.default.trashItem(at: old, resultingItemURL: nil)
-    }
-}
-
-/// Notification permission (SET-03 API 4): asked once; afterwards only read.
-public enum NotificationPermission: Equatable, Sendable {
-    case notDetermined, allowed, denied
-
-    public static func current() async -> NotificationPermission {
-        let settings = await UNUserNotificationCenter.current().notificationSettings()
-        switch settings.authorizationStatus {
-        case .notDetermined: return .notDetermined
-        case .denied: return .denied
-        default: return .allowed
-        }
-    }
-
-    /// `requestAuthorization([.alert, .sound, .badge])`; no provisional, no critical alerts.
-    public static func request() async -> NotificationPermission {
-        _ = try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge])
-        return await current()
     }
 }
 
