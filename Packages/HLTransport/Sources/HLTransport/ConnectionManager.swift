@@ -38,6 +38,9 @@ public actor ConnectionManager {
     var lastWake: [RelayPushRequest.Reason: ContinuousClock.Instant] = [:]
     /// mDNS instances already tried for an upgrade from the relay; cleared when discovery results change.
     var upgradeTried: Set<String> = []
+    /// Pairs whose `POST /v1/pairs` answered 404 twice: no new try before the instant (PAIR-01 API 8 logic 6).
+    var pairRegistrationPausedUntil: [String: ContinuousClock.Instant] = [:]
+    var lastPairCheck: ContinuousClock.Instant?
 
     public init(localCapability: CapabilityData, discovery: any LANDiscovering = BonjourDiscovery(),
                 network: any NetworkMonitoring = PathMonitor(), connector: any ChannelConnecting = WebSocketConnector(),
@@ -103,6 +106,14 @@ public actor ConnectionManager {
         if enabled, issue == .relayDeviceRemoved || issue == .relayUntrusted { issue = nil }
         if !enabled { await leaveRelay() }
         signals.post(.relaySettingChanged)
+    }
+
+    /// PAIR-02 step 4: the device screens ask the relay about the pair (`GET /v1/pairs`), at most once a minute.
+    public func refreshPairOnRelay() async {
+        let now = ContinuousClock.now
+        if let last = lastPairCheck, last.duration(to: now) < configuration.pairCheckInterval { return }
+        lastPairCheck = now
+        await checkPairOnRelay()
     }
 
     /// Asks the relay to wake the phone (CONN-04 `wake`, e.g. `sms_send`) when it has no session; at most once per

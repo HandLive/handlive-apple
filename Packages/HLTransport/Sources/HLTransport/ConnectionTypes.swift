@@ -114,6 +114,10 @@ public struct ConnectionConfiguration: Sendable {
     public var wakeInterval: Duration = .seconds(300)
     /// An old relay session keeps delivering what was in flight this long after the LAN took over (CONN-02 step 7).
     public var upgradeGrace: Duration = .seconds(5)
+    /// After a second 404 from `POST /v1/pairs` the pair waits this long before trying again (PAIR-01 API 8 logic 6).
+    public var pairRegistrationPause: Duration = .seconds(86_400)
+    /// `GET /v1/pairs` for the device screens at most this often (PAIR-02 step 4).
+    public var pairCheckInterval: Duration = .seconds(60)
     public var session = SessionConfiguration()
 
     public init() {}

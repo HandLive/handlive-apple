@@ -10,7 +10,10 @@ final class FakeRelayAPI: RelayAPI, @unchecked Sendable {
     private(set) var pushes: [RelayPushRequest] = []
     private(set) var registeredPairs: [RelayPairRegistration] = []
     private(set) var tokens = 0
+    private(set) var pairRegistrationTries = 0
     var pairList = RelayPairList(pairs: [])
+    /// What `POST /v1/pairs` answers besides the general failure (e.g. the second 404 of PAIR-01 API 8 logic 6).
+    var pairRegistrationFailure: RelayAPIError?
 
     func fail(with error: RelayAPIError?) {
         lock.lock()
@@ -46,11 +49,20 @@ final class FakeRelayAPI: RelayAPI, @unchecked Sendable {
 
     func registerPair(_ registration: RelayPairRegistration) async throws {
         try check()
+        var refusal: RelayAPIError?
+        locked {
+            pairRegistrationTries += 1
+            refusal = pairRegistrationFailure
+        }
+        if let refusal { throw refusal }
         locked { registeredPairs.append(registration) }
     }
 
+    private(set) var pairChecks = 0
+
     func pairs() async throws -> RelayPairList {
         try check()
+        locked { pairChecks += 1 }
         return pairList
     }
 

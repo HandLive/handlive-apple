@@ -194,32 +194,6 @@ extension ConnectionManager {
         }
     }
 
-    /// PAIR-01 API 8: success → `relay_registered = 1`; a failure keeps it at 0 for the next connection (E8).
-    func registerPair(_ registration: RelayPairRegistration, _ relay: RelayServices) async {
-        guard (try? await relay.api.registerPair(registration)) != nil else { return }
-        if phone?.pair.pairId == registration.pairId { phone?.relayRegistration = nil }
-        eventSink.yield(.relayPairRegistered(pairId: registration.pairId))
-    }
-
-    /// CONN-03 E4: the relay refused to route for the pair. Revoked there → PAIR-03 flow B; unknown there → the phone
-    /// left the relay or the pair was never registered: register it again when possible, keep the LAN.
-    func checkPairOnRelay() async {
-        guard let phone, let relay, let list = try? await relay.api.pairs() else { return }
-        if let entry = list.pairs.first(where: { $0.pairId == phone.pair.pairId }) {
-            guard entry.revokedAt != nil else { return }
-            if let current = session {
-                session = nil
-                await current.close(bye: nil)
-                eventSink.yield(.disconnected)
-            }
-            await closeRelay()
-            removePair(.revoked)
-        } else {
-            eventSink.yield(.relayPairMissing(pairId: phone.pair.pairId))
-            if let registration = phone.relayRegistration { await registerPair(registration, relay) }
-        }
-    }
-
     /// Relay turned off here: the session through it ends with `session/bye {shutdown}` (SET-02 step 6).
     func leaveRelay() async {
         if let current = session, current.route == .relay { await current.close(bye: .shutdown) }

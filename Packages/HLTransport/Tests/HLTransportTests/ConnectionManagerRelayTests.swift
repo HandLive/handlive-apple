@@ -100,6 +100,32 @@ struct ConnectionManagerRelayTests {
         await setup.manager.stop()
     }
 
+    @Test("Two 404s on POST /v1/pairs wait 24 h; GET /v1/pairs listing the pair marks it registered (PAIR-02 logic 3)")
+    func pairRegistrationWait() async throws {
+        let registration = RelayPairRegistration(pairId: SessionHarness.pair().pairId, deviceA: "a", deviceB: "b",
+                                                 createdAt: 1, attestation: "x", sigA: "y", sigB: "z")
+        let setup = await RelayHarness.make(phoneOnline: true, registration: registration)
+        setup.api.pairRegistrationFailure = .http(status: 404, code: .deviceNotFound, retryAfter: nil)
+        await setup.manager.start(phone: setup.phone)
+        #expect(await setup.recorder.waitForState(.connected(.relay)) != nil)
+        #expect(setup.api.pairRegistrationTries == 1)
+        await setup.manager.refreshPairOnRelay() // not listed: missing, but the next try is due only after 24 h
+        #expect(await setup.recorder.waitFor {
+            if case .relayPairMissing = $0 { return true } else { return false }
+        } != nil)
+        #expect(setup.api.pairRegistrationTries == 1)
+        setup.api.pairList = RelayPairList(pairs: [RelayPairEntry(pairId: registration.pairId, peerDeviceId: "a",
+                                                                  peerPlatform: .android, createdAt: 1, revokedAt: nil,
+                                                                  peerOnline: true)])
+        await setup.manager.refreshPairOnRelay() // at most once a minute: not asked again yet
+        #expect(setup.api.pairChecks == 1)
+        await setup.manager.checkPairOnRelay() // the phone completed the registration meanwhile
+        #expect(await setup.recorder.waitFor {
+            if case .relayPairRegistered(let pairId) = $0 { return pairId == registration.pairId } else { return false }
+        } != nil)
+        await setup.manager.stop()
+    }
+
     @Test("410 DEVICE_REVOKED turns the relay off (E3); a pin failure is reported and not retried (E7); 429 waits (E6)")
     func relayRefusals() async throws {
         let revoked = await RelayHarness.make(phoneOnline: true)
