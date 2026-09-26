@@ -17,8 +17,8 @@ struct SessionCipher {
         epochStart = now
     }
 
-    mutating func seal(type: MessageType, plaintext: Data) throws -> Envelope {
-        let envelope = try EnvelopeCipher.seal(type: type, plaintext: plaintext, key: keys.clientToServer)
+    mutating func seal(type: MessageType, plaintext: Data, id: String = HLUUID.v7()) throws -> Envelope {
+        let envelope = try EnvelopeCipher.seal(type: type, plaintext: plaintext, key: keys.clientToServer, id: id)
         sentCount += 1
         return envelope
     }

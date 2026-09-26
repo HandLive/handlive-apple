@@ -52,10 +52,11 @@ public actor ControlSession {
         try await transmit(try seal(type, plaintext: try encode(op: op, data: data)))
     }
 
-    /// Sends a request and returns the handle of its `ack`; the caller decides when to start waiting.
-    public func sendRequest<Body: Encodable & Sendable>(_ type: MessageType, op: String,
-                                                        data: Body) async throws -> PendingAck {
-        let envelope = try seal(type, plaintext: try encode(op: op, data: data))
+    /// Sends a request and returns the handle of its `ack`; the caller decides when to start waiting. A retry passes
+    /// the envelope `id` of the first try, so the phone answers it from its de-duplication window (SMS-04 step 5).
+    public func sendRequest<Body: Encodable & Sendable>(_ type: MessageType, op: String, data: Body,
+                                                        id: String = HLUUID.v7()) async throws -> PendingAck {
+        let envelope = try seal(type, plaintext: try encode(op: op, data: data), id: id)
         pendingAcks = pendingAcks.filter { !$0.value.isResolved } // drop requests that timed out
         let pending = PendingAck(requestId: envelope.id)
         pendingAcks[envelope.id] = pending
@@ -120,9 +121,9 @@ public actor ControlSession {
         return plaintext
     }
 
-    func seal(_ type: MessageType, plaintext: Data) throws -> Envelope {
+    func seal(_ type: MessageType, plaintext: Data, id: String = HLUUID.v7()) throws -> Envelope {
         guard ending == nil, cipher != nil else { throw SessionError.ended }
-        guard let envelope = try? cipher?.seal(type: type, plaintext: plaintext) else { throw SessionError.encoding }
+        guard let envelope = try? cipher?.seal(type: type, plaintext: plaintext, id: id) else { throw SessionError.encoding }
         return envelope
     }
 
