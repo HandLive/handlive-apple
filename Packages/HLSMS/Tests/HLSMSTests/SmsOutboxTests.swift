@@ -74,6 +74,7 @@ struct SmsOutboxTests {
         let two = SmsPartCounter.estimate(String(repeating: "a", count: 161))
         #expect(two == SmsPartEstimate(encoding: .gsm7, units: 161, parts: 2, capacity: 306))
         #expect(SmsPartCounter.estimate("€[]").units == 6)
+        #expect(SmsPartCounter.basic.count == 127 && SmsPartCounter.extended.count == 10) // 128 codes minus the escape
         #expect(SmsPartCounter.estimate("Ok, 3h @ phòng").encoding == .gsm7) // ò is in the GSM-7 alphabet
         #expect(SmsPartCounter.estimate("Ok, 3h @ phòng họp").encoding == .ucs2) // ọ is not
         #expect(SmsPartCounter.estimate("Hello ÄÖÜ ñ à").encoding == .gsm7)
