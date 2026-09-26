@@ -3,6 +3,7 @@ import HLAppCore
 import HLCrypto
 import HLProtocol
 import HLSMS
+import HLSMSNotifications
 import HLTransport
 @testable import HLMacUI
 

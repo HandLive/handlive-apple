@@ -1,5 +1,6 @@
 import Foundation
 import HLProtocol
+import UserNotifications
 
 /// Identifiers of SMS notifications (SMS-02 API 4): categories, actions, request and thread identifiers, and the
 /// `userInfo` keys that quick reply (SMS-04 API 5) and removal (SMS-05 API 2) read back.
@@ -56,6 +57,27 @@ public struct SmsNotificationInfo: Equatable, Sendable {
         ts = (userInfo[SmsNotificationKeys.ts] as? NSNumber)?.int64Value
         address = userInfo[SmsNotificationKeys.address] as? String
         subId = (userInfo[SmsNotificationKeys.subId] as? NSNumber)?.int32Value
+    }
+}
+
+/// What the user did with an SMS notification (SMS-04 API 5, SMS-05 A2, SMS-03 step 1).
+public enum SmsNotificationResponse: Equatable, Sendable {
+    case reply(SmsNotificationInfo, text: String)
+    case markRead(SmsNotificationInfo)
+    case open(SmsNotificationInfo)
+
+    /// The response to one of HandLive's SMS notifications: "Reply" with its text, "Mark as Read", or a tap; `nil` for
+    /// anything else.
+    public init?(actionIdentifier: String, userInfo: [AnyHashable: Any], userText: String?) {
+        guard let info = SmsNotificationInfo(userInfo) else { return nil }
+        switch actionIdentifier {
+        case SmsNotificationKeys.replyAction:
+            guard let userText else { return nil }
+            self = .reply(info, text: userText)
+        case SmsNotificationKeys.markReadAction: self = .markRead(info)
+        case UNNotificationDefaultActionIdentifier: self = .open(info)
+        default: return nil
+        }
     }
 }
 

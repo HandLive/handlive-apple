@@ -68,19 +68,13 @@ public final class UserNotificationAlerts: NSObject, ClipboardAlerting, UNUserNo
     nonisolated public func userNotificationCenter(_ center: UNUserNotificationCenter,
                                                    didReceive response: UNNotificationResponse) async {
         let action = response.actionIdentifier
-        let sms = SmsNotificationInfo(response.notification.request.content.userInfo)
-        let text = (response as? UNTextInputNotificationResponse)?.userText
+        let sms = SmsNotificationResponse(actionIdentifier: action, userInfo: response.notification.request.content.userInfo,
+                                          userText: (response as? UNTextInputNotificationResponse)?.userText)
         await MainActor.run {
             switch action {
             case Self.sendAnywayAction: onSendAnyway()
             case Self.sendAgainAction: onSendAgain()
-            case SmsNotificationKeys.replyAction:
-                if let sms, let text { onSmsResponse(.reply(sms, text: text)) }
-            case SmsNotificationKeys.markReadAction:
-                if let sms { onSmsResponse(.markRead(sms)) }
-            case UNNotificationDefaultActionIdentifier:
-                if let sms { onSmsResponse(.open(sms)) }
-            default: break
+            default: if let sms { onSmsResponse(sms) }
             }
         }
     }

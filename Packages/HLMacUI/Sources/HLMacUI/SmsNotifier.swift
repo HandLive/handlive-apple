@@ -17,13 +17,6 @@ public protocol SmsNotifying: AnyObject {
     func removeEverything()
 }
 
-/// What the user did with an SMS notification (SMS-04 API 5, SMS-05 A2, SMS-03 step 1).
-public enum SmsNotificationResponse: Equatable, Sendable {
-    case reply(SmsNotificationInfo, text: String)
-    case markRead(SmsNotificationInfo)
-    case open(SmsNotificationInfo)
-}
-
 /// `UNUserNotificationCenter` as the SMS notifier; the delegate that receives the responses is `UserNotificationAlerts`.
 @MainActor
 public final class UserNotificationSms: SmsNotifying {

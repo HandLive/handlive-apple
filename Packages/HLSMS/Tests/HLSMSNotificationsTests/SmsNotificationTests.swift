@@ -66,6 +66,25 @@ struct SmsNotificationTests {
         #expect(generic == ["d"])
     }
 
+    @Test("Responses: Reply with its text, Mark as Read, a tap; other actions and foreign notifications are not ours")
+    func responses() {
+        let userInfo: [AnyHashable: Any] = [SmsNotificationKeys.pairId: "p", SmsNotificationKeys.threadId: NSNumber(value: 7)]
+        let info = SmsNotificationInfo(userInfo)
+        #expect(info != nil)
+        guard let info else { return }
+        #expect(SmsNotificationResponse(actionIdentifier: SmsNotificationKeys.replyAction, userInfo: userInfo, userText: "Ok")
+            == .reply(info, text: "Ok"))
+        #expect(SmsNotificationResponse(actionIdentifier: SmsNotificationKeys.replyAction, userInfo: userInfo,
+                                        userText: nil) == nil)
+        #expect(SmsNotificationResponse(actionIdentifier: SmsNotificationKeys.markReadAction, userInfo: userInfo,
+                                        userText: nil) == .markRead(info))
+        #expect(SmsNotificationResponse(actionIdentifier: UNNotificationDefaultActionIdentifier, userInfo: userInfo,
+                                        userText: nil) == .open(info))
+        #expect(SmsNotificationResponse(actionIdentifier: "HL_CLIP_SEND_AGAIN", userInfo: userInfo, userText: nil) == nil)
+        #expect(SmsNotificationResponse(actionIdentifier: UNNotificationDefaultActionIdentifier, userInfo: ["p": "x"],
+                                        userText: nil) == nil)
+    }
+
     @Test("Numbers and initials for display")
     func names() throws {
         #expect(PhoneNumberDisplay.format("+84900000123") == "090 000 0123")
