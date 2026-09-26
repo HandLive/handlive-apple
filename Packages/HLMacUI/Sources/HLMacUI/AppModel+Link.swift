@@ -2,6 +2,7 @@ import Foundation
 import HLAppCore
 import HLCrypto
 import HLDesignSystem
+import HLLocalization
 import HLProtocol
 import HLTransport
 
@@ -22,6 +23,7 @@ extension AppModel {
                 record.peerCapability = details.peerCapability
             }
             clipboardConnected(session, details: details)
+            Task { await revokeTombstones() } // PAIR-03 E3: a network is back
         case .capabilityUpdated(let capability):
             updatePairRecord { $0.peerCapability = capability }
             clipboard?.phoneCapabilityUpdated(capability.features.clipboard)
@@ -47,6 +49,7 @@ extension AppModel {
         case .relayDeviceRevoked:
             settings.relayEnabled = false
             relayEnabled = false
+            relayNotice = L10n.Error.relayDeviceRevoked
         default:
             break
         }
@@ -58,12 +61,17 @@ extension AppModel {
         pairedDevice = try? store.active()
     }
 
-    /// PAIR-03 step 7 on this side: delete the `PRK` from the Keychain before anything else, then the record.
-    /// Phase 1 never registers pairs with the relay, so no tombstone is kept.
-    func forgetPair() {
+    /// PAIR-03 step 7 on this side: delete the `PRK` from the Keychain before anything else, then the record — kept
+    /// as a tombstone while the pair still has to be revoked on the relay (steps 8–9, E3).
+    func forgetPair(relayReason: RelayPairRevokeRequest.Reason = .user) {
         guard let record = pairedDevice else { return }
         try? secrets.delete(account: SecretAccount.pairKey(pairId: record.pairId))
-        try? store?.remove(pairId: record.pairId)
+        if record.relayRegistered, relay != nil {
+            try? store?.update(pairId: record.pairId) { $0.revokedAt = HLUUID.currentTimeMs() }
+            Task { await revokeTombstones(reason: relayReason) }
+        } else {
+            try? store?.remove(pairId: record.pairId)
+        }
         pairedDevice = nil
         clipboard?.phoneDisconnected()
         updateClipboardPolling()

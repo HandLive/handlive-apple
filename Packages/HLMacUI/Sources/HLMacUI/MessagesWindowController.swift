@@ -15,7 +15,7 @@ final class MessagesWindowController: NSWindowController, NSWindowDelegate, NSTo
     private static let newMessageItem = NSToolbarItem.Identifier("app.handlive.messages.new-message")
     private static let frameName = "HandLiveMessages"
     private let model: AppModel
-    private let messages: MessagesModel
+    let messages: MessagesModel
     private let search = SearchFieldHandle()
     private var titleUpdates: AnyCancellable?
 

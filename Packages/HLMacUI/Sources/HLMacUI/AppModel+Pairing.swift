@@ -74,7 +74,7 @@ extension AppModel {
             let revoke = PairRevokeData(pairId: record.pairId, reason: .user)
             if let ack = try? await session.request(.pair, op: "revoke", data: revoke), ack.ok { result = .done }
         }
-        forgetPair()
+        forgetPair(relayReason: result == .done ? .user : .lostDevice) // flow B: the phone could not be reached
         await manager?.setPhone(nil)
         return result
     }

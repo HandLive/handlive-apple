@@ -1,0 +1,143 @@
+import Foundation
+import HLAppCore
+import HLProtocol
+import HLSMS
+import HLTransport
+
+/// Result of "Remove Device from Server" (SET-02 field 30).
+public enum ServerRemovalResult: Equatable, Sendable {
+    /// "Removed from the server": the pairs keep working on the LAN, the internet connection is off.
+    case removed
+    /// E5: no network or a relay error; nothing changed.
+    case failed
+}
+
+/// Result of "Delete All HandLive Data" (SET-02 A2–A6).
+public enum DeleteAllResult: Equatable, Sendable {
+    /// Everything is gone and the app starts over at the welcome window.
+    case deleted
+    /// E7: the relay could not be reached; the user may delete from this device anyway.
+    case serverUnreachable
+}
+
+extension AppModel {
+    /// "Remove Device from Server…" can be used: this build has a relay (`HLRelayHost`) and the keys are loaded.
+    public var canRemoveFromServer: Bool { relay != nil }
+
+    /// SET-02 A1–A4 and A6 for field 26: `DELETE /v1/devices/me?revoke_pairs=false`, then every pair stays (LAN, USB)
+    /// with `relay_registered = 0` and `relay.enabled = false` goes to the phone in `capability/update` (C16).
+    public func removeFromServer() async -> ServerRemovalResult {
+        guard let api = relay?.api else { return .failed }
+        do {
+            try await api.deleteDevice(revokePairs: false)
+        } catch {
+            return .failed
+        }
+        for record in (try? store?.all()) ?? [] {
+            try? store?.update(pairId: record.pairId) { $0.relayRegistered = false }
+        }
+        pairedDevice = try? store?.active()
+        setRelayEnabled(false)
+        await manager?.setPhone(activePhone()) // registers the pair again once the relay is turned back on
+        return .removed
+    }
+
+    /// SET-02 A2–A6 for field 27: the relay deletes this device and revokes its pairs (`revoke_pairs=true`), the phone
+    /// gets `pair/revoke {reinstall}` on a LAN session while the keys still exist, then the keys, the SMS database,
+    /// the pair store, settings, notifications and the login item go, and the app starts over (SET-03). Without the
+    /// relay the answer is `.serverUnreachable` unless the user chose to delete anyway (E7).
+    public func deleteAllData(evenIfOffline: Bool = false) async -> DeleteAllResult {
+        if !evenIfOffline, let api = relay?.api {
+            do {
+                try await api.deleteDevice(revokePairs: true)
+            } catch {
+                return .serverUnreachable
+            }
+        }
+        if let record = pairedDevice, let session = await manager?.currentSession, session.route == .lan {
+            _ = try? await session.request(.pair, op: "revoke", data: PairRevokeData(pairId: record.pairId, reason: .reinstall))
+        }
+        await stopForErasing()
+        eraseLocalData()
+        startOver()
+        return .deleted
+    }
+
+    /// PAIR-03 steps 8–9 and E3: each tombstone is revoked on the relay and then deleted for good; without a network
+    /// they wait for the next try (launch, the next connection).
+    func revokeTombstones(reason: RelayPairRevokeRequest.Reason = .user) async {
+        guard let api = relay?.api, let store else { return }
+        for record in (try? store.all()) ?? [] where record.revokedAt != nil {
+            do {
+                try await api.revokePair(pairId: record.pairId, reason: reason)
+            } catch RelayAPIError.http(403, _, _) {
+                // NOT_PAIRED: this device is not a member any more, so there is nothing left to revoke.
+            } catch {
+                return
+            }
+            try? store.remove(pairId: record.pairId)
+        }
+    }
+
+    /// Stops everything that uses the keys or the files before they go.
+    private func stopForErasing() async {
+        linkEvents?.cancel()
+        linkEvents = nil
+        await manager?.stop()
+        manager = nil
+        relay = nil
+        clipboard?.stopPolling()
+        clipboard = nil
+        outboxExpiry?.cancel()
+        outboxExpiry = nil
+        smsEngine?.disconnected()
+        smsEngine?.setPair(nil)
+        smsEngine = nil
+        messages?.close()
+    }
+
+    /// SET-02 API 7 in its order: the keys first (`SecItemDelete`), then the database and the pair store, settings,
+    /// notifications and the login item. Missing items count as deleted.
+    private func eraseLocalData() {
+        try? secrets.deleteAll()
+        if let database = messages?.store.database {
+            try? database.deleteFiles()
+        } else {
+            try? SmsDatabase.removeFiles(at: smsDatabaseURL)
+        }
+        messages = nil
+        try? FileManager.default.removeItem(at: pairStoreURL)
+        settings.removeAll()
+        if settings.defaults === UserDefaults.standard, let domain = Bundle.main.bundleIdentifier {
+            UserDefaults.standard.removePersistentDomain(forName: domain)
+        }
+        smsNotifier.removeEverything()
+        if LoginItem.status == .enabled || LoginItem.status == .requiresApproval {
+            loginItemStatus = LoginItem.set(false)
+        }
+    }
+
+    /// A6: back to the welcome screen as a fresh install, with new keys and a new `device_id` (SET-03).
+    private func startOver() {
+        identity = nil
+        store = nil
+        pairedDevice = nil
+        link = LinkStatus(state: .idle(.notPaired))
+        unreadThreads = 0
+        relayNotice = nil
+        menuStatusLine = nil
+        clipboardProgress = [:]
+        showInMenuBar = settings.showInMenuBar
+        clipboardEnabled = settings.clipboardEnabled
+        sendImages = settings.sendImages
+        blockSensitive = settings.blockSensitive
+        autoClearSeconds = settings.autoClearSeconds
+        relayEnabled = settings.relayEnabled
+        smsEnabled = settings.smsEnabled
+        smsNotify = settings.smsNotify
+        smsPreview = settings.smsPreview
+        launch()
+        applyActivationPolicy()
+        didEraseAllData()
+    }
+}

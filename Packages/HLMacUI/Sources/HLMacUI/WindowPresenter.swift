@@ -50,8 +50,17 @@ public final class WindowPresenter {
     /// The Messages window (SMS-03 step 1); without the SMS database (SMS-01 E7) there is nothing to show.
     public func showMessages() {
         guard let messages = model.messages else { return }
-        if messagesWindow == nil { messagesWindow = MessagesWindowController(model: model, messages: messages) }
+        if messagesWindow?.messages !== messages { // first opening, or new data after Delete All
+            messagesWindow?.close()
+            messagesWindow = MessagesWindowController(model: model, messages: messages)
+        }
         messagesWindow?.show()
+    }
+
+    /// Closes the Messages window (Delete All HandLive Data).
+    public func closeMessages() {
+        messagesWindow?.close()
+        messagesWindow = nil
     }
 
     /// "New Message" (File ⌘N, the Dock menu): the Messages window with the compose screen.

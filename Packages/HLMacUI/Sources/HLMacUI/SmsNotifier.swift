@@ -11,8 +11,10 @@ public protocol SmsNotifying: AnyObject {
     func post(_ incoming: SmsIncoming, showPreview: Bool)
     /// Notifications of one conversation: up to `upToTs`, or all of them.
     func remove(pairId: String, threadId: Int64, upToTs: Int64?)
-    /// Every SMS notification (unpairing, deleting all data).
+    /// Every SMS notification (unpairing).
     func removeAll()
+    /// Every delivered and pending notification of the app ("Delete All HandLive Data", SET-02 API 7).
+    func removeEverything()
 }
 
 /// What the user did with an SMS notification (SMS-04 API 5, SMS-05 A2, SMS-03 step 1).
@@ -57,5 +59,11 @@ public final class UserNotificationSms: SmsNotifying {
                 .map(\.request.identifier)
             center.removeDeliveredNotifications(withIdentifiers: identifiers)
         }
+    }
+
+    public func removeEverything() {
+        let center = UNUserNotificationCenter.current()
+        center.removeAllDeliveredNotifications()
+        center.removeAllPendingNotificationRequests()
     }
 }

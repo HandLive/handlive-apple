@@ -16,6 +16,10 @@ public final class AppCoordinator {
         self.model = model
         windows = WindowPresenter(model: model)
         model.openMessagesWindow = { [weak self] in self?.windows.showMessages() }
+        model.didEraseAllData = { [weak self] in
+            self?.windows.closeMessages()
+            self?.windows.showWelcome()
+        }
     }
 
     public var actions: AppActions {

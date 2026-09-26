@@ -63,8 +63,8 @@ public final class AppModel: ObservableObject {
     let pairStoreURL: URL
     let smsDatabaseURL: URL
     let makeManager: @MainActor (CapabilityData, RelayServices?) -> ConnectionManager
-    /// `{RELAY_HOST}` of this build (CONN-03); `nil` without one (and in tests): LAN only.
-    let relayConfiguration: RelayConfiguration?
+    /// The relay services of this device (CONN-03): from `{RELAY_HOST}` of the build; `nil` without one: LAN only.
+    let makeRelay: @MainActor (RelayIdentity) -> RelayServices?
     var relay: RelayServices?
     var smsEngine: SmsEngine?
     /// Hourly check of the outbox: a message waiting more than 24 h becomes "Not sent" (SMS-04 E1).
@@ -72,8 +72,10 @@ public final class AppModel: ObservableObject {
     let smsNotifier: any SmsNotifying
     /// The Messages window is open: the app shows its Dock icon and menu bar (SET-03 step 6).
     var messagesWindowOpen = false
-    /// Opens the Messages window; set by a view of the menu bar extra, which has the SwiftUI `openWindow` action.
+    /// Opens the Messages window (the app coordinator's window presenter).
     public var openMessagesWindow: () -> Void = {}
+    /// "Delete All HandLive Data" finished: the windows start over at the welcome window (SET-02 A6).
+    public var didEraseAllData: () -> Void = {}
 
     /// `pairStoreURL` defaults to Application Support of the bundle identifier; tests pass a temporary file, a
     /// pasteboard and notifications of their own.
@@ -85,7 +87,9 @@ public final class AppModel: ObservableObject {
                     bundleIdentifier: Bundle.main.bundleIdentifier ?? "app.handlive.mac"),
                 pasteboard: (any ClipboardAccess)? = nil, alerts: (any ClipboardAlerting)? = nil,
                 smsNotifier: (any SmsNotifying)? = nil,
-                relayConfiguration: RelayConfiguration? = .fromBundle(),
+                makeRelay: @escaping @MainActor (RelayIdentity) -> RelayServices? = { identity in
+                    RelayConfiguration.fromBundle().map { RelayServices.live(configuration: $0, identity: identity) }
+                },
                 makeManager: @escaping @MainActor (CapabilityData, RelayServices?) -> ConnectionManager = {
                     ConnectionManager(localCapability: $0, relay: $1)
                 }) {
@@ -97,7 +101,7 @@ public final class AppModel: ObservableObject {
         self.pasteboard = pasteboard ?? MacPasteboard()
         self.alerts = alerts ?? UserNotificationAlerts()
         self.smsNotifier = smsNotifier ?? UserNotificationSms()
-        self.relayConfiguration = relayConfiguration
+        self.makeRelay = makeRelay
         self.makeManager = makeManager
         showInMenuBar = settings.showInMenuBar
         clipboardEnabled = settings.clipboardEnabled
@@ -141,6 +145,7 @@ public final class AppModel: ObservableObject {
             startClipboard(identity: keys)
             startMessages(identity: keys)
             startConnection()
+            Task { await revokeTombstones() } // PAIR-03 E3: revocations that waited for a network
         } catch IdentityError.keysMissing {
             // The Keychain lost the keys after setup started: start over as a fresh install.
             settings.setupStartedAt = nil
@@ -158,8 +163,8 @@ public final class AppModel: ObservableObject {
     }
 
     private func startConnection() {
-        if let relayConfiguration, let identity {
-            relay = RelayServices.live(configuration: relayConfiguration, identity: RelayIdentity(
+        if let identity {
+            relay = makeRelay(RelayIdentity(
                 deviceId: identity.deviceId, signingSeed: identity.signingSeed,
                 signingPublicKey: identity.signingPublicKey, platform: device.platform, appVersion: device.appVersion))
         }

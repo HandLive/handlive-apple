@@ -66,18 +66,65 @@ final class StubAlerts: ClipboardAlerting {
 
 @MainActor
 func makeModel(secrets: any SecretStore = InMemorySecretStore(), pasteboard: StubPasteboard = StubPasteboard(),
-               alerts: StubAlerts = StubAlerts(), sms: StubSmsNotifier = StubSmsNotifier()) -> AppModel {
+               alerts: StubAlerts = StubAlerts(), sms: StubSmsNotifier = StubSmsNotifier(),
+               relay: ScriptedRelayAPI? = nil) -> AppModel {
     let suite = "app.handlive.tests.\(UUID().uuidString)"
     let defaults = UserDefaults(suiteName: suite)!
+    let folder = FileManager.default.temporaryDirectory.appendingPathComponent("handlive-tests-\(UUID().uuidString)")
     return AppModel(settings: AppSettings(defaults: defaults), secrets: secrets,
                     device: LocalDevice(appVersion: "1.0.0 (1)", osVersion: "15.6", model: "Mac15,3", name: "Mac",
                                         platform: .macos),
-                    pairStoreURL: FileManager.default.temporaryDirectory
-                        .appendingPathComponent("handlive-tests-\(UUID().uuidString)/paired-devices.bin"),
-                    smsDatabaseURL: FileManager.default.temporaryDirectory
-                        .appendingPathComponent("handlive-tests-\(UUID().uuidString)/handlive.sqlite"),
-                    pasteboard: pasteboard, alerts: alerts, smsNotifier: sms, relayConfiguration: nil) { capability, _ in
-        ConnectionManager(localCapability: capability, discovery: SilentDiscovery(), network: SilentNetwork())
+                    pairStoreURL: folder.appendingPathComponent("paired-devices.bin"),
+                    smsDatabaseURL: folder.appendingPathComponent("handlive.sqlite"),
+                    pasteboard: pasteboard, alerts: alerts, smsNotifier: sms,
+                    makeRelay: { _ in relay.map { RelayServices(api: $0, sockets: ClosedRelaySockets()) } },
+                    makeManager: { capability, _ in
+                        ConnectionManager(localCapability: capability, discovery: SilentDiscovery(), network: SilentNetwork())
+                    })
+}
+
+/// The relay's REST side as a script: every call is recorded; `reachable = false` fails like no network (E5, E7).
+final class ScriptedRelayAPI: RelayAPI, @unchecked Sendable {
+    private let lock = NSLock()
+    private var reachableValue = true
+    private var log: [String] = []
+
+    var reachable: Bool {
+        get { lock.withLock { reachableValue } }
+        set { lock.withLock { reachableValue = newValue } }
+    }
+
+    var calls: [String] { lock.withLock { log } }
+
+    private func record(_ call: String) throws {
+        try lock.withLock {
+            log.append(call)
+            if !reachableValue { throw RelayAPIError.unreachable("offline") }
+        }
+    }
+
+    func registerDevice() async throws { try record("registerDevice") }
+    func accessToken() async throws -> String {
+        try record("accessToken")
+        return "jwt"
+    }
+    func registerPair(_ registration: RelayPairRegistration) async throws { try record("registerPair") }
+    func pairs() async throws -> RelayPairList {
+        try record("pairs")
+        return RelayPairList(pairs: [])
+    }
+    func revokePair(pairId: String, reason: RelayPairRevokeRequest.Reason) async throws {
+        try record("revokePair \(reason.rawValue)")
+    }
+    func updatePushToken(_ request: RelayPushTokenRequest) async throws { try record("updatePushToken") }
+    func push(_ request: RelayPushRequest) async throws { try record("push") }
+    func deleteDevice(revokePairs: Bool) async throws { try record("deleteDevice revoke_pairs=\(revokePairs)") }
+}
+
+/// A relay WebSocket that never opens: the tests stay on the (silent) LAN.
+struct ClosedRelaySockets: RelaySocketOpening {
+    func open(token: String, timeout: Duration) async throws -> any MessageChannel {
+        throw RelayAPIError.unreachable("closed")
     }
 }
 
@@ -100,5 +147,11 @@ final class StubSmsNotifier: SmsNotifying {
 
     func removeAll() {
         removedAll += 1
+    }
+
+    private(set) var removedEverything = 0
+
+    func removeEverything() {
+        removedEverything += 1
     }
 }
