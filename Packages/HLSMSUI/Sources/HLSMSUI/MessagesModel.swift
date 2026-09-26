@@ -11,12 +11,12 @@ public final class MessagesModel: ObservableObject {
     @Published public private(set) var syncStatus = SmsSyncStatus.idle
     /// Conversations shown as unread (SMS-05 field 4): the Mac menu bar and the iOS tab badge.
     @Published public private(set) var unreadThreads = 0
-    /// The selected conversation (sidebar, iPad) or `nil`.
+    /// The selected conversation (sidebar, iPad) or `nil`; choosing one closes "New Message".
     @Published public var selection: Int64? {
         didSet { if selection != oldValue { selectionChanged(from: oldValue) } }
     }
-    /// "New Message" is open (SMS-04, ⌘N).
-    @Published public var composingNew = false
+    /// "New Message" while it is open (SMS-04; ⌘N, the toolbar, the Dock menu).
+    @Published public private(set) var newMessage: NewMessageModel?
     @Published public var searchText = ""
     /// iOS: "All / Unread".
     @Published public var unreadOnly = false
@@ -32,6 +32,8 @@ public final class MessagesModel: ObservableObject {
     var observation: Task<Void, Never>?
     var failureObservation: Task<Void, Never>?
     var conversations: [Int64: ConversationModel] = [:]
+    /// The Messages window (Mac) or screen (iOS) is in use, so the selected conversation counts as open.
+    public private(set) var isActive = true
 
     public init(engine: SmsEngine, store: SmsStore) {
         self.engine = engine
@@ -43,6 +45,7 @@ public final class MessagesModel: ObservableObject {
         guard pairId != self.pairId else { return }
         self.pairId = pairId
         selection = nil
+        newMessage = nil
         conversations.removeAll()
         threads = []
         listLimit = SmsStore.pageSize
@@ -90,8 +93,34 @@ public final class MessagesModel: ObservableObject {
         guard let pairId, let thread = try? await store.pool.read({ db in
             try SmsStore.thread(db, pairId: pairId, address: address)
         }) else { return }
-        composingNew = false
         selection = thread.threadId
+        newMessage = nil
+    }
+
+    /// Opens "New Message" in place of the conversation; the conversation the phone creates replaces it (step 11).
+    public func startNewMessage() {
+        guard let pairId else { return }
+        let compose = NewMessageModel(engine: engine, store: store, pairId: pairId)
+        compose.onThreadCreated = { [weak self] threadId in self?.selection = threadId }
+        selection = nil
+        newMessage = compose
+    }
+
+    public func closeNewMessage() {
+        newMessage = nil
+    }
+
+    /// The window or screen came into use or went away (another app, closed, background): while it is not in use a
+    /// new message in the selected conversation is notified (SMS-02 step 8); coming back reads it (SMS-03 step 4).
+    public func setActive(_ active: Bool) {
+        guard active != isActive else { return }
+        isActive = active
+        guard let selection else { return }
+        if active {
+            Task { await engine.openConversation(threadId: selection) }
+        } else {
+            engine.closeConversation(threadId: selection)
+        }
     }
 
     private func observe() {
@@ -124,6 +153,8 @@ public final class MessagesModel: ObservableObject {
     private func selectionChanged(from old: Int64?) {
         if let old { engine.closeConversation(threadId: old) }
         guard let selection else { return }
+        newMessage = nil
+        guard isActive else { return }
         Task { await engine.openConversation(threadId: selection) }
     }
 }

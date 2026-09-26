@@ -48,6 +48,30 @@ struct MessagesModelTests {
         #expect(await Self.eventually { model.visibleThreads.map(\.threadId) == [1] })
     }
 
+    @Test("New Message replaces the conversation until one is chosen; the selection is open only while in use")
+    func newMessageAndActivity() async throws {
+        let store = try Self.store()
+        let engine = SmsEngine(store: store)
+        engine.setPair(Self.pairId)
+        let messages = MessagesModel(engine: engine, store: store)
+        messages.setPair(Self.pairId)
+        messages.selection = 1
+        #expect(await Self.eventually { engine.openThreadId == 1 })
+        messages.startNewMessage()
+        let compose = try #require(messages.newMessage)
+        #expect(messages.selection == nil && engine.openThreadId == nil)
+        compose.onThreadCreated(5) // the phone's copy of the first message names its conversation (SMS-04 step 11)
+        #expect(messages.selection == 5 && messages.newMessage == nil)
+        #expect(await Self.eventually { engine.openThreadId == 5 })
+        messages.setActive(false) // window closed or in the background: new messages there notify again
+        #expect(engine.openThreadId == nil)
+        messages.selection = 6
+        try? await Task.sleep(for: .milliseconds(50))
+        #expect(engine.openThreadId == nil)
+        messages.setActive(true)
+        #expect(await Self.eventually { engine.openThreadId == 6 })
+    }
+
     @Test("A conversation: messages oldest first, the placeholder of a message written here, the counter")
     func conversation() async throws {
         let store = try Self.store()
