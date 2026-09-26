@@ -1,3 +1,4 @@
+import HLAppCore
 import HLDesignSystem
 import HLLocalization
 import HLTransport
@@ -10,7 +11,7 @@ public struct PairingSheet: View {
     private let cancel: () -> Void
 
     public init(model: AppModel, onPaired: @escaping @MainActor (String) -> Void, cancel: @escaping () -> Void) {
-        _controller = StateObject(wrappedValue: PairingController(model: model, onPaired: onPaired))
+        _controller = StateObject(wrappedValue: PairingController(host: model, onPaired: onPaired))
         self.cancel = cancel
     }
 
@@ -100,5 +101,18 @@ struct PairingCardView: View {
     static func grouped(_ pin: String) -> String {
         guard pin.count == 6 else { return pin }
         return "\(pin.prefix(3)) \(pin.suffix(3))"
+    }
+}
+
+extension PairingController.Notice {
+    /// The Mac's wording of each notice (PAIR-01 E3, E4, field 10; SET-03 E1, E4).
+    var text: String {
+        switch self {
+        case .insecure: L10n.Error.pairingAuthFailed
+        case .phoneNotFound: L10n.Pairing.phoneNotFound
+        case .localNetworkDenied: L10n.Setup.localNetworkDeniedMac
+        case .saveFailed: L10n.Error.pairingFailed
+        case .keysMissing: L10n.Setup.keysFailed
+        }
     }
 }

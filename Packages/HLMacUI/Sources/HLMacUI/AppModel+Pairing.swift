@@ -19,7 +19,12 @@ public enum UnpairResult: Equatable, Sendable {
     case donePendingRemote
 }
 
-extension AppModel {
+extension AppModel: PairingHost {
+    public var pairingDeviceName: String { device.name }
+
+    /// The relay for the QR code's rendezvous (PAIR-01 step 2) while the internet connection is on.
+    public var pairingRelay: RelayServices? { relayEnabled ? relay : nil }
+
     /// Why clipboard sync is not in effect with the phone (SET-02 field 24), or `nil` when it is.
     public var clipboardUnavailableReason: String? {
         guard let device = pairedDevice else { return nil }

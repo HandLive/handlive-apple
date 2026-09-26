@@ -71,7 +71,7 @@ struct PairingControllerTests {
 
     func controller(lifetime: Duration = .seconds(120), paired: @escaping @MainActor (String) -> Void = { _ in })
         -> PairingController {
-        PairingController(model: model, search: search, lifetime: lifetime, onPaired: paired)
+        PairingController(host: model, search: search, lifetime: lifetime, onPaired: paired)
     }
 
     static func result(name: String = "Pixel của Lan") -> PairingResult {
@@ -171,7 +171,7 @@ struct PairingControllerTests {
 
     @Test("Without keys the sheet shows the keys error instead of a code")
     func withoutKeys() {
-        let pairing = PairingController(model: makeModel(), search: search) { _ in }
+        let pairing = PairingController(host: makeModel(), search: search) { _ in }
         pairing.start()
         #expect(pairing.notice == .keysMissing && pairing.qrURI.isEmpty && search.all.isEmpty)
     }
