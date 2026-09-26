@@ -32,6 +32,11 @@ public struct RelayDeviceRegistered: Codable, Equatable, Sendable {
     public let deviceId: String
     public let createdAt: Int64
 
+    public init(deviceId: String, createdAt: Int64) {
+        self.deviceId = deviceId
+        self.createdAt = createdAt
+    }
+
     enum CodingKeys: String, CodingKey {
         case deviceId = "device_id"
         case createdAt = "created_at"
@@ -55,6 +60,11 @@ public struct RelayChallenge: Codable, Equatable, Sendable {
     /// b64u of 32 bytes; valid 60 s.
     public let challenge: String
     public let expiresAt: Int64
+
+    public init(challenge: String, expiresAt: Int64) {
+        self.challenge = challenge
+        self.expiresAt = expiresAt
+    }
 
     enum CodingKeys: String, CodingKey {
         case challenge
@@ -162,9 +172,18 @@ public struct RelayErrorBody: Codable, Equatable, Sendable {
     public struct Detail: Codable, Equatable, Sendable {
         public let code: RelayRestErrorCode
         public let message: String
+
+        public init(code: RelayRestErrorCode, message: String) {
+            self.code = code
+            self.message = message
+        }
     }
 
     public let error: Detail
+
+    public init(code: RelayRestErrorCode, message: String) {
+        error = Detail(code: code, message: message)
+    }
 }
 
 /// Relay HTTP error codes (0.8.2); an unknown code reads as `.unrecognized` and is handled like `INTERNAL`.

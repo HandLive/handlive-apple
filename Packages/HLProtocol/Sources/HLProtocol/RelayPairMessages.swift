@@ -34,9 +34,29 @@ public struct RelayPairRegistration: Codable, Equatable, Sendable {
     }
 }
 
+/// Response of `POST /v1/pairs` (201 created, 200 already there with identical data).
+public struct RelayPairRegistered: Codable, Equatable, Sendable {
+    public let pairId: String
+    public let createdAt: Int64
+
+    public init(pairId: String, createdAt: Int64) {
+        self.pairId = pairId
+        self.createdAt = createdAt
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case pairId = "pair_id"
+        case createdAt = "created_at"
+    }
+}
+
 /// `GET /v1/pairs` (PAIR-02 API 1): a pair with a `revoked_at` was revoked; a local pair absent here is not.
 public struct RelayPairList: Codable, Equatable, Sendable {
     public let pairs: [RelayPairEntry]
+
+    public init(pairs: [RelayPairEntry]) {
+        self.pairs = pairs
+    }
 }
 
 /// One pair of `GET /v1/pairs`: `revoked_at` set means revoked; `peer_online` comes from the relay's presence.
@@ -47,6 +67,16 @@ public struct RelayPairEntry: Codable, Equatable, Sendable {
     public let createdAt: Int64
     public let revokedAt: Int64?
     public let peerOnline: Bool
+
+    public init(pairId: String, peerDeviceId: String, peerPlatform: CapabilityData.Platform, createdAt: Int64,
+                revokedAt: Int64?, peerOnline: Bool) {
+        self.pairId = pairId
+        self.peerDeviceId = peerDeviceId
+        self.peerPlatform = peerPlatform
+        self.createdAt = createdAt
+        self.revokedAt = revokedAt
+        self.peerOnline = peerOnline
+    }
 
     enum CodingKeys: String, CodingKey {
         case pairId = "pair_id"
