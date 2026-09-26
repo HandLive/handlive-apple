@@ -1,6 +1,8 @@
 import HLAppCore
 import HLDesignSystem
 import HLLocalization
+import HLSMS
+import HLSMSUI
 import SwiftUI
 
 /// Settings › Devices (PAIR-02, DeviceRow README): the paired phone with its status, "Details…" and "Unpair…", or
@@ -98,19 +100,11 @@ struct DeviceDetailView: View {
                         Text(verbatim: device.peerName).hlTextStyle(.macHeadline)
                     }
                 }
-                Section {
-                    LabeledContent(L10n.Settings.clipboard) {
-                        if let reason = model.clipboardUnavailableReason {
-                            Text(reason).foregroundStyle(HLColorToken.textOrange.color)
-                        } else {
-                            Text(L10n.Common.on).foregroundStyle(.secondary)
-                        }
-                    }
-                    if !(device.peerCapability?.permissionsMissing ?? []).isEmpty {
-                        Label(L10n.Pairing.reasonMissingPermission, systemImage: "info.circle")
-                            .foregroundStyle(HLColorToken.textOrange.color)
-                    }
+                Section { // field 8: the features in use, each with its reason when it isn't
+                    featureRow(L10n.Settings.clipboard, reason: model.clipboardUnavailableReason)
+                    featureRow(L10n.Settings.smsMessages, reason: model.smsFeatureReason)
                 }
+                MissingPermissionsSection(permissions: device.peerCapability?.permissionsMissing ?? [])
                 Section {
                     LabeledContent(L10n.Pairing.securityCode) {
                         Text(verbatim: device.securityCode)
@@ -133,6 +127,46 @@ struct DeviceDetailView: View {
             .padding(HLSpacing.space16)
         }
         .frame(width: 440)
+    }
+}
+
+extension DeviceDetailView {
+    private func featureRow(_ name: String, reason: String?) -> some View {
+        LabeledContent(name) {
+            if let reason {
+                Text(reason).foregroundStyle(HLColorToken.textOrange.color)
+            } else {
+                Text(L10n.Common.on).foregroundStyle(.secondary)
+            }
+        }
+    }
+}
+
+/// PAIR-02 field 9: the permissions missing on the phone. A missing `READ_SMS`/`SEND_SMS` opens the SMS instructions
+/// (SMS-01 field 7) through "View Instructions"; contacts get their hint; the others get their instructions with their
+/// phases.
+struct MissingPermissionsSection: View {
+    let permissions: [String]
+
+    var body: some View {
+        if !permissions.isEmpty {
+            Section {
+                if SmsPermissions.smsMissing(in: permissions) { SmsPhoneProblemRow(.missingPermission) }
+                if SmsPermissions.contactsMissing(in: permissions) { reason(L10n.Sms.contactsPermissionHint) }
+                if permissions.contains(where: Self.hasOwnPhase) { reason(L10n.Pairing.reasonMissingPermission) }
+            }
+        }
+    }
+
+    /// A permission of a later feature (calls, camera…), neither SMS nor contacts.
+    static func hasOwnPhase(_ permission: String) -> Bool {
+        !SmsPermissions.isSms(permission) && !SmsPermissions.matches(permission, SmsPermissions.contacts)
+    }
+
+    private func reason(_ text: String) -> some View {
+        Label(text, systemImage: "info.circle")
+            .hlTextStyle(.macFootnote)
+            .foregroundStyle(HLColorToken.textOrange.color)
     }
 }
 
