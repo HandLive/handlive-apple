@@ -1,6 +1,42 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "a11y.sms_bubble_received" : {
+      "comment" : "VoiceOver label of a received message bubble (SMS-03 special requirements); {sender} = the conversation name, or the sender's number in national format in a group conversation; {time} formatted by the system; the message text is the accessibility value, read after the label",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        }
+      }
+    },
+    "a11y.sms_bubble_sent" : {
+      "comment" : "VoiceOver label of a sent message bubble (SMS-03 special requirements); {time} formatted by the system; {status} = the sms.status_* text; the message text is the accessibility value",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You, %1$@, %2$@"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bạn, %1$@, %2$@"
+          }
+        }
+      }
+    },
     "clipboard.auto_send_off_on_phone" : {
       "comment" : "Mac/iPhone note when the phone reports features.clipboard.auto_send = false",
       "extractionState" : "manual",
@@ -213,6 +249,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chưa nhận gì"
+          }
+        }
+      }
+    },
+    "clipboard.nothing_received_body" : {
+      "comment" : "Empty-state sentence under clipboard.nothing_received on the Clipboard tab (CLIP-04 field 10, PasteCard)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Content copied on the phone or Mac appears here while HandLive is open."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nội dung sao chép trên điện thoại hoặc Mac sẽ hiện ở đây khi HandLive đang mở."
+          }
+        }
+      }
+    },
+    "clipboard.paste_hint" : {
+      "comment" : "One-line hint under the system Paste button on the send card (CLIP-04 field 1, PasteCard); “Paste” is the system button's own label",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap Paste to send what you just copied."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chạm Dán để gửi nội dung vừa sao chép."
           }
         }
       }
@@ -452,7 +524,7 @@
       }
     },
     "common.delete" : {
-      "comment" : "Warning-colored confirm button of Remove Device from Server and Delete All HandLive Data (SET-02 field 28)",
+      "comment" : "Destructive button of the alert “Couldn't connect to the server. Delete from this device anyway?” (SET-02 E7), next to common.cancel; the field 28 buttons are settings.remove_from_server_confirm and settings.delete_all_confirm",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -506,7 +578,7 @@
       }
     },
     "common.off" : {
-      "comment" : "Off value: option of Auto-Clear Received Clipboard, state read by TalkBack/VoiceOver for a switch",
+      "comment" : "Off value: option of Auto-Clear Received Clipboard, state read by TalkBack/VoiceOver for a switch, feature card state off (SET-01 field 10)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -524,7 +596,7 @@
       }
     },
     "common.on" : {
-      "comment" : "On value: state read by TalkBack/VoiceOver for a switch, value of a permission row",
+      "comment" : "On value: state read by TalkBack/VoiceOver for a switch, value of a permission row, feature card state ready (SET-01 field 10)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -847,6 +919,42 @@
         }
       }
     },
+    "error.relay_pin_mismatch" : {
+      "comment" : "The relay certificate does not match the pinned keys; nothing was sent (CONN-03 E7, field 4)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The server's certificate isn't trusted, so HandLive didn't connect over the internet."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chứng chỉ máy chủ không đáng tin cậy nên HandLive không kết nối qua Internet."
+          }
+        }
+      }
+    },
+    "error.relay_rate_limited" : {
+      "comment" : "Relay answered 429 RATE_LIMITED (CONN-03 E6, field 4); {duration} is the remaining Retry-After wait, formatted by the system (like status.retry_in)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Too many requests. Trying again in %1$@."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quá nhiều yêu cầu. Thử lại sau %1$@."
+          }
+        }
+      }
+    },
     "error.server_unreachable" : {
       "comment" : "Shown under Remove Device from Server when there is no network or the server fails (SET-02 E5); nothing changed",
       "extractionState" : "manual",
@@ -897,6 +1005,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Gửi không thành công"
+          }
+        }
+      }
+    },
+    "error.sms_history_failed" : {
+      "comment" : "Error banner at the top of a conversation when sms/history timed out or failed (SMS-03 E4), with common.retry",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't load older messages"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không tải được tin cũ hơn"
           }
         }
       }
@@ -1005,6 +1131,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "SIM không hoạt động"
+          }
+        }
+      }
+    },
+    "error.sms_sync_storage" : {
+      "comment" : "Non-blocking error when a sync page cannot be written to the local database (SMS-01 E7: out of storage, SQLCipher cannot be opened)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't save messages on this device"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không lưu được tin nhắn trên máy này"
           }
         }
       }
@@ -1711,6 +1855,24 @@
         }
       }
     },
+    "permission.local_network_primer" : {
+      "comment" : "Body of the local network explanation before the first Bonjour browse (SET-03 step 9), under permission.local_network_primer_title; button common.continue",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HandLive looks for your Android phone on your Wi-Fi network to connect to it directly."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HandLive tìm điện thoại Android trong mạng Wi-Fi để kết nối trực tiếp."
+          }
+        }
+      }
+    },
     "permission.local_network_primer_title" : {
       "comment" : "Title of the explanation before the local network dialog (iOS, macOS 15+)",
       "extractionState" : "manual",
@@ -1946,7 +2108,7 @@
       }
     },
     "settings.calls" : {
-      "comment" : "Mac Settings pane title (toolbar item)",
+      "comment" : "Mac Settings pane title (toolbar item); the Calls feature card name on Android (SET-01 field 10)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -2013,6 +2175,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dữ liệu"
+          }
+        }
+      }
+    },
+    "settings.delete_all_confirm" : {
+      "comment" : "Warning-colored confirm button of Delete All HandLive Data, next to common.cancel (SET-02 field 28)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete All"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Xóa toàn bộ"
           }
         }
       }
@@ -2287,6 +2467,24 @@
         }
       }
     },
+    "settings.remove_from_server_confirm" : {
+      "comment" : "Warning-colored confirm button of Remove Device from Server, next to common.cancel (SET-02 field 28)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove from Server"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Xóa khỏi máy chủ"
+          }
+        }
+      }
+    },
     "settings.remove_from_server_ellipsis" : {
       "comment" : "Mac button in the General pane (SET-02 field 26); “…” because it opens an alert",
       "extractionState" : "manual",
@@ -2432,7 +2630,7 @@
       }
     },
     "settings.sms_messages" : {
-      "comment" : "Switch for feature.sms (SET-02 field 7): Android Settings tab, Mac Messages pane, iPhone Messages group",
+      "comment" : "Switch for feature.sms (SET-02 field 7): Android Settings tab, Mac Messages pane, iPhone Messages group; also the SMS feature card name (SET-01 field 10)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -2665,6 +2863,24 @@
         }
       }
     },
+    "setup.local_network_denied_ios" : {
+      "comment" : "iPhone/iPad guidance when the local network permission is denied (SET-03 E4), with common.open_settings; the Mac text is setup.local_network_denied_mac",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HandLive can't look for the phone on Wi-Fi. Turn on HandLive in Settings › Privacy & Security › Local Network."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HandLive không tìm được điện thoại trong mạng Wi-Fi. Bật HandLive trong Cài đặt › Quyền riêng tư & Bảo mật › Mạng cục bộ."
+          }
+        }
+      }
+    },
     "setup.local_network_denied_mac" : {
       "comment" : "Mac guidance when local network access is denied (SET-03 E4, CONN-01 E8), with an Open System Settings button",
       "extractionState" : "manual",
@@ -2697,6 +2913,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Để mở HandLive khi đăng nhập, cho phép trong Cài đặt hệ thống › Cài đặt chung › Mục đăng nhập."
+          }
+        }
+      }
+    },
+    "setup.notifications_denied_ios" : {
+      "comment" : "iPhone/iPad guidance when notifications are denied (SET-03 E3), with common.open_settings; the Mac text is setup.notifications_denied_mac",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notifications are off, so new SMS messages and incoming calls don't appear while HandLive is closed. Turn them on in Settings › Notifications › HandLive."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thông báo đang tắt nên không thấy SMS mới và cuộc gọi đến khi HandLive đóng. Bật lại trong Cài đặt › Thông báo › HandLive."
           }
         }
       }
@@ -2810,7 +3044,7 @@
       }
     },
     "sms.char_count" : {
-      "comment" : "Character counter under an empty compose field (“0/160”); {used} and {limit} are numbers formatted by the system",
+      "comment" : "Character counter under an empty compose field (“0/160”, SMS-04 field 3); {used} and {limit} as in sms.char_counter, formatted by the system",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -2828,7 +3062,7 @@
       }
     },
     "sms.char_counter" : {
-      "comment" : "Character and part counter under the compose field (“120/160 · 1 message”); {used} and {limit} are formatted numbers, {parts} is sms.part_count",
+      "comment" : "Character and part counter under the compose field (SMS-04 field 3: “120/160 · 1 message”, “230/306 · 2 messages”); {used} = characters in the message, {limit} = capacity of the current number of parts (160 for one GSM-7 part, 153 × parts when several; 70 for one part with a character outside GSM-7, 67 × parts when several), both formatted numbers; {parts} is sms.part_count",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -2845,8 +3079,26 @@
         }
       }
     },
+    "sms.choose_sim" : {
+      "comment" : "Title of the SIM picker of the compose field, also opened by SMS_SIM_UNAVAILABLE (SMS-04 field 4, E6)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose SIM"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chọn SIM"
+          }
+        }
+      }
+    },
     "sms.compose_placeholder" : {
-      "comment" : "Placeholder of the compose field at the bottom of a conversation (MessageBubble); at most 1,600 characters",
+      "comment" : "Placeholder of the compose field at the bottom of a conversation (MessageBubble) and of the quick-reply text field of the HL_SMS_REPLY notification action (SMS-02 API 4); at most 1,600 characters",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -2895,6 +3147,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sao chép số"
+          }
+        }
+      }
+    },
+    "sms.empty_body" : {
+      "comment" : "Empty-state sentence under sms.empty_title, shown with the SMS-01 sync status (SMS-03 E1)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Messages from your phone appear here after the first sync."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tin nhắn từ điện thoại sẽ hiện ở đây sau lần đồng bộ đầu tiên."
           }
         }
       }
@@ -3115,6 +3385,24 @@
         }
       }
     },
+    "sms.recipient_label" : {
+      "comment" : "Label of the recipient field of New Message (SMS-04 field 1)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To:"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đến:"
+          }
+        }
+      }
+    },
     "sms.reply" : {
       "comment" : "Title of the HL_SMS_REPLY notification action (text input) of a new SMS notification; not offered for group conversations",
       "extractionState" : "manual",
@@ -3314,7 +3602,7 @@
       }
     },
     "sms.sync_downloaded" : {
-      "comment" : "Progress under the sync banner, first sync only (SMS-01 field 2)",
+      "comment" : "Progress under the sync banner, first sync only (SMS-01 field 2); count is printed without digit grouping (“Downloaded 1500 messages”, 0.12.1)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {

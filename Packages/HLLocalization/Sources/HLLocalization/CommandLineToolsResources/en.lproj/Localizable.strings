@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>a11y.sms_bubble_received</key>
+	<string>%1$@, %2$@</string>
+	<key>a11y.sms_bubble_sent</key>
+	<string>You, %1$@, %2$@</string>
 	<key>clipboard.auto_send_off_on_phone</key>
 	<string>Auto-send is off on the phone — use the Send Clipboard button on the phone</string>
 	<key>clipboard.conflict_body</key>
@@ -26,6 +30,10 @@
 	<string>Not connected — will send if reconnected within 2 minutes</string>
 	<key>clipboard.nothing_received</key>
 	<string>Nothing Received Yet</string>
+	<key>clipboard.nothing_received_body</key>
+	<string>Content copied on the phone or Mac appears here while HandLive is open.</string>
+	<key>clipboard.paste_hint</key>
+	<string>Tap Paste to send what you just copied.</string>
 	<key>clipboard.received_from</key>
 	<string>From %1$@ · %2$@</string>
 	<key>clipboard.send_again</key>
@@ -96,12 +104,18 @@
 	<string>Pairing didn't finish. Try again.</string>
 	<key>error.relay_device_revoked</key>
 	<string>This device was removed from the internet service</string>
+	<key>error.relay_pin_mismatch</key>
+	<string>The server's certificate isn't trusted, so HandLive didn't connect over the internet.</string>
+	<key>error.relay_rate_limited</key>
+	<string>Too many requests. Trying again in %1$@.</string>
 	<key>error.server_unreachable</key>
 	<string>Couldn't connect to the server. Try again later.</string>
 	<key>error.session_auth_failed</key>
 	<string>Couldn't verify the phone</string>
 	<key>error.sms_generic_failure</key>
 	<string>Couldn't send</string>
+	<key>error.sms_history_failed</key>
+	<string>Couldn't load older messages</string>
 	<key>error.sms_invalid_address</key>
 	<string>Invalid number</string>
 	<key>error.sms_limit_exceeded</key>
@@ -114,6 +128,8 @@
 	<string>The phone is in airplane mode</string>
 	<key>error.sms_sim_unavailable</key>
 	<string>The SIM isn't active</string>
+	<key>error.sms_sync_storage</key>
+	<string>Couldn't save messages on this device</string>
 	<key>error.sms_thread_not_found</key>
 	<string>This conversation is no longer on the phone</string>
 	<key>error.update_phone_app</key>
@@ -192,6 +208,8 @@
 	<string>Unpaired; %1$@ will clean up when it reconnects</string>
 	<key>pairing.use_pin</key>
 	<string>Can't Scan? Use a PIN</string>
+	<key>permission.local_network_primer</key>
+	<string>HandLive looks for your Android phone on your Wi-Fi network to connect to it directly.</string>
 	<key>permission.local_network_primer_title</key>
 	<string>Find Your Phone on Wi-Fi</string>
 	<key>permission.notifications_primer_client</key>
@@ -226,6 +244,8 @@
 	<string>Clipboard</string>
 	<key>settings.data</key>
 	<string>Data</string>
+	<key>settings.delete_all_confirm</key>
+	<string>Delete All</string>
 	<key>settings.delete_all_data</key>
 	<string>Delete All HandLive Data</string>
 	<key>settings.delete_all_data_ellipsis</key>
@@ -256,6 +276,8 @@
 	<string>Phone</string>
 	<key>settings.remove_from_server</key>
 	<string>Remove Device from Server</string>
+	<key>settings.remove_from_server_confirm</key>
+	<string>Remove from Server</string>
 	<key>settings.remove_from_server_ellipsis</key>
 	<string>Remove Device from Server…</string>
 	<key>settings.remove_from_server_warning</key>
@@ -298,10 +320,14 @@
 	<string>The clipboard syncs while HandLive is open on this device: tap the Paste button to send, with no paste permission prompt. iPhone and iPad can't take calls. When HandLive is closed, SMS messages and incoming calls appear as notifications.</string>
 	<key>setup.keys_failed</key>
 	<string>Couldn't create the security keys on this device. Try again.</string>
+	<key>setup.local_network_denied_ios</key>
+	<string>HandLive can't look for the phone on Wi-Fi. Turn on HandLive in Settings › Privacy &amp; Security › Local Network.</string>
 	<key>setup.local_network_denied_mac</key>
 	<string>HandLive can't look for the phone on Wi-Fi. Turn on HandLive in System Settings › Privacy &amp; Security › Local Network.</string>
 	<key>setup.login_item_approval_mac</key>
 	<string>To open HandLive at login, allow it in System Settings › General › Login Items.</string>
+	<key>setup.notifications_denied_ios</key>
+	<string>Notifications are off, so new SMS messages and incoming calls don't appear while HandLive is closed. Turn them on in Settings › Notifications › HandLive.</string>
 	<key>setup.notifications_denied_mac</key>
 	<string>Notifications are off, so new SMS messages and missed calls don't appear. Turn them on in System Settings › Notifications › HandLive.</string>
 	<key>setup.time_sensitive_off</key>
@@ -318,12 +344,16 @@
 	<string>%1$@/%2$@</string>
 	<key>sms.char_counter</key>
 	<string>%1$@/%2$@ · %3$@</string>
+	<key>sms.choose_sim</key>
+	<string>Choose SIM</string>
 	<key>sms.compose_placeholder</key>
 	<string>SMS Message</string>
 	<key>sms.contacts_permission_hint</key>
 	<string>Allow HandLive to read contacts on the phone to show names</string>
 	<key>sms.copy_number</key>
 	<string>Copy Number</string>
+	<key>sms.empty_body</key>
+	<string>Messages from your phone appear here after the first sync.</string>
 	<key>sms.empty_title</key>
 	<string>No Messages Yet</string>
 	<key>sms.filter_all</key>
@@ -344,6 +374,8 @@
 	<string>New SMS message</string>
 	<key>sms.quick_reply_not_sent</key>
 	<string>Not sent yet. Open HandLive to try again.</string>
+	<key>sms.recipient_label</key>
+	<string>To:</string>
 	<key>sms.reply</key>
 	<string>Reply</string>
 	<key>sms.resync</key>

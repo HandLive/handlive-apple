@@ -4,6 +4,16 @@
 /// Every user-facing string of the Apple apps, from the shared catalog (C20, 0.12). Code never
 /// spells UI text out: `Text(L10n.Status.connecting)`, `L10n.Pairing.pairedWith(deviceName: name)`.
 public enum L10n {
+    public enum A11y {
+        /// {sender}, {time}
+        public static func smsBubbleReceived(sender: String, time: String) -> String {
+            L10nLookup.format("a11y.sms_bubble_received", sender, time)
+        }
+        /// You, {time}, {status}
+        public static func smsBubbleSent(time: String, status: String) -> String {
+            L10nLookup.format("a11y.sms_bubble_sent", time, status)
+        }
+    }
     public enum Clipboard {
         /// Auto-send is off on the phone — use the Send Clipboard button on the phone
         public static var autoSendOffOnPhone: String { L10nLookup.string("clipboard.auto_send_off_on_phone") }
@@ -39,6 +49,10 @@ public enum L10n {
         public static var notConnectedWillSend: String { L10nLookup.string("clipboard.not_connected_will_send") }
         /// Nothing Received Yet
         public static var nothingReceived: String { L10nLookup.string("clipboard.nothing_received") }
+        /// Content copied on the phone or Mac appears here while HandLive is open.
+        public static var nothingReceivedBody: String { L10nLookup.string("clipboard.nothing_received_body") }
+        /// Tap Paste to send what you just copied.
+        public static var pasteHint: String { L10nLookup.string("clipboard.paste_hint") }
         /// From {device_name} · {time}
         public static func receivedFrom(deviceName: String, time: String) -> String {
             L10nLookup.format("clipboard.received_from", deviceName, time)
@@ -123,12 +137,20 @@ public enum L10n {
         public static var pairingFailed: String { L10nLookup.string("error.pairing_failed") }
         /// This device was removed from the internet service
         public static var relayDeviceRevoked: String { L10nLookup.string("error.relay_device_revoked") }
+        /// The server's certificate isn't trusted, so HandLive didn't connect over the internet.
+        public static var relayPinMismatch: String { L10nLookup.string("error.relay_pin_mismatch") }
+        /// Too many requests. Trying again in {duration}.
+        public static func relayRateLimited(duration: String) -> String {
+            L10nLookup.format("error.relay_rate_limited", duration)
+        }
         /// Couldn't connect to the server. Try again later.
         public static var serverUnreachable: String { L10nLookup.string("error.server_unreachable") }
         /// Couldn't verify the phone
         public static var sessionAuthFailed: String { L10nLookup.string("error.session_auth_failed") }
         /// Couldn't send
         public static var smsGenericFailure: String { L10nLookup.string("error.sms_generic_failure") }
+        /// Couldn't load older messages
+        public static var smsHistoryFailed: String { L10nLookup.string("error.sms_history_failed") }
         /// Invalid number
         public static var smsInvalidAddress: String { L10nLookup.string("error.sms_invalid_address") }
         /// Sending limit reached. Try again later.
@@ -141,6 +163,8 @@ public enum L10n {
         public static var smsRadioOff: String { L10nLookup.string("error.sms_radio_off") }
         /// The SIM isn't active
         public static var smsSimUnavailable: String { L10nLookup.string("error.sms_sim_unavailable") }
+        /// Couldn't save messages on this device
+        public static var smsSyncStorage: String { L10nLookup.string("error.sms_sync_storage") }
         /// This conversation is no longer on the phone
         public static var smsThreadNotFound: String { L10nLookup.string("error.sms_thread_not_found") }
         /// Update HandLive on the phone
@@ -243,6 +267,8 @@ public enum L10n {
         public static var usePin: String { L10nLookup.string("pairing.use_pin") }
     }
     public enum Permission {
+        /// HandLive looks for your Android phone on your Wi-Fi network to connect to it directly.
+        public static var localNetworkPrimer: String { L10nLookup.string("permission.local_network_primer") }
         /// Find Your Phone on Wi-Fi
         public static var localNetworkPrimerTitle: String { L10nLookup.string("permission.local_network_primer_title") }
         /// Notifications tell you about new SMS messages and incoming calls; incoming calls are Time Sensitive so they arrive on time.
@@ -281,6 +307,8 @@ public enum L10n {
         public static var clipboard: String { L10nLookup.string("settings.clipboard") }
         /// Data
         public static var data: String { L10nLookup.string("settings.data") }
+        /// Delete All
+        public static var deleteAllConfirm: String { L10nLookup.string("settings.delete_all_confirm") }
         /// Delete All HandLive Data
         public static var deleteAllData: String { L10nLookup.string("settings.delete_all_data") }
         /// Delete All HandLive Data…
@@ -311,6 +339,8 @@ public enum L10n {
         public static var phone: String { L10nLookup.string("settings.phone") }
         /// Remove Device from Server
         public static var removeFromServer: String { L10nLookup.string("settings.remove_from_server") }
+        /// Remove from Server
+        public static var removeFromServerConfirm: String { L10nLookup.string("settings.remove_from_server_confirm") }
         /// Remove Device from Server…
         public static var removeFromServerEllipsis: String { L10nLookup.string("settings.remove_from_server_ellipsis") }
         /// This device's registration will be removed from the HandLive server. Paired devices keep working on the same Wi-Fi network; the internet connection stays off until you turn it back on.
@@ -357,10 +387,14 @@ public enum L10n {
         public static var iosLimits: String { L10nLookup.string("setup.ios_limits") }
         /// Couldn't create the security keys on this device. Try again.
         public static var keysFailed: String { L10nLookup.string("setup.keys_failed") }
+        /// HandLive can't look for the phone on Wi-Fi. Turn on HandLive in Settings › Privacy & Security › Local Network.
+        public static var localNetworkDeniedIos: String { L10nLookup.string("setup.local_network_denied_ios") }
         /// HandLive can't look for the phone on Wi-Fi. Turn on HandLive in System Settings › Privacy & Security › Local Network.
         public static var localNetworkDeniedMac: String { L10nLookup.string("setup.local_network_denied_mac") }
         /// To open HandLive at login, allow it in System Settings › General › Login Items.
         public static var loginItemApprovalMac: String { L10nLookup.string("setup.login_item_approval_mac") }
+        /// Notifications are off, so new SMS messages and incoming calls don't appear while HandLive is closed. Turn them on in Settings › Notifications › HandLive.
+        public static var notificationsDeniedIos: String { L10nLookup.string("setup.notifications_denied_ios") }
         /// Notifications are off, so new SMS messages and missed calls don't appear. Turn them on in System Settings › Notifications › HandLive.
         public static var notificationsDeniedMac: String { L10nLookup.string("setup.notifications_denied_mac") }
         /// Focus may silence call notifications
@@ -383,12 +417,16 @@ public enum L10n {
         public static func charCounter(used: String, limit: String, parts: String) -> String {
             L10nLookup.format("sms.char_counter", used, limit, parts)
         }
+        /// Choose SIM
+        public static var chooseSim: String { L10nLookup.string("sms.choose_sim") }
         /// SMS Message
         public static var composePlaceholder: String { L10nLookup.string("sms.compose_placeholder") }
         /// Allow HandLive to read contacts on the phone to show names
         public static var contactsPermissionHint: String { L10nLookup.string("sms.contacts_permission_hint") }
         /// Copy Number
         public static var copyNumber: String { L10nLookup.string("sms.copy_number") }
+        /// Messages from your phone appear here after the first sync.
+        public static var emptyBody: String { L10nLookup.string("sms.empty_body") }
         /// No Messages Yet
         public static var emptyTitle: String { L10nLookup.string("sms.empty_title") }
         /// All
@@ -413,6 +451,8 @@ public enum L10n {
         }
         /// Not sent yet. Open HandLive to try again.
         public static var quickReplyNotSent: String { L10nLookup.string("sms.quick_reply_not_sent") }
+        /// To:
+        public static var recipientLabel: String { L10nLookup.string("sms.recipient_label") }
         /// Reply
         public static var reply: String { L10nLookup.string("sms.reply") }
         /// Resync
