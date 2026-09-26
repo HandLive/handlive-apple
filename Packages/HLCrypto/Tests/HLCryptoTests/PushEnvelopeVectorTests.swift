@@ -27,8 +27,9 @@ struct PushEnvelopeVectorTests {
         }
     }
 
-    @Test("The APNs payload's p and hl open to the plaintext with the pair's K_push")
+    @Test("The APNs payload's p and hl open to the plaintext with the pair's K_push, the SMS text cut ones too")
     func envelopes() throws {
+        #expect(file.vectors.filter { $0["kind"] as? String == "envelope" }.count == 8)
         for vector in file.vectors where vector["kind"] as? String == "envelope" {
             let payload = try #require(try JSONSerialization.jsonObject(with: Data(try vector.string("apns_payload").utf8))
                 as? [String: Any])
