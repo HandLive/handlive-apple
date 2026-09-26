@@ -3,6 +3,8 @@
 name: HandLive
 options:
   bundleIdPrefix: app.handlive
+  # C20: English is the development, source and fallback language; Vietnamese is the second language.
+  developmentLanguage: en
   deploymentTarget:
     macOS: "13.0"
     iOS: "16.0"
@@ -19,6 +21,12 @@ packages:
     path: Packages/HLTransport
   HLDesignSystem:
     path: Packages/HLDesignSystem
+  HLLocalization:
+    path: Packages/HLLocalization
+  HLAppCore:
+    path: Packages/HLAppCore
+  HLMacUI:
+    path: Packages/HLMacUI
 targets:
   HandLive:
     type: application
@@ -33,11 +41,20 @@ targets:
         MARKETING_VERSION: "0.0.1"
         CURRENT_PROJECT_VERSION: "1"
         GENERATE_INFOPLIST_FILE: YES
+        # Purpose strings (English, from the catalog) and NSBonjourServices; InfoPlist.xcstrings translates them.
+        INFOPLIST_FILE: macOS/Info.plist
         INFOPLIST_KEY_LSUIElement: YES
         INFOPLIST_KEY_CFBundleDisplayName: HandLive
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
+        # Màu nhấn toàn app = Color Set AccentColor (accent-fill, sinh bởi generate-design-tokens.py).
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        # keychain-access-groups: the data-protection keychain of 0.6.1 needs it once the app is signed (Developer ID).
+        CODE_SIGN_ENTITLEMENTS: macOS/HandLive.entitlements
     dependencies:
       - package: HLProtocol
       - package: HLCrypto
       - package: HLTransport
       - package: HLDesignSystem
+      - package: HLLocalization
+      - package: HLAppCore
+      - package: HLMacUI

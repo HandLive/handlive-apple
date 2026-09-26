@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>clipboard.auto_send_off_on_phone</key>
+	<string>Tự gửi đang tắt trên điện thoại — dùng nút Gửi bảng nhớ tạm trên điện thoại</string>
+	<key>clipboard.conflict_body</key>
+	<string>Thiết bị này vừa có nội dung sao chép mới.</string>
+	<key>clipboard.conflict_title</key>
+	<string>Chưa ghi lên %1$@</string>
+	<key>clipboard.empty_or_not_text</key>
+	<string>Bảng nhớ tạm trống hoặc không phải văn bản</string>
+	<key>clipboard.image_receiving</key>
+	<string>Đang nhận ảnh từ %1$@ — %2$@</string>
+	<key>clipboard.image_sending</key>
+	<string>Đang gửi ảnh tới %1$@ — %2$@</string>
+	<key>clipboard.not_connected_will_send</key>
+	<string>Chưa kết nối — sẽ gửi nếu kết nối lại trong 2 phút</string>
+	<key>clipboard.send_again</key>
+	<string>Gửi lại</string>
+	<key>clipboard.send_anyway</key>
+	<string>Vẫn gửi</string>
+	<key>clipboard.sensitive_blocked_body</key>
+	<string>HandLive không gửi nội dung có vẻ là mật khẩu hoặc số thẻ.</string>
+	<key>clipboard.sensitive_blocked_title</key>
+	<string>Đã chặn nội dung nhạy cảm</string>
+	<key>clipboard.sent_to</key>
+	<string>Đã gửi tới %1$@</string>
+	<key>clipboard.skipped_just_received</key>
+	<string>Không gửi: nội dung này vừa nhận từ %1$@.</string>
+	<key>common.agree</key>
+	<string>Đồng ý</string>
+	<key>common.cancel</key>
+	<string>Hủy</string>
+	<key>common.continue</key>
+	<string>Tiếp tục</string>
+	<key>common.done</key>
+	<string>Xong</string>
+	<key>common.get_started</key>
+	<string>Bắt đầu</string>
+	<key>common.off</key>
+	<string>Tắt</string>
+	<key>common.on</key>
+	<string>Bật</string>
+	<key>common.open_settings</key>
+	<string>Mở cài đặt</string>
+	<key>common.open_system_settings</key>
+	<string>Mở Cài đặt hệ thống</string>
+	<key>common.retry</key>
+	<string>Thử lại</string>
+	<key>error.clip_image_no_space</key>
+	<string>Không đủ bộ nhớ để nhận ảnh</string>
+	<key>error.clip_image_send_failed</key>
+	<string>Không gửi được ảnh</string>
+	<key>error.clip_image_too_large</key>
+	<string>Ảnh quá lớn (tối đa 10 MB)</string>
+	<key>error.clip_image_unreadable</key>
+	<string>Không đọc được ảnh</string>
+	<key>error.clip_text_too_large</key>
+	<string>Nội dung quá lớn để gửi (tối đa 1 MB văn bản)</string>
+	<key>error.clip_write_failed_on_phone</key>
+	<string>Không ghi được bảng nhớ tạm trên điện thoại</string>
+	<key>error.feature_disabled</key>
+	<string>Tính năng đang tắt trên %1$@</string>
+	<key>error.pairing_auth_failed</key>
+	<string>Ghép nối không an toàn, thử lại</string>
+	<key>error.pairing_failed</key>
+	<string>Không ghép nối được. Thử lại.</string>
+	<key>error.session_auth_failed</key>
+	<string>Không xác thực được điện thoại</string>
+	<key>error.update_phone_app</key>
+	<string>Cập nhật HandLive trên điện thoại</string>
+	<key>error.update_this_app</key>
+	<string>Cập nhật HandLive trên máy này</string>
+	<key>infoplist.focus_status_usage</key>
+	<string>HandLive đọc trạng thái Tập trung để không đổ chuông và không hiện cuộc gọi khi bạn đang tập trung.</string>
+	<key>infoplist.local_network_usage</key>
+	<string>HandLive tìm điện thoại Android của bạn trong mạng Wi-Fi để kết nối trực tiếp, không qua Internet.</string>
+	<key>infoplist.microphone_usage</key>
+	<string>HandLive dùng micro để bạn nói trong cuộc gọi chuyển từ điện thoại.</string>
+	<key>menu.camera_preview</key>
+	<string>Xem trước camera</string>
+	<key>menu.messages</key>
+	<string>Tin nhắn</string>
+	<key>menu.quit</key>
+	<string>Thoát HandLive</string>
+	<key>menu.send_clipboard_to_phone</key>
+	<string>Gửi bảng nhớ tạm sang điện thoại</string>
+	<key>menu.settings</key>
+	<string>Cài đặt…</string>
+	<key>pairing.add_phone</key>
+	<string>Thêm điện thoại…</string>
+	<key>pairing.details</key>
+	<string>Chi tiết…</string>
+	<key>pairing.devices</key>
+	<string>Thiết bị</string>
+	<key>pairing.empty_body_client</key>
+	<string>Ghép điện thoại Android để nhận bảng nhớ tạm, tin nhắn và cuộc gọi.</string>
+	<key>pairing.empty_title_client</key>
+	<string>Chưa có điện thoại</string>
+	<key>pairing.in_progress</key>
+	<string>Đang ghép nối…</string>
+	<key>pairing.options</key>
+	<string>Tùy chọn</string>
+	<key>pairing.pair_phone_title</key>
+	<string>Ghép nối điện thoại</string>
+	<key>pairing.paired</key>
+	<string>Đã ghép nối</string>
+	<key>pairing.paired_with</key>
+	<string>Đã ghép nối với %1$@</string>
+	<key>pairing.phone_not_found</key>
+	<string>Không tìm thấy điện thoại. Để hai máy cùng mạng Wi-Fi rồi thử lại.</string>
+	<key>pairing.pin_instructions</key>
+	<string>Trên điện thoại, chạm Thêm thiết bị, chọn Nhập mã PIN rồi nhập mã này.</string>
+	<key>pairing.qr_code_changes_in</key>
+	<string>Mã đổi sau %1$@</string>
+	<key>pairing.qr_instructions</key>
+	<string>Mở HandLive trên điện thoại Android, chạm Thêm thiết bị rồi quét mã này.</string>
+	<key>pairing.reason_internet_off_on_phone</key>
+	<string>Kết nối qua Internet đang tắt trên điện thoại</string>
+	<key>pairing.reason_missing_permission</key>
+	<string>Thiếu quyền trên điện thoại</string>
+	<key>pairing.reason_missing_sms_permission</key>
+	<string>Thiếu quyền SMS trên điện thoại</string>
+	<key>pairing.reason_off_on_device</key>
+	<string>Tắt trên %1$@</string>
+	<key>pairing.revoked_elsewhere</key>
+	<string>Thiết bị %1$@ đã được hủy ghép nối từ thiết bị khác</string>
+	<key>pairing.security_code</key>
+	<string>Mã an toàn</string>
+	<key>pairing.unpair</key>
+	<string>Hủy ghép nối</string>
+	<key>pairing.unpair_confirm_message</key>
+	<string>Hủy ghép nối sẽ xóa khóa bảo mật và dữ liệu SMS, nhật ký cuộc gọi đã đồng bộ trên %1$@. Không thể hoàn tác.</string>
+	<key>pairing.unpair_confirm_title</key>
+	<string>Hủy ghép nối với %1$@?</string>
+	<key>pairing.unpair_ellipsis</key>
+	<string>Hủy ghép nối…</string>
+	<key>pairing.unpaired_by_peer</key>
+	<string>%1$@ đã hủy ghép nối với thiết bị này</string>
+	<key>pairing.use_pin</key>
+	<string>Không quét được? Dùng mã PIN</string>
+	<key>permission.local_network_primer_title</key>
+	<string>Tìm điện thoại trong mạng Wi-Fi</string>
+	<key>permission.notifications_primer_client</key>
+	<string>Thông báo cho bạn biết có SMS mới và cuộc gọi đến; cuộc gọi đến dùng mức nhạy cảm thời gian để đến kịp lúc.</string>
+	<key>permission.notifications_primer_title_client</key>
+	<string>Báo khi có tin nhắn và cuộc gọi</string>
+	<key>permission.primer_footer</key>
+	<string>Bạn có thể đổi lại trong Cài đặt bất cứ lúc nào.</string>
+	<key>push.call_incoming</key>
+	<string>Cuộc gọi đến trên điện thoại</string>
+	<key>push.call_missed</key>
+	<string>Cuộc gọi nhỡ trên điện thoại</string>
+	<key>push.generic</key>
+	<string>Có thông báo mới từ điện thoại</string>
+	<key>push.sms_new</key>
+	<string>Tin nhắn SMS mới</string>
+	<key>settings.auto_clear</key>
+	<string>Tự xóa bảng nhớ tạm đã nhận</string>
+	<key>settings.auto_clear_1_min</key>
+	<string>Sau 1 phút</string>
+	<key>settings.auto_clear_5_min</key>
+	<string>Sau 5 phút</string>
+	<key>settings.auto_clear_footer</key>
+	<string>Chỉ xóa nội dung nhận từ thiết bị khác, và chỉ khi bạn chưa sao chép gì mới.</string>
+	<key>settings.block_sensitive</key>
+	<string>Chặn nội dung nhạy cảm</string>
+	<key>settings.calls</key>
+	<string>Cuộc gọi</string>
+	<key>settings.camera</key>
+	<string>Camera</string>
+	<key>settings.clipboard</key>
+	<string>Bảng nhớ tạm</string>
+	<key>settings.general</key>
+	<string>Chung</string>
+	<key>settings.internet_connection</key>
+	<string>Kết nối qua Internet</string>
+	<key>settings.messages</key>
+	<string>Tin nhắn</string>
+	<key>settings.open_at_login</key>
+	<string>Mở HandLive khi đăng nhập</string>
+	<key>settings.paste_from_other_apps</key>
+	<string>Dán từ ứng dụng khác</string>
+	<key>settings.paste_permission_hint</key>
+	<string>Để tự gửi bảng nhớ tạm, mở Cài đặt hệ thống › Quyền riêng tư &amp; Bảo mật › Dán từ ứng dụng khác và chọn Luôn cho phép cho HandLive.</string>
+	<key>settings.show_in_menu_bar</key>
+	<string>Hiện HandLive trên thanh menu</string>
+	<key>settings.show_in_menu_bar_footer</key>
+	<string>Khi tắt, HandLive nằm trên Dock.</string>
+	<key>settings.sync_clipboard</key>
+	<string>Đồng bộ bảng nhớ tạm</string>
+	<key>settings.sync_images</key>
+	<string>Đồng bộ ảnh</string>
+	<key>settings.title</key>
+	<string>Cài đặt</string>
+	<key>setup.applications_drag_hint</key>
+	<string>Kéo HandLive vào thư mục Ứng dụng trong Finder rồi mở lại.</string>
+	<key>setup.applications_later</key>
+	<string>Để sau</string>
+	<key>setup.applications_move</key>
+	<string>Chuyển</string>
+	<key>setup.applications_prompt</key>
+	<string>Camera ảo chỉ hoạt động khi HandLive nằm trong thư mục Ứng dụng. Chuyển ngay?</string>
+	<key>setup.ios_limits</key>
+	<string>Bảng nhớ tạm đồng bộ khi HandLive đang mở trên máy này: chạm nút Dán để gửi, không bị hỏi quyền dán. iPhone/iPad không nghe gọi được. Khi HandLive đóng, SMS và cuộc gọi đến hiện dưới dạng thông báo.</string>
+	<key>setup.keys_failed</key>
+	<string>Không tạo được khóa bảo mật trên máy này. Hãy thử lại.</string>
+	<key>setup.local_network_denied_mac</key>
+	<string>HandLive không tìm được điện thoại trong mạng Wi-Fi. Bật HandLive trong Cài đặt hệ thống › Quyền riêng tư &amp; Bảo mật › Mạng cục bộ.</string>
+	<key>setup.login_item_approval_mac</key>
+	<string>Để mở HandLive khi đăng nhập, cho phép trong Cài đặt hệ thống › Cài đặt chung › Mục đăng nhập.</string>
+	<key>setup.notifications_denied_mac</key>
+	<string>Thông báo đang tắt nên không thấy SMS mới và cuộc gọi nhỡ. Bật lại trong Cài đặt hệ thống › Thông báo › HandLive.</string>
+	<key>setup.time_sensitive_off</key>
+	<string>Thông báo cuộc gọi có thể bị chế độ Tập trung chặn</string>
+	<key>setup.welcome_body_client</key>
+	<string>HandLive đưa bảng nhớ tạm, tin nhắn SMS và cuộc gọi từ điện thoại Android lên máy này. Dữ liệu được mã hóa đầu-cuối, chỉ đi giữa các thiết bị của bạn; máy chủ không đọc được nội dung. Không cần tài khoản.</string>
+	<key>setup.welcome_privacy_link</key>
+	<string>HandLive và quyền riêng tư của bạn</string>
+	<key>setup.welcome_title</key>
+	<string>Chào mừng đến với HandLive</string>
+	<key>status.channel_internet</key>
+	<string>Qua Internet</string>
+	<key>status.channel_lan</key>
+	<string>LAN</string>
+	<key>status.channel_usb</key>
+	<string>USB</string>
+	<key>status.connected_internet</key>
+	<string>Đã kết nối qua Internet</string>
+	<key>status.connected_usb</key>
+	<string>Đã kết nối qua USB</string>
+	<key>status.connected_wifi</key>
+	<string>Đã kết nối qua Wi-Fi</string>
+	<key>status.connected_wifi_to</key>
+	<string>Đã kết nối qua Wi-Fi với %1$@</string>
+	<key>status.connecting</key>
+	<string>Đang kết nối…</string>
+	<key>status.disconnected</key>
+	<string>Mất kết nối</string>
+	<key>status.not_paired</key>
+	<string>Chưa ghép nối</string>
+	<key>status.peer_offline</key>
+	<string>Điện thoại ngoại tuyến</string>
+	<key>status.peer_offline_since</key>
+	<string>Điện thoại ngoại tuyến · lần cuối %1$@</string>
+	<key>status.reconnect_now</key>
+	<string>Kết nối lại ngay</string>
+	<key>status.repair_needed</key>
+	<string>Cần ghép nối lại</string>
+	<key>status.retry_in</key>
+	<string>Thử lại sau %1$@</string>
+</dict>
+</plist>

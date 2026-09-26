@@ -107,10 +107,10 @@ jobs:
 
       # Chạy xcodebuild trong thư mục package (không cần .xcodeproj): scheme tự sinh của package
       # một product cùng tên có luôn test target.
-      - name: xcodebuild test (HLProtocol, HLCrypto, HLTransport, HLDesignSystem)
+      - name: xcodebuild test (every package)
         run: |
           set -euo pipefail
-          for pkg in HLProtocol HLCrypto HLTransport HLDesignSystem; do
+          for pkg in HLProtocol HLCrypto HLTransport HLDesignSystem HLLocalization HLAppCore HLMacUI; do
             echo "::group::xcodebuild test $pkg"
             (cd "apple/Packages/$pkg" && xcodebuild test \
               -scheme "$pkg" \

@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>clipboard.auto_send_off_on_phone</key>
+	<string>Auto-send is off on the phone — use the Send Clipboard button on the phone</string>
+	<key>clipboard.conflict_body</key>
+	<string>That device just copied something new.</string>
+	<key>clipboard.conflict_title</key>
+	<string>Clipboard Not Updated on %1$@</string>
+	<key>clipboard.empty_or_not_text</key>
+	<string>The clipboard is empty or doesn't contain text</string>
+	<key>clipboard.image_receiving</key>
+	<string>Receiving image from %1$@ — %2$@</string>
+	<key>clipboard.image_sending</key>
+	<string>Sending image to %1$@ — %2$@</string>
+	<key>clipboard.not_connected_will_send</key>
+	<string>Not connected — will send if reconnected within 2 minutes</string>
+	<key>clipboard.send_again</key>
+	<string>Send Again</string>
+	<key>clipboard.send_anyway</key>
+	<string>Send Anyway</string>
+	<key>clipboard.sensitive_blocked_body</key>
+	<string>HandLive doesn't send content that looks like a password or card number.</string>
+	<key>clipboard.sensitive_blocked_title</key>
+	<string>Sensitive Content Blocked</string>
+	<key>clipboard.sent_to</key>
+	<string>Sent to %1$@</string>
+	<key>clipboard.skipped_just_received</key>
+	<string>Not sent — this just came from %1$@.</string>
+	<key>common.agree</key>
+	<string>Agree</string>
+	<key>common.cancel</key>
+	<string>Cancel</string>
+	<key>common.continue</key>
+	<string>Continue</string>
+	<key>common.done</key>
+	<string>Done</string>
+	<key>common.get_started</key>
+	<string>Get Started</string>
+	<key>common.off</key>
+	<string>Off</string>
+	<key>common.on</key>
+	<string>On</string>
+	<key>common.open_settings</key>
+	<string>Open Settings</string>
+	<key>common.open_system_settings</key>
+	<string>Open System Settings</string>
+	<key>common.retry</key>
+	<string>Try Again</string>
+	<key>error.clip_image_no_space</key>
+	<string>Not enough storage to receive the image</string>
+	<key>error.clip_image_send_failed</key>
+	<string>Couldn't send the image</string>
+	<key>error.clip_image_too_large</key>
+	<string>Image is too large (up to 10 MB)</string>
+	<key>error.clip_image_unreadable</key>
+	<string>Couldn't read the image</string>
+	<key>error.clip_text_too_large</key>
+	<string>Content is too large to send (up to 1 MB of text)</string>
+	<key>error.clip_write_failed_on_phone</key>
+	<string>Couldn't update the clipboard on the phone</string>
+	<key>error.feature_disabled</key>
+	<string>This feature is off on %1$@</string>
+	<key>error.pairing_auth_failed</key>
+	<string>Pairing isn't secure — try again</string>
+	<key>error.pairing_failed</key>
+	<string>Pairing didn't finish. Try again.</string>
+	<key>error.session_auth_failed</key>
+	<string>Couldn't verify the phone</string>
+	<key>error.update_phone_app</key>
+	<string>Update HandLive on the phone</string>
+	<key>error.update_this_app</key>
+	<string>Update HandLive on this device</string>
+	<key>infoplist.focus_status_usage</key>
+	<string>HandLive reads your Focus status so it doesn't ring or show calls while a Focus is on.</string>
+	<key>infoplist.local_network_usage</key>
+	<string>HandLive looks for your Android phone on your Wi-Fi network to connect to it directly, not over the internet.</string>
+	<key>infoplist.microphone_usage</key>
+	<string>HandLive uses the microphone so you can talk during calls transferred from your phone.</string>
+	<key>menu.camera_preview</key>
+	<string>Camera Preview</string>
+	<key>menu.messages</key>
+	<string>Messages</string>
+	<key>menu.quit</key>
+	<string>Quit HandLive</string>
+	<key>menu.send_clipboard_to_phone</key>
+	<string>Send Clipboard to Phone</string>
+	<key>menu.settings</key>
+	<string>Settings…</string>
+	<key>pairing.add_phone</key>
+	<string>Add Phone…</string>
+	<key>pairing.details</key>
+	<string>Details…</string>
+	<key>pairing.devices</key>
+	<string>Devices</string>
+	<key>pairing.empty_body_client</key>
+	<string>Pair an Android phone to get its clipboard, messages, and calls.</string>
+	<key>pairing.empty_title_client</key>
+	<string>No Phone Yet</string>
+	<key>pairing.in_progress</key>
+	<string>Pairing…</string>
+	<key>pairing.options</key>
+	<string>Options</string>
+	<key>pairing.pair_phone_title</key>
+	<string>Pair Phone</string>
+	<key>pairing.paired</key>
+	<string>Paired</string>
+	<key>pairing.paired_with</key>
+	<string>Paired with %1$@</string>
+	<key>pairing.phone_not_found</key>
+	<string>Couldn't find the phone. Put both devices on the same Wi-Fi network and try again.</string>
+	<key>pairing.pin_instructions</key>
+	<string>On the phone, tap Add Device, choose Enter PIN, and type this code.</string>
+	<key>pairing.qr_code_changes_in</key>
+	<string>Code changes in %1$@</string>
+	<key>pairing.qr_instructions</key>
+	<string>Open HandLive on your Android phone, tap Add Device, then scan this code.</string>
+	<key>pairing.reason_internet_off_on_phone</key>
+	<string>Internet connection is off on the phone</string>
+	<key>pairing.reason_missing_permission</key>
+	<string>Missing permission on the phone</string>
+	<key>pairing.reason_missing_sms_permission</key>
+	<string>Missing SMS permission on the phone</string>
+	<key>pairing.reason_off_on_device</key>
+	<string>Off on %1$@</string>
+	<key>pairing.revoked_elsewhere</key>
+	<string>%1$@ was unpaired from another device</string>
+	<key>pairing.security_code</key>
+	<string>Security Code</string>
+	<key>pairing.unpair</key>
+	<string>Unpair</string>
+	<key>pairing.unpair_confirm_message</key>
+	<string>Unpairing deletes the security keys and the SMS messages and call history synced to %1$@. This can't be undone.</string>
+	<key>pairing.unpair_confirm_title</key>
+	<string>Unpair %1$@?</string>
+	<key>pairing.unpair_ellipsis</key>
+	<string>Unpair…</string>
+	<key>pairing.unpaired_by_peer</key>
+	<string>%1$@ unpaired this device</string>
+	<key>pairing.use_pin</key>
+	<string>Can't Scan? Use a PIN</string>
+	<key>permission.local_network_primer_title</key>
+	<string>Find Your Phone on Wi-Fi</string>
+	<key>permission.notifications_primer_client</key>
+	<string>Notifications tell you about new SMS messages and incoming calls; incoming calls are Time Sensitive so they arrive on time.</string>
+	<key>permission.notifications_primer_title_client</key>
+	<string>Get Notified About Messages and Calls</string>
+	<key>permission.primer_footer</key>
+	<string>You can change this in Settings at any time.</string>
+	<key>push.call_incoming</key>
+	<string>Incoming call on your phone</string>
+	<key>push.call_missed</key>
+	<string>Missed call on your phone</string>
+	<key>push.generic</key>
+	<string>New notification from your phone</string>
+	<key>push.sms_new</key>
+	<string>New SMS message</string>
+	<key>settings.auto_clear</key>
+	<string>Auto-Clear Received Clipboard</string>
+	<key>settings.auto_clear_1_min</key>
+	<string>After 1 Minute</string>
+	<key>settings.auto_clear_5_min</key>
+	<string>After 5 Minutes</string>
+	<key>settings.auto_clear_footer</key>
+	<string>Clears only content received from other devices, and only if you haven't copied anything new.</string>
+	<key>settings.block_sensitive</key>
+	<string>Block Sensitive Content</string>
+	<key>settings.calls</key>
+	<string>Calls</string>
+	<key>settings.camera</key>
+	<string>Camera</string>
+	<key>settings.clipboard</key>
+	<string>Clipboard</string>
+	<key>settings.general</key>
+	<string>General</string>
+	<key>settings.internet_connection</key>
+	<string>Internet Connection</string>
+	<key>settings.messages</key>
+	<string>Messages</string>
+	<key>settings.open_at_login</key>
+	<string>Open HandLive at Login</string>
+	<key>settings.paste_from_other_apps</key>
+	<string>Paste from Other Apps</string>
+	<key>settings.paste_permission_hint</key>
+	<string>To send the clipboard automatically, open System Settings › Privacy &amp; Security › Paste from Other Apps and choose Always Allow for HandLive.</string>
+	<key>settings.show_in_menu_bar</key>
+	<string>Show HandLive in Menu Bar</string>
+	<key>settings.show_in_menu_bar_footer</key>
+	<string>When this is off, HandLive appears in the Dock.</string>
+	<key>settings.sync_clipboard</key>
+	<string>Sync Clipboard</string>
+	<key>settings.sync_images</key>
+	<string>Sync Images</string>
+	<key>settings.title</key>
+	<string>Settings</string>
+	<key>setup.applications_drag_hint</key>
+	<string>Drag HandLive into the Applications folder in Finder, then open it again.</string>
+	<key>setup.applications_later</key>
+	<string>Not Now</string>
+	<key>setup.applications_move</key>
+	<string>Move</string>
+	<key>setup.applications_prompt</key>
+	<string>The virtual camera works only when HandLive is in the Applications folder. Move it now?</string>
+	<key>setup.ios_limits</key>
+	<string>The clipboard syncs while HandLive is open on this device: tap the Paste button to send, with no paste permission prompt. iPhone and iPad can't take calls. When HandLive is closed, SMS messages and incoming calls appear as notifications.</string>
+	<key>setup.keys_failed</key>
+	<string>Couldn't create the security keys on this device. Try again.</string>
+	<key>setup.local_network_denied_mac</key>
+	<string>HandLive can't look for the phone on Wi-Fi. Turn on HandLive in System Settings › Privacy &amp; Security › Local Network.</string>
+	<key>setup.login_item_approval_mac</key>
+	<string>To open HandLive at login, allow it in System Settings › General › Login Items.</string>
+	<key>setup.notifications_denied_mac</key>
+	<string>Notifications are off, so new SMS messages and missed calls don't appear. Turn them on in System Settings › Notifications › HandLive.</string>
+	<key>setup.time_sensitive_off</key>
+	<string>Focus may silence call notifications</string>
+	<key>setup.welcome_body_client</key>
+	<string>HandLive brings the clipboard, SMS messages, and calls from your Android phone to this device. Data is end-to-end encrypted and travels only between your devices; the server can't read it. No account needed.</string>
+	<key>setup.welcome_privacy_link</key>
+	<string>HandLive and Your Privacy</string>
+	<key>setup.welcome_title</key>
+	<string>Welcome to HandLive</string>
+	<key>status.channel_internet</key>
+	<string>Internet</string>
+	<key>status.channel_lan</key>
+	<string>LAN</string>
+	<key>status.channel_usb</key>
+	<string>USB</string>
+	<key>status.connected_internet</key>
+	<string>Connected over the internet</string>
+	<key>status.connected_usb</key>
+	<string>Connected via USB</string>
+	<key>status.connected_wifi</key>
+	<string>Connected via Wi-Fi</string>
+	<key>status.connected_wifi_to</key>
+	<string>Connected via Wi-Fi to %1$@</string>
+	<key>status.connecting</key>
+	<string>Connecting…</string>
+	<key>status.disconnected</key>
+	<string>Disconnected</string>
+	<key>status.not_paired</key>
+	<string>Not paired</string>
+	<key>status.peer_offline</key>
+	<string>Phone offline</string>
+	<key>status.peer_offline_since</key>
+	<string>Phone offline · last seen %1$@</string>
+	<key>status.reconnect_now</key>
+	<string>Reconnect Now</string>
+	<key>status.repair_needed</key>
+	<string>Needs to be paired again</string>
+	<key>status.retry_in</key>
+	<string>Retrying in %1$@</string>
+</dict>
+</plist>

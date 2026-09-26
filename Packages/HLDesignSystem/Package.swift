@@ -18,12 +18,13 @@ let package = Package(
     products: [
         .library(name: "HLDesignSystem", targets: ["HLDesignSystem"]),
     ],
-    dependencies: useSwiftTestingPackage
+    dependencies: [.package(path: "../HLLocalization")] + (useSwiftTestingPackage
         ? [.package(url: "https://github.com/swiftlang/swift-testing.git", branch: "release/6.2")]
-        : [],
+        : []),
     targets: [
         .target(
             name: "HLDesignSystem",
+            dependencies: ["HLLocalization"],
             exclude: hasXcode ? [] : [colorCatalog],
             // Font và OFL.txt đi cùng nhau (điều kiện của OFL).
             resources: (hasXcode ? [.process(colorCatalog)] : []) + [.copy("Resources/Fonts")],
@@ -31,7 +32,7 @@ let package = Package(
         ),
         .testTarget(
             name: "HLDesignSystemTests",
-            dependencies: ["HLDesignSystem"]
+            dependencies: ["HLDesignSystem", "HLLocalization"]
                 + (useSwiftTestingPackage ? [.product(name: "Testing", package: "swift-testing")] : [])
         ),
     ]

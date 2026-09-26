@@ -52,14 +52,33 @@ def render_colors(colors: list[ColorToken]) -> str:
         out.append(f"        case .{swift_identifier(token.name)}: return HLColorPalette({args})\n")
     out.append("        }\n    }\n\n")
     out.append("    /// Màu hệ thống thay cho hex (01-mau-sac.md: không hard-code màu hệ thống trên Apple).\n")
-    out.append("    public var systemColor: Color? {\n        switch self {\n")
-    by_api: dict[str, list[str]] = {}
+    out.append("    /// `nil`: nền tảng hoặc phiên bản không có API tương ứng → dùng `palette` của token.\n")
+    out.append("    public var systemColor: Color? {\n        #if os(macOS)\n")
+    out.append(_system_switch(colors, "appkit"))
+    out.append("        #else\n")
+    out.append(_system_switch(colors, "uikit"))
+    out.append("        #endif\n    }\n}\n")
+    return "".join(out)
+
+
+def _system_switch(colors: list[ColorToken], platform: str) -> str:
+    """`switch` trả API hệ thống của một nền tảng; token cùng biểu thức gom chung một `case`."""
+    groups: dict[tuple, list[str]] = {}
     for token in colors:
-        if token.system_color:
-            by_api.setdefault(token.system_color, []).append(f".{swift_identifier(token.name)}")
-    for api, cases in by_api.items():
-        out.append(f"        case {', '.join(cases)}: return {api}\n")
-    out.append("        default: return nil\n        }\n    }\n}\n")
+        api = token.system
+        expression = getattr(api, platform) if api else None
+        if expression:
+            minimum = api.appkit_min if platform == "appkit" else None
+            groups.setdefault((expression, minimum), []).append(f".{swift_identifier(token.name)}")
+    out = ["        switch self {\n"]
+    for (expression, minimum), cases in groups.items():
+        if minimum:
+            out.append(f"        case {', '.join(cases)}:\n")
+            out.append(f"            if #available(macOS {minimum}, *) {{ return {expression} }}\n")
+            out.append("            return nil\n")
+        else:
+            out.append(f"        case {', '.join(cases)}: return {expression}\n")
+    out.append("        default: return nil\n        }\n")
     return "".join(out)
 
 
@@ -73,37 +92,44 @@ def render_text_styles(styles: list[TextStyleToken]) -> str:
     out.append("\n    public var spec: HLTextStyleSpec {\n        switch self {\n")
     for style in styles:
         postscript = f'"{style.postscript_name}"' if style.postscript_name else "nil"
+        bold_text = f'"{style.bold_text_postscript_name}"' if style.bold_text_postscript_name else "nil"
         out.append(
             f"        case .{swift_identifier(style.name)}: return HLTextStyleSpec("
             f"family: {_FAMILY_ENUMS[style.family]}, size: {_number(style.size)}, "
             f"lineHeight: {_number(style.line_height)}, weight: {style.weight}, "
             f"letterSpacingEm: {_number(style.letter_spacing_em)}, textStyle: .{style.text_style}, "
-            f"postScriptName: {postscript}, monospacedDigit: {str(style.monospaced_digit).lower()})\n"
+            f"postScriptName: {postscript}, monospacedDigit: {str(style.monospaced_digit).lower()}, "
+            f"emphasisWeight: {style.emphasis_weight}, boldTextPostScriptName: {bold_text})\n"
         )
     out.append("        }\n    }\n}\n\n")
-    names = sorted({s.postscript_name for s in styles if s.postscript_name})
-    out.append("/// Tên PostScript của các file Be Vietnam Pro được đóng gói (chỉ weight token dùng).\n")
+    names = sorted({name for s in styles for name in (s.postscript_name, s.bold_text_postscript_name) if name})
+    out.append("/// Tên PostScript của các file Be Vietnam Pro được đóng gói: weight token dùng và weight tăng một bậc\n")
+    out.append("/// khi người dùng bật Chữ đậm.\n")
     out.append("public enum HLBrandFontFiles {\n")
     listed = ", ".join(f'"{name}"' for name in names)
     out.append(f"    public static let postScriptNames: [String] = [{listed}]\n}}\n")
     return "".join(out)
 
 
-def render_metrics(metrics: dict[str, list[MetricToken]]) -> str:
-    out = [_HEADER, "import CoreGraphics\n"]
+def render_metrics(metrics: dict[str, list[MetricToken]]) -> dict[str, str]:
+    """Một tệp cho mỗi họ số đo, đặt tên theo kiểu bên trong (HLSpacing.swift …)."""
+    files = {}
     for family, enum_name, prefix, swift_type, summary in _METRIC_ENUMS:
+        out = [_HEADER, "import CoreGraphics\n"]
         out.append(f"\n/// {summary}\npublic enum {enum_name} {{\n")
         for token in metrics[family]:
             member = swift_identifier(token.name.removeprefix(prefix))
             out.append(_doc(token.usage))
             out.append(f"    public static let {member}: {swift_type} = {_number(token.value)}\n")
         out.append("}\n")
-    return "".join(out)
+        files[f"{GENERATED_DIR}/{enum_name}.swift"] = "".join(out)
+    return files
 
 
 def render_swift_sources(colors, styles, metrics) -> dict[str, str]:
+    """Tệp Swift sinh ra, đặt tên theo kiểu chính bên trong (docs/code-standards.md)."""
     return {
-        f"{GENERATED_DIR}/hl-color-token-generated.swift": render_colors(colors),
-        f"{GENERATED_DIR}/hl-text-style-generated.swift": render_text_styles(styles),
-        f"{GENERATED_DIR}/hl-metrics-generated.swift": render_metrics(metrics),
+        f"{GENERATED_DIR}/HLColorToken.swift": render_colors(colors),
+        f"{GENERATED_DIR}/HLTextStyle.swift": render_text_styles(styles),
+        **render_metrics(metrics),
     }
