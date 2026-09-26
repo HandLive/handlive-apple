@@ -25,12 +25,15 @@ public struct HandLiveScenes: Scene {
         }
         .commands {
             HandLiveCommands(model: model, actions: actions)
+            SidebarCommands()
+            TextEditingCommands()
         }
     }
 }
 
 /// HandLive's items in the app's menu bar (`.regular` mode): "Add Phone…" after "Settings…" in the HandLive menu,
-/// "Send Clipboard to Phone" after the pasteboard items of Edit. Unusable items are dimmed, not hidden.
+/// "New Message" ⌘N in File, "Send Clipboard to Phone" after the pasteboard items of Edit (Find ⌘F comes with the
+/// text editing commands), "Messages" after Minimize and Zoom in Window. Unusable items are dimmed, not hidden.
 struct HandLiveCommands: Commands {
     @ObservedObject var model: AppModel
     let actions: AppActions
@@ -40,9 +43,18 @@ struct HandLiveCommands: Commands {
             Button(L10n.Pairing.addPhone) { actions.showPairing() }
                 .disabled(model.pairedDevice != nil)
         }
+        CommandGroup(replacing: .newItem) {
+            Button(L10n.Sms.newMessage) { actions.newMessage() }
+                .keyboardShortcut("n")
+                .disabled(!model.canComposeMessage)
+        }
         CommandGroup(after: .pasteboard) {
             Button(L10n.Menu.sendClipboardToPhone) { actions.sendClipboard() }
                 .disabled(!model.canSendClipboard)
+        }
+        CommandGroup(after: .windowSize) {
+            Button(L10n.Menu.messages) { actions.showMessages() }
+                .disabled(model.messages == nil)
         }
     }
 }

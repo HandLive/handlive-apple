@@ -17,8 +17,14 @@ public struct MenuBarIcon: View {
     public var body: some View {
         let status = model.connectionStatus
         let symbol = model.menuBarFeedback ?? status.menuBarSymbolName
-        icon(symbol)
-            .accessibilityLabel(Text(status.accessibilityText(deviceName: model.pairedDevice?.peerName)))
+        HStack(spacing: 2) {
+            icon(symbol)
+            if let badge = model.unreadBadgeText {
+                Text(verbatim: badge).monospacedDigit() // unread conversations (MenuBarMenu README)
+            }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(status.accessibilityText(deviceName: model.pairedDevice?.peerName)))
     }
 
     @ViewBuilder
@@ -67,6 +73,9 @@ public struct MenuBarMenu: View {
         Divider()
         Button(L10n.Menu.sendClipboardToPhone) { actions.sendClipboard() }
             .disabled(!model.canSendClipboard)
+        Button(L10n.Menu.messages) { actions.showMessages() }
+            .badge(model.unreadThreads) // the unread count on the right (a menu item badge from macOS 14)
+            .disabled(model.messages == nil)
         if let line = model.menuStatusLine {
             Text(line)
         }

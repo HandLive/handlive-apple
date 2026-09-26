@@ -71,6 +71,17 @@ extension AppModel {
         }
     }
 
+    /// "New Message" can be opened: a paired phone and the SMS database.
+    public var canComposeMessage: Bool {
+        pairedDevice != nil && messages != nil
+    }
+
+    /// The menu bar icon's count of unread conversations: "2", above 99 "99+" (MenuBarMenu README).
+    public var unreadBadgeText: String? {
+        guard unreadThreads > 0 else { return nil }
+        return unreadThreads > 99 ? "99+" : String(unreadThreads)
+    }
+
     /// Opens the Messages window, on a conversation when given.
     public func showMessages(threadId: Int64? = nil) {
         if let threadId { messages?.selection = threadId }

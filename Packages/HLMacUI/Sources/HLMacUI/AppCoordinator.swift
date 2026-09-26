@@ -15,12 +15,15 @@ public final class AppCoordinator {
     public init(model: AppModel = AppModel()) {
         self.model = model
         windows = WindowPresenter(model: model)
+        model.openMessagesWindow = { [weak self] in self?.windows.showMessages() }
     }
 
     public var actions: AppActions {
         AppActions(showPairing: { [weak self] in self?.windows.showWelcome() },
                    showOnboarding: { [weak self] in self?.windows.showWelcome() },
-                   sendClipboard: { [weak self] in self?.sendClipboard() })
+                   sendClipboard: { [weak self] in self?.sendClipboard() },
+                   showMessages: { [weak self] in self?.windows.showMessages() },
+                   newMessage: { [weak self] in self?.windows.newMessage() })
     }
 
     /// Step 1: the menu bar icon exists from launch; the welcome window opens while setup is not done or the keys
@@ -36,10 +39,12 @@ public final class AppCoordinator {
     }
 
     /// Opening HandLive again from Finder, Launchpad or Spotlight: the welcome window while no phone is paired, else
-    /// Settings (Phase 1 has no Messages window yet).
+    /// the Messages window (Settings when the SMS database could not be opened).
     public func reopen() {
         if !model.setupCompleted || model.pairedDevice == nil || model.phase != .ready {
             windows.showWelcome()
+        } else if model.messages != nil {
+            windows.showMessages()
         } else {
             windows.showSettings()
         }
@@ -55,15 +60,19 @@ public final class AppCoordinator {
         }
     }
 
-    /// Dock menu (`.regular` mode): the menu bar commands, for when the icon is hidden.
+    /// Dock menu (`.regular` mode): the menu bar commands, for when the icon is hidden — "New Message", "Send
+    /// Clipboard to Phone" (03-platforms/01-macos.md), "Add Phone…" while unpaired.
     public func dockMenu() -> NSMenu {
         let menu = NSMenu()
+        menu.autoenablesItems = false
         if model.pairedDevice == nil {
             menu.addItem(ClosureMenuItem(title: L10n.Pairing.addPhone) { [weak self] in self?.windows.showWelcome() })
         }
+        let compose = ClosureMenuItem(title: L10n.Sms.newMessage) { [weak self] in self?.windows.newMessage() }
+        compose.isEnabled = model.canComposeMessage
+        menu.addItem(compose)
         let send = ClosureMenuItem(title: L10n.Menu.sendClipboardToPhone) { [weak self] in self?.sendClipboard() }
         send.isEnabled = model.canSendClipboard
-        menu.autoenablesItems = false
         menu.addItem(send)
         return menu
     }
