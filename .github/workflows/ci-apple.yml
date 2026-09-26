@@ -50,7 +50,7 @@ jobs:
   build-test:
     name: xcodebuild test + swiftlint + build app
     runs-on: macos-15
-    timeout-minutes: 45
+    timeout-minutes: 90
     env:
       DERIVED_DATA: ${{ github.workspace }}/.ci-derived-data
     steps:
@@ -104,6 +104,10 @@ jobs:
           path: ${{ env.DERIVED_DATA }}
           key: apple-dd-${{ runner.os }}-${{ hashFiles('apple/Packages/*/Package.swift', 'apple/ThirdParty/*/Package.swift', 'apple/project.yml') }}
           restore-keys: apple-dd-${{ runner.os }}-
+
+      # SQLCipher's XCFramework as a local binary target: xcodebuild hangs downloading the remote one on this runner.
+      - name: Fetch SQLCipher (checksum-verified)
+        run: apple/ThirdParty/SQLCipher/fetch.sh
 
       # Chạy xcodebuild trong thư mục package (không cần .xcodeproj): scheme tự sinh của package
       # một product cùng tên có luôn test target.

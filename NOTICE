@@ -16,6 +16,6 @@ This product includes third-party software:
   (license text in ThirdParty/GRDB/LICENSE; https://github.com/groue/GRDB.swift), vendored in ThirdParty/GRDB
   to build it against SQLCipher.
 - SQLCipher 4.19.0 Community Edition — Copyright (c) 2025, ZETETIC LLC — BSD-style license
-  (license text in ThirdParty/SQLCipher/LICENSE.md; https://github.com/sqlcipher/SQLCipher.swift), fetched by the
-  Swift Package Manager as a prebuilt XCFramework and embedded in the apps. SQLCipher is based on SQLite, which is
-  in the public domain.
+  (license text in ThirdParty/SQLCipher/LICENSE.md; https://github.com/sqlcipher/SQLCipher.swift), the prebuilt
+  XCFramework that SQLCipher.swift publishes, fetched by ThirdParty/SQLCipher/fetch.sh and embedded in the apps.
+  SQLCipher is based on SQLite, which is in the public domain.

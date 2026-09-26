@@ -3,9 +3,9 @@
 // be built against SQLCipher: GRDB's README says "To use SQLCipher with the Swift Package Manager, you must fork GRDB,
 // and modify Package.swift", following the "GRDB+SQLCipher" comments of its manifest. The GRDB/ sources and
 // Sources/GRDBSQLCipher are copied unchanged (GRDB/Documentation.docc left out); only this manifest differs: the system
-// SQLite target is removed and GRDB links the official SQLCipher.swift package (Zetetic, BSD-style Community Edition,
-// a prebuilt XCFramework) with SQLITE_HAS_CODEC. Update both together: copy a newer GRDB release and bump the version
-// here, the SQLCipher.swift version below, and NOTICE.
+// SQLite target is removed and GRDB links SQLCipher (Zetetic, BSD-style Community Edition: the prebuilt XCFramework of
+// SQLCipher.swift, as the local package ../SQLCipher that fetch.sh fills) with SQLITE_HAS_CODEC. Update both together:
+// copy a newer GRDB release and bump the version here, the SQLCipher version in ../SQLCipher/fetch.sh, and NOTICE.
 import PackageDescription
 
 let package = Package(
@@ -15,17 +15,17 @@ let package = Package(
         .library(name: "GRDB", targets: ["GRDB"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/sqlcipher/SQLCipher.swift.git", exact: "4.19.0"),
+        .package(path: "../SQLCipher"),
     ],
     targets: [
         .target(
             name: "GRDBSQLCipher",
-            dependencies: [.product(name: "SQLCipher", package: "SQLCipher.swift")]
+            dependencies: [.product(name: "SQLCipher", package: "SQLCipher")]
         ),
         .target(
             name: "GRDB",
             dependencies: [
-                .product(name: "SQLCipher", package: "SQLCipher.swift"),
+                .product(name: "SQLCipher", package: "SQLCipher"),
                 .target(name: "GRDBSQLCipher"),
             ],
             path: "GRDB",
