@@ -58,6 +58,8 @@
 	<string>Agree</string>
 	<key>common.cancel</key>
 	<string>Cancel</string>
+	<key>common.close</key>
+	<string>Close</string>
 	<key>common.continue</key>
 	<string>Continue</string>
 	<key>common.delete</key>
@@ -68,6 +70,8 @@
 	<string>Get Started</string>
 	<key>common.off</key>
 	<string>Off</string>
+	<key>common.ok</key>
+	<string>OK</string>
 	<key>common.on</key>
 	<string>On</string>
 	<key>common.open_settings</key>
@@ -250,6 +254,8 @@
 	<string>Delete All HandLive Data</string>
 	<key>settings.delete_all_data_ellipsis</key>
 	<string>Delete All HandLive Data…</string>
+	<key>settings.delete_all_data_title</key>
+	<string>Delete All HandLive Data?</string>
 	<key>settings.delete_all_data_warning</key>
 	<string>The security keys, paired devices, synced messages and call history, and all settings on this device will be deleted. This can't be undone.</string>
 	<key>settings.delete_all_offline_confirm</key>
@@ -280,6 +286,8 @@
 	<string>Remove from Server</string>
 	<key>settings.remove_from_server_ellipsis</key>
 	<string>Remove Device from Server…</string>
+	<key>settings.remove_from_server_title</key>
+	<string>Remove This Device from the Server?</string>
 	<key>settings.remove_from_server_warning</key>
 	<string>This device's registration will be removed from the HandLive server. Paired devices keep working on the same Wi-Fi network; the internet connection stays off until you turn it back on.</string>
 	<key>settings.removed_from_server</key>
@@ -318,6 +326,8 @@
 	<string>The virtual camera works only when HandLive is in the Applications folder. Move it now?</string>
 	<key>setup.ios_limits</key>
 	<string>The clipboard syncs while HandLive is open on this device: tap the Paste button to send, with no paste permission prompt. iPhone and iPad can't take calls. When HandLive is closed, SMS messages and incoming calls appear as notifications.</string>
+	<key>setup.ios_limits_title</key>
+	<string>How HandLive Works on iPhone and iPad</string>
 	<key>setup.keys_failed</key>
 	<string>Couldn't create the security keys on this device. Try again.</string>
 	<key>setup.local_network_denied_ios</key>
@@ -372,6 +382,10 @@
 	<string>New Message</string>
 	<key>sms.notification_hidden_body</key>
 	<string>New SMS message</string>
+	<key>sms.permission_instructions_body</key>
+	<string>On your phone, open HandLive and go to Settings › Permissions &amp; Background. Tap Grant Permission under SMS Messages, or Open Settings if the permission was denied, and allow SMS.</string>
+	<key>sms.permission_instructions_title</key>
+	<string>Grant SMS Permission on Your Phone</string>
 	<key>sms.quick_reply_not_sent</key>
 	<string>Not sent yet. Open HandLive to try again.</string>
 	<key>sms.recipient_label</key>

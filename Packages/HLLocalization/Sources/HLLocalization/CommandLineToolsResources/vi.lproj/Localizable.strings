@@ -58,6 +58,8 @@
 	<string>Đồng ý</string>
 	<key>common.cancel</key>
 	<string>Hủy</string>
+	<key>common.close</key>
+	<string>Đóng</string>
 	<key>common.continue</key>
 	<string>Tiếp tục</string>
 	<key>common.delete</key>
@@ -68,6 +70,8 @@
 	<string>Bắt đầu</string>
 	<key>common.off</key>
 	<string>Tắt</string>
+	<key>common.ok</key>
+	<string>OK</string>
 	<key>common.on</key>
 	<string>Bật</string>
 	<key>common.open_settings</key>
@@ -250,6 +254,8 @@
 	<string>Xóa toàn bộ dữ liệu HandLive</string>
 	<key>settings.delete_all_data_ellipsis</key>
 	<string>Xóa toàn bộ dữ liệu HandLive…</string>
+	<key>settings.delete_all_data_title</key>
+	<string>Xóa toàn bộ dữ liệu HandLive?</string>
 	<key>settings.delete_all_data_warning</key>
 	<string>Xóa khóa bảo mật, thiết bị đã ghép, tin nhắn và nhật ký cuộc gọi đã đồng bộ cùng mọi cài đặt trên thiết bị này. Không thể hoàn tác.</string>
 	<key>settings.delete_all_offline_confirm</key>
@@ -280,6 +286,8 @@
 	<string>Xóa khỏi máy chủ</string>
 	<key>settings.remove_from_server_ellipsis</key>
 	<string>Xóa thiết bị khỏi máy chủ…</string>
+	<key>settings.remove_from_server_title</key>
+	<string>Xóa thiết bị này khỏi máy chủ?</string>
 	<key>settings.remove_from_server_warning</key>
 	<string>Xóa đăng ký của thiết bị này khỏi máy chủ HandLive. Các thiết bị đã ghép vẫn dùng được khi ở cùng mạng Wi-Fi; kết nối qua Internet sẽ tắt cho tới khi bạn bật lại.</string>
 	<key>settings.removed_from_server</key>
@@ -318,6 +326,8 @@
 	<string>Camera ảo chỉ hoạt động khi HandLive nằm trong thư mục Ứng dụng. Chuyển ngay?</string>
 	<key>setup.ios_limits</key>
 	<string>Bảng nhớ tạm đồng bộ khi HandLive đang mở trên máy này: chạm nút Dán để gửi, không bị hỏi quyền dán. iPhone/iPad không nghe gọi được. Khi HandLive đóng, SMS và cuộc gọi đến hiện dưới dạng thông báo.</string>
+	<key>setup.ios_limits_title</key>
+	<string>Cách HandLive hoạt động trên iPhone và iPad</string>
 	<key>setup.keys_failed</key>
 	<string>Không tạo được khóa bảo mật trên máy này. Hãy thử lại.</string>
 	<key>setup.local_network_denied_ios</key>
@@ -372,6 +382,10 @@
 	<string>Tin nhắn mới</string>
 	<key>sms.notification_hidden_body</key>
 	<string>Tin nhắn SMS mới</string>
+	<key>sms.permission_instructions_body</key>
+	<string>Trên điện thoại, mở HandLive và vào Cài đặt › Quyền và chạy nền. Chạm Cấp quyền ở mục Tin nhắn SMS, hoặc Mở cài đặt nếu quyền đã bị từ chối, rồi cho phép SMS.</string>
+	<key>sms.permission_instructions_title</key>
+	<string>Cấp quyền SMS trên điện thoại</string>
 	<key>sms.quick_reply_not_sent</key>
 	<string>Chưa gửi được, mở HandLive để thử lại.</string>
 	<key>sms.recipient_label</key>

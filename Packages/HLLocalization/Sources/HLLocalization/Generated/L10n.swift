@@ -13,6 +13,10 @@ public enum L10n {
         public static func smsBubbleSent(time: String, status: String) -> String {
             L10nLookup.format("a11y.sms_bubble_sent", time, status)
         }
+        /// one: {count} unread conversation | other: {count} unread conversations
+        public static func unreadConversations(count: Int) -> String {
+            L10nLookup.format("a11y.unread_conversations", count)
+        }
     }
     public enum Clipboard {
         /// Auto-send is off on the phone — use the Send Clipboard button on the phone
@@ -87,6 +91,8 @@ public enum L10n {
         public static var agree: String { L10nLookup.string("common.agree") }
         /// Cancel
         public static var cancel: String { L10nLookup.string("common.cancel") }
+        /// Close
+        public static var close: String { L10nLookup.string("common.close") }
         /// Continue
         public static var `continue`: String { L10nLookup.string("common.continue") }
         /// Delete
@@ -97,6 +103,8 @@ public enum L10n {
         public static var getStarted: String { L10nLookup.string("common.get_started") }
         /// Off
         public static var off: String { L10nLookup.string("common.off") }
+        /// OK
+        public static var ok: String { L10nLookup.string("common.ok") }
         /// On
         public static var on: String { L10nLookup.string("common.on") }
         /// Open Settings
@@ -313,6 +321,8 @@ public enum L10n {
         public static var deleteAllData: String { L10nLookup.string("settings.delete_all_data") }
         /// Delete All HandLive Data…
         public static var deleteAllDataEllipsis: String { L10nLookup.string("settings.delete_all_data_ellipsis") }
+        /// Delete All HandLive Data?
+        public static var deleteAllDataTitle: String { L10nLookup.string("settings.delete_all_data_title") }
         /// The security keys, paired devices, synced messages and call history, and all settings on this device will be deleted. This can't be undone.
         public static var deleteAllDataWarning: String { L10nLookup.string("settings.delete_all_data_warning") }
         /// Couldn't connect to the server. Delete from this device anyway?
@@ -343,6 +353,8 @@ public enum L10n {
         public static var removeFromServerConfirm: String { L10nLookup.string("settings.remove_from_server_confirm") }
         /// Remove Device from Server…
         public static var removeFromServerEllipsis: String { L10nLookup.string("settings.remove_from_server_ellipsis") }
+        /// Remove This Device from the Server?
+        public static var removeFromServerTitle: String { L10nLookup.string("settings.remove_from_server_title") }
         /// This device's registration will be removed from the HandLive server. Paired devices keep working on the same Wi-Fi network; the internet connection stays off until you turn it back on.
         public static var removeFromServerWarning: String { L10nLookup.string("settings.remove_from_server_warning") }
         /// Removed from the server
@@ -385,6 +397,8 @@ public enum L10n {
         public static var applicationsPrompt: String { L10nLookup.string("setup.applications_prompt") }
         /// The clipboard syncs while HandLive is open on this device: tap the Paste button to send, with no paste permission prompt. iPhone and iPad can't take calls. When HandLive is closed, SMS messages and incoming calls appear as notifications.
         public static var iosLimits: String { L10nLookup.string("setup.ios_limits") }
+        /// How HandLive Works on iPhone and iPad
+        public static var iosLimitsTitle: String { L10nLookup.string("setup.ios_limits_title") }
         /// Couldn't create the security keys on this device. Try again.
         public static var keysFailed: String { L10nLookup.string("setup.keys_failed") }
         /// HandLive can't look for the phone on Wi-Fi. Turn on HandLive in Settings › Privacy & Security › Local Network.
@@ -449,6 +463,10 @@ public enum L10n {
         public static func partCount(count: Int) -> String {
             L10nLookup.format("sms.part_count", count)
         }
+        /// On your phone, open HandLive and go to Settings › Permissions & Background. Tap Grant Permission under SMS Messages, or Open Settings if the permission was denied, and allow SMS.
+        public static var permissionInstructionsBody: String { L10nLookup.string("sms.permission_instructions_body") }
+        /// Grant SMS Permission on Your Phone
+        public static var permissionInstructionsTitle: String { L10nLookup.string("sms.permission_instructions_title") }
         /// Not sent yet. Open HandLive to try again.
         public static var quickReplyNotSent: String { L10nLookup.string("sms.quick_reply_not_sent") }
         /// To:
