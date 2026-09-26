@@ -1,6 +1,7 @@
 import AppKit
 import Foundation
 import HLAppCore
+import HLLocalization
 import HLProtocol
 import HLSMS
 import HLSMSNotifications
@@ -75,6 +76,27 @@ extension AppModel {
         case .markRead(let info): Task { await engine.markAsRead(threadId: info.threadId) }
         case .open(let info): showMessages(threadId: info.threadId)
         }
+    }
+
+    /// Why SMS does not work with the phone while it is on here (2-patterns/04-cai-dat.md), or `nil`.
+    public var smsUnavailableReason: String? {
+        guard smsEnabled, let device = pairedDevice, let capability = device.peerCapability else { return nil }
+        if capability.features.sms?.enabled != true { return L10n.Pairing.reasonOffOnDevice(deviceName: device.peerName) }
+        if (capability.permissionsMissing ?? []).contains(where: { $0.hasSuffix("READ_SMS") }) {
+            return L10n.Pairing.reasonMissingSmsPermission
+        }
+        return nil
+    }
+
+    /// "Resync All SMS…" needs a session to the phone and SMS active (SET-02 field 25).
+    public var canResyncSms: Bool {
+        guard case .connected = link.status else { return false }
+        return smsEngine?.isActive == true
+    }
+
+    /// SMS-01 field 8: names can't be shown because the phone may not read contacts.
+    public var phoneMissesContactsPermission: Bool {
+        (pairedDevice?.peerCapability?.permissionsMissing ?? []).contains { $0.hasSuffix("READ_CONTACTS") }
     }
 
     /// "New Message" can be opened: a paired phone and the SMS database.
