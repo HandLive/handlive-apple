@@ -42,15 +42,19 @@ public struct LocalDevice: Sendable, Equatable {
         return String(bytes: buffer.prefix { $0 != 0 }.map { UInt8(bitPattern: $0) }, encoding: .utf8) ?? ""
     }
 
-    /// Capability of this device (0.7.2) from its settings. Phase 1 advertises only what the app implements:
-    /// clipboard and the relay switch; absent features count as off, so the phone sends nothing else.
+    /// Capability of this device (0.7.2) from its settings: what the app implements — clipboard, SMS and the relay
+    /// switch; absent features count as off, so the phone sends nothing else. iPhone and iPad add `sms.notify`, which
+    /// decides whether the phone pushes new messages (SET-02 field 8).
     public func capability(settings: AppSettings) -> CapabilityData {
         let mimes = settings.sendImages ? ClipboardLimits.mimes : [ClipboardLimits.textMime]
         let clipboard = ClipboardFeature(enabled: settings.clipboardEnabled, autoSend: true,
                                          maxTextBytes: ClipboardLimits.maxTextBytes,
                                          maxImageBytes: ClipboardLimits.maxImageBytes, mimes: mimes)
+        let mobile = platform == .ios || platform == .ipados
+        let sms = SmsFeature(enabled: settings.smsEnabled, notify: mobile ? settings.smsNotify : nil)
         return CapabilityData(appVersion: appVersion, platform: platform, osVersion: osVersion, model: model,
-                              features: Features(clipboard: clipboard, relay: RelayFeature(enabled: settings.relayEnabled)))
+                              features: Features(clipboard: clipboard, sms: sms,
+                                                 relay: RelayFeature(enabled: settings.relayEnabled)))
     }
 }
 
