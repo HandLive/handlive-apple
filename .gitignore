@@ -15,3 +15,6 @@ Packages/*/Package.resolved
 *.mobileprovision
 .env
 .env.*
+
+# Fetched by the GRDB package, never committed
+ThirdParty/*/Package.resolved
