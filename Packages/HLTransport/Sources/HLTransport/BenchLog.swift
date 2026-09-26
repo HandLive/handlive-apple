@@ -24,10 +24,15 @@ public enum BenchLog {
 
     /// Logs one event in debug builds: `BenchLog.event("state", ["from": "Discovering", "to": "Connected"])`.
     public static func event(_ name: String, _ fields: KeyValuePairs<String, String> = [:]) {
+        event(name, fields: fields.map { ($0.key, $0.value) })
+    }
+
+    /// Same, with fields built at run time (optional fields such as `code` go last).
+    public static func event(_ name: String, fields: [(String, String)]) {
         #if DEBUG
         let current = identity.withLock { $0 }
         let text = line(wallMs: Date().timeIntervalSince1970 * 1000, monoNs: clock_gettime_nsec_np(CLOCK_MONOTONIC_RAW),
-                        identity: current, event: name, fields: fields.map { ($0.key, $0.value) })
+                        identity: current, event: name, fields: fields)
         Logger(subsystem: current.role == .macos ? "app.handlive.mac" : "app.handlive.ios", category: "bench")
             .info("\(text, privacy: .public)")
         #endif
