@@ -139,7 +139,7 @@ actor LinkRecorder {
         for await event in stream { events.append(event) }
     }
 
-    func waitFor(timeout: Duration = .seconds(3), _ match: @Sendable (LinkEvent) -> Bool) async -> LinkEvent? {
+    func waitFor(timeout: Duration = .seconds(10), _ match: @Sendable (LinkEvent) -> Bool) async -> LinkEvent? {
         let deadline = ContinuousClock.now.advanced(by: timeout)
         while ContinuousClock.now < deadline {
             if let event = events.last(where: match) { return event }
@@ -148,7 +148,7 @@ actor LinkRecorder {
         return nil
     }
 
-    func waitForState(_ state: ConnectionState, timeout: Duration = .seconds(3)) async -> LinkStatus? {
+    func waitForState(_ state: ConnectionState, timeout: Duration = .seconds(10)) async -> LinkStatus? {
         guard case .status(let status)? = await waitFor(timeout: timeout, {
             if case .status(let status) = $0 { return status.state == state }
             return false

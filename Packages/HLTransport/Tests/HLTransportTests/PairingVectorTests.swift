@@ -121,11 +121,12 @@ struct PairingVectorTests {
     }
 
     @Test("K_pin of the PIN vector (Argon2id v0x13, 64 MiB, p = 4) differs from p = 1 and from an integer PIN")
-    func pinKey() throws {
+    func pinKey() async throws {
         let file = try Self.file()
         let vector = try #require(file.vectors.first { $0["mode"] as? String == "pin" })
-        let key = PairingAuthDerivation.pinKey(pin: try vector.string("pin"), clientNonce: try vector.hex("nonce_c"),
-                                               serverNonce: try vector.hex("nonce_s"))
+        let key = await PairingAuthDerivation.pinKeyOffPool(pin: try vector.string("pin"),
+                                                            clientNonce: try vector.hex("nonce_c"),
+                                                            serverNonce: try vector.hex("nonce_s"))
         let expectedKey = try vector.string("k_pin")
         let secret = try vector.hex("secret")
         #expect(Hex.encode(key) == expectedKey && key == secret)

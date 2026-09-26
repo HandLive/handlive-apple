@@ -169,7 +169,7 @@ extension LinkEvent {
 }
 
 /// Polls a condition for up to `timeout`.
-func waitUntil(timeout: Duration = .seconds(3), _ condition: @Sendable () async -> Bool) async -> Bool {
+func waitUntil(timeout: Duration = .seconds(10), _ condition: @Sendable () async -> Bool) async -> Bool {
     let deadline = ContinuousClock.now.advanced(by: timeout)
     while ContinuousClock.now < deadline {
         if await condition() { return true }

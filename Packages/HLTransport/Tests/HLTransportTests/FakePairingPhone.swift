@@ -71,8 +71,8 @@ final class FakePairingPhone: @unchecked Sendable {
         let serverNonce = PairingCodes.newNonce()
         let secret: Data = switch window {
         case .qr(let secret, _): secret
-        case .pin(let typed): PairingAuthDerivation.pinKey(pin: typed, clientNonce: clientNonce, serverNonce: serverNonce,
-                                                           parameters: pinParameters)
+        case .pin(let typed): await PairingAuthDerivation.pinKeyOffPool(pin: typed, clientNonce: clientNonce,
+                                                                        serverNonce: serverNonce, parameters: pinParameters)
         }
         let transcript = try PairingAuthDerivation.offerTranscript(
             client: PairingParty(deviceId: hello.deviceId, nonce: clientNonce, signingPublicKey: clientSig,
