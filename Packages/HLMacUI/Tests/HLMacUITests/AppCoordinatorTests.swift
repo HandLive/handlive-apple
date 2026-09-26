@@ -1,5 +1,6 @@
 import AppKit
 import Foundation
+import HLAppCore
 import HLLocalization
 import Testing
 @testable import HLMacUI
