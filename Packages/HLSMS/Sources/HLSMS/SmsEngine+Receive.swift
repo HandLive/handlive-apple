@@ -51,6 +51,11 @@ extension SmsEngine {
         if openThreadId == threadId { openThreadId = nil }
     }
 
+    /// "Mark as Read" (row action, notification action `HL_SMS_MARK_READ`): read on this device only (SMS-05 A2).
+    public func markAsRead(threadId: Int64) async {
+        await markRead(threadId: threadId)
+    }
+
     func markRead(threadId: Int64) async {
         guard let pairId else { return }
         try? await store.markLocallyRead(pairId: pairId, threadId: threadId)
