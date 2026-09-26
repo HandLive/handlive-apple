@@ -100,7 +100,7 @@ struct ConnectionManagerRelayTests {
         await setup.manager.stop()
     }
 
-    @Test("410 DEVICE_REVOKED turns the relay off (E3); a pin failure is reported and not retried (E7)")
+    @Test("410 DEVICE_REVOKED turns the relay off (E3); a pin failure is reported and not retried (E7); 429 waits (E6)")
     func relayRefusals() async throws {
         let revoked = await RelayHarness.make(phoneOnline: true)
         revoked.api.fail(with: .http(status: 410, code: .deviceRevoked, retryAfter: nil))
@@ -120,6 +120,16 @@ struct ConnectionManagerRelayTests {
         } != nil)
         #expect(await untrusted.relay.opens == 0)
         await untrusted.manager.stop()
+
+        let limited = await RelayHarness.make(phoneOnline: true)
+        limited.api.fail(with: .http(status: 429, code: .rateLimited, retryAfter: 30))
+        await limited.manager.start(phone: limited.phone)
+        let waiting = await limited.recorder.waitFor {
+            if case .status(let status) = $0 { return status.issue == .relayRateLimited && status.nextRetry != nil }
+            return false
+        }
+        #expect(waiting != nil) // E6: "Trying again in …" from nextRetry
+        await limited.manager.stop()
     }
 
     @Test("relay.enabled off: the grace ends in Backoff and no relay is opened")

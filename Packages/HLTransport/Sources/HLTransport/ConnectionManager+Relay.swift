@@ -168,6 +168,7 @@ extension ConnectionManager {
             eventSink.yield(.relayDeviceRevoked)
             scheduleBackoff(.backoff)
         case RelayAPIError.http(429, _, let retryAfter):
+            issue = .relayRateLimited
             pendingDelay = .seconds(max(retryAfter ?? 0, backoff.nextDelay()) * configuration.delayScale)
         default:
             scheduleBackoff(.backoff)

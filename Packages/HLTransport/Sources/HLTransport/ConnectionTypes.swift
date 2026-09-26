@@ -42,6 +42,8 @@ public enum LinkIssue: Sendable, Equatable {
     /// `410 DEVICE_REVOKED`: "This device was removed from the internet service"; the relay stays off until the user
     /// turns it on again (CONN-03 E3).
     case relayDeviceRemoved
+    /// `429 RATE_LIMITED`: "Too many requests. Trying again in {duration}." with `nextRetry` (CONN-03 E6).
+    case relayRateLimited
 }
 
 /// What the UI shows (StatusIndicator, menu bar menu, CONN-02 fields 1–4).
