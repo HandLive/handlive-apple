@@ -11,12 +11,13 @@ extension AppModel {
         applyActivationPolicy()
     }
 
-    /// `.accessory` while the menu bar icon is shown, `.regular` (Dock, app menu bar) otherwise (SET-03 step 6).
+    /// `.accessory` while the menu bar icon is shown and the Messages window is closed, `.regular` (Dock, app menu bar)
+    /// otherwise (SET-03 step 6, SMS-03 on the Mac).
     public func applyActivationPolicy() {
-        let policy: NSApplication.ActivationPolicy = showInMenuBar ? .accessory : .regular
-        guard NSApp.activationPolicy() != policy else { return }
-        NSApp.setActivationPolicy(policy)
-        if policy == .regular { NSApp.activate(ignoringOtherApps: true) }
+        let policy: NSApplication.ActivationPolicy = showInMenuBar && !messagesWindowOpen ? .accessory : .regular
+        guard let app = NSApp, app.activationPolicy() != policy else { return } // no NSApplication in unit tests
+        app.setActivationPolicy(policy)
+        if policy == .regular { app.activate(ignoringOtherApps: true) }
     }
 
     /// "Open HandLive at Login" (SET-02 field 22, SET-03 API 3).
@@ -50,10 +51,16 @@ extension AppModel {
         clipboard?.autoClearSettingChanged()
     }
 
+    /// SET-02 field 21: the capability tells the phone first, then the relay session and connection close (step 6).
     public func setRelayEnabled(_ enabled: Bool) {
         settings.relayEnabled = enabled
         relayEnabled = enabled
+        relayNotice = nil
         scheduleCapabilityUpdate()
+        Task { [manager] in
+            try? await Task.sleep(for: .milliseconds(400)) // after the coalesced capability/update
+            await manager?.setRelayEnabled(enabled)
+        }
     }
 
     /// Several changes within 300 ms travel as one `capability/update` snapshot (SET-02 API 1 logic 2).

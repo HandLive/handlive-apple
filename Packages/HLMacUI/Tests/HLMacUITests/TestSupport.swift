@@ -2,6 +2,7 @@ import Foundation
 import HLAppCore
 import HLCrypto
 import HLProtocol
+import HLSMS
 import HLTransport
 @testable import HLMacUI
 
@@ -65,7 +66,7 @@ final class StubAlerts: ClipboardAlerting {
 
 @MainActor
 func makeModel(secrets: any SecretStore = InMemorySecretStore(), pasteboard: StubPasteboard = StubPasteboard(),
-               alerts: StubAlerts = StubAlerts()) -> AppModel {
+               alerts: StubAlerts = StubAlerts(), sms: StubSmsNotifier = StubSmsNotifier()) -> AppModel {
     let suite = "app.handlive.tests.\(UUID().uuidString)"
     let defaults = UserDefaults(suiteName: suite)!
     return AppModel(settings: AppSettings(defaults: defaults), secrets: secrets,
@@ -73,7 +74,31 @@ func makeModel(secrets: any SecretStore = InMemorySecretStore(), pasteboard: Stu
                                         platform: .macos),
                     pairStoreURL: FileManager.default.temporaryDirectory
                         .appendingPathComponent("handlive-tests-\(UUID().uuidString)/paired-devices.bin"),
-                    pasteboard: pasteboard, alerts: alerts) {
-        ConnectionManager(localCapability: $0, discovery: SilentDiscovery(), network: SilentNetwork())
+                    smsDatabaseURL: FileManager.default.temporaryDirectory
+                        .appendingPathComponent("handlive-tests-\(UUID().uuidString)/handlive.sqlite"),
+                    pasteboard: pasteboard, alerts: alerts, smsNotifier: sms, relayConfiguration: nil) { capability, _ in
+        ConnectionManager(localCapability: capability, discovery: SilentDiscovery(), network: SilentNetwork())
+    }
+}
+
+/// SMS notifications recorded instead of posted.
+@MainActor
+final class StubSmsNotifier: SmsNotifying {
+    private(set) var posted: [SmsIncoming] = []
+    private(set) var previews: [Bool] = []
+    private(set) var removed: [(threadId: Int64, upToTs: Int64?)] = []
+    private(set) var removedAll = 0
+
+    func post(_ incoming: SmsIncoming, showPreview: Bool) {
+        posted.append(incoming)
+        previews.append(showPreview)
+    }
+
+    func remove(pairId: String, threadId: Int64, upToTs: Int64?) {
+        removed.append((threadId, upToTs))
+    }
+
+    func removeAll() {
+        removedAll += 1
     }
 }

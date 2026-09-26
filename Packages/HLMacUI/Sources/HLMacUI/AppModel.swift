@@ -4,6 +4,8 @@ import HLAppCore
 import HLCrypto
 import HLDesignSystem
 import HLProtocol
+import HLSMS
+import HLSMSUI
 import HLTransport
 
 /// State and intents of the Mac app: keys, the paired phone, the connection, settings and first-run progress.
@@ -35,6 +37,16 @@ public final class AppModel: ObservableObject {
     @Published public internal(set) var menuBarFeedback: String?
     /// Image transfers over 1 MiB in progress, one per direction (CLIP-03 field 2).
     @Published public internal(set) var clipboardProgress: [ClipboardProgress.Direction: ClipboardProgress] = [:]
+    /// SMS settings mirrored for the views (SET-02 fields 7–9).
+    @Published public internal(set) var smsEnabled: Bool
+    @Published public internal(set) var smsNotify: Bool
+    @Published public internal(set) var smsPreview: Bool
+    /// Conversations shown as unread: the badge right after the menu bar icon (SMS-02 field 6).
+    @Published public internal(set) var unreadThreads = 0
+    /// The Messages screens; `nil` until the keys load, or when the database cannot be opened (SMS-01 E7).
+    @Published public internal(set) var messages: MessagesModel?
+    /// Result of a relay action in Settings (SET-02 field 30) or a relay problem (CONN-03 field 4).
+    @Published public internal(set) var relayNotice: String?
 
     let settings: AppSettings
     let secrets: any SecretStore
@@ -49,7 +61,17 @@ public final class AppModel: ObservableObject {
     let pasteboard: any ClipboardAccess
     let alerts: any ClipboardAlerting
     let pairStoreURL: URL
-    let makeManager: @MainActor (CapabilityData) -> ConnectionManager
+    let smsDatabaseURL: URL
+    let makeManager: @MainActor (CapabilityData, RelayServices?) -> ConnectionManager
+    /// `{RELAY_HOST}` of this build (CONN-03); `nil` without one (and in tests): LAN only.
+    let relayConfiguration: RelayConfiguration?
+    var relay: RelayServices?
+    var smsEngine: SmsEngine?
+    let smsNotifier: any SmsNotifying
+    /// The Messages window is open: the app shows its Dock icon and menu bar (SET-03 step 6).
+    var messagesWindowOpen = false
+    /// Opens the Messages window; set by a view of the menu bar extra, which has the SwiftUI `openWindow` action.
+    public var openMessagesWindow: () -> Void = {}
 
     /// `pairStoreURL` defaults to Application Support of the bundle identifier; tests pass a temporary file, a
     /// pasteboard and notifications of their own.
@@ -57,16 +79,23 @@ public final class AppModel: ObservableObject {
                 device: LocalDevice = .current(name: Host.current().localizedName ?? "Mac", platform: .macos),
                 pairStoreURL: URL = PairedDeviceStore.defaultURL(
                     bundleIdentifier: Bundle.main.bundleIdentifier ?? "app.handlive.mac"),
+                smsDatabaseURL: URL = SmsDatabase.defaultURL(
+                    bundleIdentifier: Bundle.main.bundleIdentifier ?? "app.handlive.mac"),
                 pasteboard: (any ClipboardAccess)? = nil, alerts: (any ClipboardAlerting)? = nil,
-                makeManager: @escaping @MainActor (CapabilityData) -> ConnectionManager = {
-                    ConnectionManager(localCapability: $0)
+                smsNotifier: (any SmsNotifying)? = nil,
+                relayConfiguration: RelayConfiguration? = .fromBundle(),
+                makeManager: @escaping @MainActor (CapabilityData, RelayServices?) -> ConnectionManager = {
+                    ConnectionManager(localCapability: $0, relay: $1)
                 }) {
         self.settings = settings
         self.secrets = secrets
         self.device = device
         self.pairStoreURL = pairStoreURL
+        self.smsDatabaseURL = smsDatabaseURL
         self.pasteboard = pasteboard ?? MacPasteboard()
         self.alerts = alerts ?? UserNotificationAlerts()
+        self.smsNotifier = smsNotifier ?? UserNotificationSms()
+        self.relayConfiguration = relayConfiguration
         self.makeManager = makeManager
         showInMenuBar = settings.showInMenuBar
         clipboardEnabled = settings.clipboardEnabled
@@ -74,6 +103,9 @@ public final class AppModel: ObservableObject {
         blockSensitive = settings.blockSensitive
         autoClearSeconds = settings.autoClearSeconds
         relayEnabled = settings.relayEnabled
+        smsEnabled = settings.smsEnabled
+        smsNotify = settings.smsNotify
+        smsPreview = settings.smsPreview
     }
 
     /// "Send Clipboard to Phone" is available with a paired phone and clipboard on here and, as far as known, on the
@@ -105,6 +137,7 @@ public final class AppModel: ObservableObject {
             pairedDevice = try? store.active()
             phase = .ready
             startClipboard(identity: keys)
+            startMessages(identity: keys)
             startConnection()
         } catch IdentityError.keysMissing {
             // The Keychain lost the keys after setup started: start over as a fresh install.
@@ -123,11 +156,17 @@ public final class AppModel: ObservableObject {
     }
 
     private func startConnection() {
-        let manager = makeManager(device.capability(settings: settings))
+        if let relayConfiguration, let identity {
+            relay = RelayServices.live(configuration: relayConfiguration, identity: RelayIdentity(
+                deviceId: identity.deviceId, signingSeed: identity.signingSeed,
+                signingPublicKey: identity.signingPublicKey, platform: device.platform, appVersion: device.appVersion))
+        }
+        let manager = makeManager(device.capability(settings: settings), relay)
         self.manager = manager
         let phone = activePhone()
+        let relayOn = settings.relayEnabled
         linkEvents = Task { [weak self] in
-            await manager.start(phone: phone)
+            await manager.start(phone: phone, relayEnabled: relayOn)
             for await event in manager.events {
                 await self?.handle(event)
             }

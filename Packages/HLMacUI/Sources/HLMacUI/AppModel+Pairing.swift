@@ -59,6 +59,7 @@ extension AppModel {
         }
         pairedDevice = record
         updateClipboardPolling()
+        pairChangedForMessages()
         let phone = activePhone()
         Task { await manager?.setPhone(phone) }
     }
