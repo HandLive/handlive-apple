@@ -50,7 +50,7 @@ struct ClipboardTabView: View {
                 Image(systemName: "doc.on.clipboard").foregroundStyle(Color.accentColor).accessibilityHidden(true)
                 Text(text).font(.subheadline).frame(maxWidth: .infinity, alignment: .leading)
                 Button { model.dismissUnsentBanner() } label: {
-                    Image(systemName: "xmark").accessibilityLabel(Text(L10n.Common.done))
+                    Image(systemName: "xmark").accessibilityLabel(Text(L10n.Common.close)) // CLIP-04 field 3
                 }
                 .buttonStyle(.borderless)
             }

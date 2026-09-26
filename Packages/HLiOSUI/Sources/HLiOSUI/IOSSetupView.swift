@@ -59,7 +59,7 @@ struct IOSSetupView: View {
         case .localNetworkDenied:
             guide(L10n.Setup.localNetworkDeniedIos)
         case .limits:
-            primer(symbol: "iphone", title: nil, body: L10n.Setup.iosLimits)
+            primer(symbol: "iphone", title: L10n.Setup.iosLimitsTitle, body: L10n.Setup.iosLimits) // SET-03 field 11
         }
     }
 

@@ -42,7 +42,7 @@ public struct IOSRootView: View {
                 .tag(IOSTab.clipboard)
             MessagesTabView(model: model)
                 .tabItem { Label(L10n.Sms.title, systemImage: "message.fill") }
-                .badge(model.unreadThreads)
+                .badge(unreadBadge)
                 .tag(IOSTab.messages)
             SettingsTabView(model: model) { pairing = true }
                 .tabItem { Label(L10n.Settings.title, systemImage: "gearshape.fill") }
@@ -53,6 +53,16 @@ public struct IOSRootView: View {
             offeredPairing = true
             pairing = true
         }
+    }
+}
+
+extension IOSRootView {
+    /// The Messages tab badge: the number of unread conversations, which VoiceOver reads as "3 unread conversations"
+    /// (SMS-02 field 6); none at 0.
+    private var unreadBadge: Text? {
+        let count = model.unreadThreads
+        guard count > 0 else { return nil }
+        return Text(verbatim: String(count)).accessibilityLabel(Text(L10n.A11y.unreadConversations(count: count)))
     }
 }
 
