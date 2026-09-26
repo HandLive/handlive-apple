@@ -114,7 +114,7 @@ jobs:
       - name: xcodebuild test (every package)
         run: |
           set -euo pipefail
-          for pkg in HLProtocol HLCrypto HLTransport HLDesignSystem HLLocalization HLAppCore HLSMS HLSMSUI HLMacUI; do
+          for pkg in HLProtocol HLCrypto HLTransport HLDesignSystem HLLocalization HLAppCore HLSMS HLSMSUI HLMacUI HLiOSUI; do
             echo "::group::xcodebuild test $pkg"
             (cd "apple/Packages/$pkg" && xcodebuild test \
               -scheme "$pkg" \
