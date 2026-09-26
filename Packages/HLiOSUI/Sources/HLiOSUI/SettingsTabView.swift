@@ -118,8 +118,9 @@ struct MessagesSettingsSection: View {
         GroupedSection(L10n.Settings.messages, footer: L10n.Settings.smsReadNote) {
             Toggle(isOn: Binding(get: { model.smsEnabled }, set: { model.setSmsEnabled($0) })) {
                 GroupedRowLabel(L10n.Settings.smsMessages, systemImage: "message", feature: .messages,
-                                unavailableReason: model.smsUnavailableReason)
+                                unavailableReason: model.smsPhoneProblem?.text)
             }
+            if model.smsPhoneProblem?.hasInstructions == true { SmsInstructionsButton() } // SMS-01 field 7
             Group {
                 Toggle(L10n.Settings.smsNotify, isOn: Binding(get: { model.smsNotify }, set: { model.setSmsNotify($0) }))
                 Toggle(L10n.Settings.smsPreview, isOn: Binding(get: { model.smsPreview },
@@ -143,7 +144,7 @@ struct MessagesSettingsSection: View {
             } message: {
                 Text(L10n.Sms.resyncConfirmMessage)
             }
-            if (model.pairedDevice?.peerCapability?.permissionsMissing ?? []).contains(where: { $0.hasSuffix("READ_CONTACTS") }) {
+            if model.phoneMissesContactsPermission {
                 Label(L10n.Sms.contactsPermissionHint, systemImage: "info.circle")
                     .font(.footnote)
                     .foregroundStyle(HLColorToken.textOrange.color)

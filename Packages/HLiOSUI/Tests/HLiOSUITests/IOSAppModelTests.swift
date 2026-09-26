@@ -5,6 +5,7 @@ import HLLocalization
 import HLProtocol
 import HLSMS
 import HLSMSNotifications
+import HLSMSUI
 import HLTransport
 import Testing
 @testable import HLiOSUI
@@ -149,6 +150,27 @@ struct IOSAppModelTests {
         #expect(relay.calls.contains("deleteDevice revoke_pairs=true"))
         #expect(erased && model.pairedDevice == nil && !model.setupCompleted && model.deviceId != oldDevice)
         #expect(notifications.removedEverything == 1)
+    }
+
+    @Test("Settings and the phone details: SMS off on the phone or missing permissions, off here, contacts hint")
+    func phoneReasons() throws {
+        let model = makeIOSModel()
+        model.launch()
+        try model.completePairing(pairingResult(name: "Pixel của Lan"))
+        #expect(model.smsPhoneProblem == nil && model.smsFeatureReason == nil && model.clipboardFeatureReason == nil)
+        model.updatePairRecord {
+            $0.peerCapability = CapabilityData(appVersion: "1.0.0 (100)", platform: .android, osVersion: "15",
+                                               model: "Pixel 8",
+                                               features: Features(sms: SmsFeature(enabled: true, canSend: true)),
+                                               permissionsMissing: ["SEND_SMS", "READ_CONTACTS"])
+        }
+        #expect(model.smsPhoneProblem == .missingPermission && model.phoneMissesContactsPermission)
+        #expect(model.smsFeatureReason == L10n.Pairing.reasonMissingSmsPermission)
+        model.setSmsEnabled(false)
+        model.setClipboardEnabled(false)
+        #expect(model.smsPhoneProblem == nil)
+        #expect(model.smsFeatureReason == L10n.Pairing.reasonOffOnDevice(deviceName: "iPhone của Lan"))
+        #expect(model.clipboardFeatureReason == L10n.Pairing.reasonOffOnDevice(deviceName: "iPhone của Lan"))
     }
 
     @Test("SET-03 step 13: finishing setup registers this device with the relay in the background")

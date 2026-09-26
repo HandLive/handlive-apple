@@ -3,6 +3,8 @@ import HLAppCore
 import HLDesignSystem
 import HLLocalization
 import HLProtocol
+import HLSMS
+import HLSMSUI
 import HLTransport
 
 extension IOSAppModel {
@@ -108,13 +110,28 @@ extension IOSAppModel {
     }
 
     /// Why SMS does not work with the phone while it is on here (2-patterns/04-cai-dat.md), or `nil`.
-    public var smsUnavailableReason: String? {
-        guard smsEnabled, let device = pairedDevice, let capability = device.peerCapability else { return nil }
-        if capability.features.sms?.enabled != true { return L10n.Pairing.reasonOffOnDevice(deviceName: device.peerName) }
-        if (capability.permissionsMissing ?? []).contains(where: { $0.hasSuffix("READ_SMS") }) {
-            return L10n.Pairing.reasonMissingSmsPermission
-        }
-        return nil
+    public var smsPhoneProblem: SmsPhoneProblem? {
+        guard smsEnabled, let device = pairedDevice else { return nil }
+        return SmsPhoneProblem.of(device.peerCapability, phoneName: device.peerName)
+    }
+
+    /// PAIR-02 field 8: why SMS is not in use with the phone, off on this device included, or `nil` when it is.
+    public var smsFeatureReason: String? {
+        guard pairedDevice != nil else { return nil }
+        guard smsEnabled else { return L10n.Pairing.reasonOffOnDevice(deviceName: device.name) }
+        return smsPhoneProblem?.text
+    }
+
+    /// PAIR-02 field 8: why clipboard sync is not in use with the phone, off on this device included, or `nil`.
+    public var clipboardFeatureReason: String? {
+        guard pairedDevice != nil else { return nil }
+        guard clipboardEnabled else { return L10n.Pairing.reasonOffOnDevice(deviceName: device.name) }
+        return clipboardUnavailableReason
+    }
+
+    /// SMS-01 field 8: names can't be shown because the phone may not read contacts.
+    public var phoneMissesContactsPermission: Bool {
+        SmsPermissions.contactsMissing(in: pairedDevice?.peerCapability?.permissionsMissing ?? [])
     }
 
     /// Why clipboard sync is not in effect with the phone (SET-02 field 24), or `nil`.
