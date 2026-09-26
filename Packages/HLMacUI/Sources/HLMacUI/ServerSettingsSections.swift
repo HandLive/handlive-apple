@@ -37,7 +37,7 @@ struct ServerSettingsSections: View {
                     .foregroundStyle(result.isError ? HLColorToken.textOrange.color : Color.secondary)
             }
         }
-        .alert(L10n.Settings.removeFromServer, isPresented: $confirmingRemove) {
+        .alert(L10n.Settings.removeFromServerTitle, isPresented: $confirmingRemove) {
             Button(L10n.Common.cancel, role: .cancel) {}
             Button(L10n.Settings.removeFromServerConfirm, role: .destructive) { removeFromServer() }
         } message: {
@@ -51,7 +51,7 @@ struct ServerSettingsSections: View {
                     Button(L10n.Common.delete, role: .destructive) { deleteAll(evenIfOffline: true) }
                 }
         }
-        .alert(L10n.Settings.deleteAllData, isPresented: $confirmingDelete) {
+        .alert(L10n.Settings.deleteAllDataTitle, isPresented: $confirmingDelete) {
             Button(L10n.Common.cancel, role: .cancel) {}
             Button(L10n.Settings.deleteAllConfirm, role: .destructive) { deleteAll(evenIfOffline: false) }
         } message: {
