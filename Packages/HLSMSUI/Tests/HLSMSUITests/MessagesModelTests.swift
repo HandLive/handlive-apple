@@ -72,6 +72,25 @@ struct MessagesModelTests {
         #expect(await Self.eventually { engine.openThreadId == 6 })
     }
 
+    @Test("Last synced follows the saved cursor; close stops reading the database")
+    func lastSyncAndClose() async throws {
+        let store = try Self.store()
+        let messages = MessagesModel(engine: SmsEngine(store: store), store: store)
+        messages.setPair(Self.pairId)
+        try await store.applyNew(Self.new(1, thread: 1, ts: 100), pairId: Self.pairId)
+        #expect(await Self.eventually { messages.threads.count == 1 })
+        #expect(messages.lastSyncAt == nil)
+        try await store.applySyncPage(SmsSyncAckData(threads: [], messages: [], cursor: "c1", hasMore: false),
+                                      pairId: Self.pairId, now: 1_727_150_000_000)
+        messages.apply(.syncStatus(.done))
+        #expect(await Self.eventually { messages.lastSyncAt == 1_727_150_000_000 })
+        messages.close()
+        #expect(messages.threads.isEmpty)
+        try await store.applyNew(Self.new(2, thread: 2, ts: 200), pairId: Self.pairId)
+        try? await Task.sleep(for: .milliseconds(100))
+        #expect(messages.threads.isEmpty)
+    }
+
     @Test("A conversation: messages oldest first, the placeholder of a message written here, the counter")
     func conversation() async throws {
         let store = try Self.store()

@@ -22,6 +22,8 @@ public final class MessagesModel: ObservableObject {
     @Published public var unreadOnly = false
     /// Latest failed send per conversation, for the row's "Not sent" (ThreadRow README).
     @Published public private(set) var failedThreads: Set<Int64> = []
+    /// `sync_cursor.updated_at` of the pair (SMS-01 field 4, Settings › Messages).
+    @Published public private(set) var lastSyncAt: Int64?
 
     public let engine: SmsEngine
     public let store: SmsStore
@@ -49,13 +51,36 @@ public final class MessagesModel: ObservableObject {
         conversations.removeAll()
         threads = []
         listLimit = SmsStore.pageSize
+        lastSyncAt = nil
         observe()
+        refreshLastSync()
+    }
+
+    /// Stops reading the database (SET-02 "Delete All HandLive Data", before its files go).
+    public func close() {
+        observation?.cancel()
+        failureObservation?.cancel()
+        observation = nil
+        failureObservation = nil
+        conversations.removeAll()
+        newMessage = nil
+        threads = []
+    }
+
+    private func refreshLastSync() {
+        guard let pairId else { return }
+        Task { [weak self, store] in
+            let time = try? await store.lastSync(pairId: pairId)
+            if self?.pairId == pairId { self?.lastSyncAt = time }
+        }
     }
 
     /// Engine events the screens show; the app forwards them here and to its notifier.
     public func apply(_ event: SmsEvent) {
         switch event {
-        case .syncStatus(let status): syncStatus = status
+        case .syncStatus(let status):
+            syncStatus = status
+            if status == .done || status == .idle { refreshLastSync() }
         case .badge(let count): unreadThreads = count
         case .history(let threadId, let state): conversations[threadId]?.historyState = state
         default: break
