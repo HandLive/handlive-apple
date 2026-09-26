@@ -82,6 +82,8 @@
 	<string>Try Again</string>
 	<key>common.view_instructions</key>
 	<string>View Instructions</string>
+	<key>common.view_instructions_ellipsis</key>
+	<string>View Instructions…</string>
 	<key>error.clip_content_too_large</key>
 	<string>Content is too large to send (up to 1 MB of text, 10 MB for images)</string>
 	<key>error.clip_image_no_space</key>

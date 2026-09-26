@@ -115,6 +115,8 @@ public enum L10n {
         public static var retry: String { L10nLookup.string("common.retry") }
         /// View Instructions
         public static var viewInstructions: String { L10nLookup.string("common.view_instructions") }
+        /// View Instructions…
+        public static var viewInstructionsEllipsis: String { L10nLookup.string("common.view_instructions_ellipsis") }
     }
     public enum Error {
         /// Content is too large to send (up to 1 MB of text, 10 MB for images)

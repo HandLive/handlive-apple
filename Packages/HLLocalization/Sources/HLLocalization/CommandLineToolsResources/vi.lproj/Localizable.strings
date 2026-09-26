@@ -82,6 +82,8 @@
 	<string>Thử lại</string>
 	<key>common.view_instructions</key>
 	<string>Xem hướng dẫn</string>
+	<key>common.view_instructions_ellipsis</key>
+	<string>Xem hướng dẫn…</string>
 	<key>error.clip_content_too_large</key>
 	<string>Nội dung quá lớn để gửi (tối đa 1 MB văn bản, 10 MB ảnh)</string>
 	<key>error.clip_image_no_space</key>

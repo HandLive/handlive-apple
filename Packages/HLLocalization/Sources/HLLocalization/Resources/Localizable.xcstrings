@@ -740,7 +740,7 @@
       }
     },
     "common.view_instructions" : {
-      "comment" : "Opens the SMS-01 field 7 alert (sms.permission_instructions_title / _body, common.ok)",
+      "comment" : "Opens the SMS-01 field 7 alert (sms.permission_instructions_title / _body, common.ok); the Mac uses common.view_instructions_ellipsis",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -753,6 +753,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Xem hướng dẫn"
+          }
+        }
+      }
+    },
+    "common.view_instructions_ellipsis" : {
+      "comment" : "Mac form of common.view_instructions: the button opens the SMS-01 field 7 alert, so it ends with “…”",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View Instructions…"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Xem hướng dẫn…"
           }
         }
       }
