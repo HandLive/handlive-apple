@@ -1,5 +1,6 @@
 import Foundation
 import HLAppCore
+import HLLocalization
 import HLProtocol
 import HLSMS
 import HLSMSNotifications
@@ -107,6 +108,29 @@ struct AppModelMessagesTests {
         #expect(model.messagesWindowOpen)
         model.messagesWindowVisibilityChanged(false)
         #expect(!model.messagesWindowOpen)
+    }
+
+    @Test("Settings › Messages: the reason SMS can't work with the phone, contacts hint, resync only when connected")
+    func messagesPaneState() throws {
+        let model = makeModel()
+        model.launch()
+        try model.completePairing(PairingControllerTests.result(name: "Pixel của Lan"))
+        #expect(model.smsUnavailableReason == nil && !model.phoneMissesContactsPermission && !model.canResyncSms)
+        model.updatePairRecord { $0.peerCapability = Self.capability(smsOn: false, missing: []) }
+        #expect(model.smsUnavailableReason == L10n.Pairing.reasonOffOnDevice(deviceName: "Pixel của Lan"))
+        model.updatePairRecord {
+            $0.peerCapability = Self.capability(smsOn: true, missing: ["android.permission.READ_SMS", "READ_CONTACTS"])
+        }
+        #expect(model.smsUnavailableReason == L10n.Pairing.reasonMissingSmsPermission)
+        #expect(model.phoneMissesContactsPermission)
+        model.setSmsEnabled(false)
+        #expect(model.smsUnavailableReason == nil) // the switch itself says it is off
+        #expect(!SmsSyncSection.relative(1_727_150_000_000, now: Date(timeIntervalSince1970: 1_727_150_300)).isEmpty)
+    }
+
+    static func capability(smsOn: Bool, missing: [String]) -> CapabilityData {
+        CapabilityData(appVersion: "1.0.0 (100)", platform: .android, osVersion: "15", model: "Pixel 8",
+                       features: Features(sms: SmsFeature(enabled: smsOn, canSend: true)), permissionsMissing: missing)
     }
 
     static func message(_ id: Int, ts: Int64) -> SmsMessageData {
