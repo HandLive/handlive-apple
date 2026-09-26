@@ -67,7 +67,11 @@ public struct ConversationView: View {
             case .complete?: Text(L10n.Sms.beginningOfConversation)
             case .needsConnection?: Text(L10n.Sms.historyNeedsConnection)
             case .threadGone?: Text(L10n.Error.smsThreadNotFound)
-            case .failed?: Button(L10n.Common.retry) { model.retryHistory() }
+            case .failed?:
+                HStack(spacing: HLSpacing.space8) {
+                    Text(L10n.Error.smsHistoryFailed)
+                    Button(L10n.Common.retry) { model.retryHistory() }
+                }
             case .unavailable?, .ready?, nil: EmptyView()
             }
         }

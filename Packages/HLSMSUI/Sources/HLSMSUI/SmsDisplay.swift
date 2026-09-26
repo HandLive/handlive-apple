@@ -90,21 +90,22 @@ public enum SmsDisplay {
         [bubbleTime(ts), simLabel].compactMap { $0 }.joined(separator: " · ")
     }
 
-    /// VoiceOver label of a bubble: sender and time, or time and status of a sent message; the text is the value.
+    /// VoiceOver label of a bubble (SMS-03 special requirements): "{sender}, {time}" for a received message — the
+    /// sender's number in a group conversation — and "You, {time}, {status}" for a sent one; the text is the value.
     public static func bubbleAccessibility(_ message: SmsMessage, thread: SmsThread?,
                                            status: MessageBubble.Status?) -> String {
         guard message.isIncoming else {
-            return [bubbleTime(message.ts), statusText(status)].filter { !$0.isEmpty }.joined(separator: ", ")
+            return L10n.A11y.smsBubbleSent(time: bubbleTime(message.ts), status: statusText(status ?? .sent))
         }
         let sender = thread.map { SmsNames.title(displayName: $0.isGroup ? nil : $0.displayName,
                                                  addresses: $0.isGroup ? [message.address] : $0.addresses) }
             ?? PhoneNumberDisplay.format(message.address)
-        return [sender, bubbleTime(message.ts)].joined(separator: ", ")
+        return L10n.A11y.smsBubbleReceived(sender: sender, time: bubbleTime(message.ts))
     }
 
-    /// VoiceOver label of a placeholder bubble.
+    /// VoiceOver label of a placeholder bubble (a message written here that the phone has not echoed yet).
     public static func placeholderAccessibility(_ entry: SmsOutboxEntry, status: MessageBubble.Status?) -> String {
-        [bubbleTime(entry.createdAt), statusText(status)].filter { !$0.isEmpty }.joined(separator: ", ")
+        L10n.A11y.smsBubbleSent(time: bubbleTime(entry.createdAt), status: statusText(status ?? .pending))
     }
 
     /// The row of a conversation.

@@ -48,17 +48,21 @@ public struct ComposeBar: View {
         .padding(HLSpacing.space12)
     }
 
+    /// SMS-04 field 4: the SIM chip opens "Choose SIM" with the phone's active SIMs.
     private var simMenu: some View {
-        Menu {
-            ForEach(sims, id: \.subId) { sim in
-                Button {
-                    subId = sim.subId
-                } label: {
-                    if sim.subId == subId { Label(sim.label, systemImage: "checkmark") } else { Text(sim.label) }
+        let current = sims.first { $0.subId == subId }?.label ?? sims[0].label
+        return Menu {
+            Section(L10n.Sms.chooseSim) {
+                ForEach(sims, id: \.subId) { sim in
+                    Button {
+                        subId = sim.subId
+                    } label: {
+                        if sim.subId == subId { Label(sim.label, systemImage: "checkmark") } else { Text(sim.label) }
+                    }
                 }
             }
         } label: {
-            Text(sims.first { $0.subId == subId }?.label ?? sims[0].label)
+            Text(current)
                 .font(.caption.weight(.semibold))
                 .padding(.horizontal, HLSpacing.space8)
                 .padding(.vertical, HLSpacing.space4)
@@ -68,5 +72,7 @@ public struct ComposeBar: View {
         .menuStyle(.borderlessButton)
         #endif
         .fixedSize()
+        .accessibilityLabel(Text(L10n.Sms.chooseSim))
+        .accessibilityValue(Text(current))
     }
 }

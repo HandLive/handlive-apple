@@ -66,7 +66,7 @@ public enum SmsNotificationBuilder {
         let reply = UNTextInputNotificationAction(
             identifier: SmsNotificationKeys.replyAction, title: L10n.Sms.reply, options: [],
             icon: UNNotificationActionIcon(systemImageName: "arrowshape.turn.up.left"),
-            textInputButtonTitle: L10n.Sms.send, textInputPlaceholder: "")
+            textInputButtonTitle: L10n.Sms.send, textInputPlaceholder: L10n.Sms.composePlaceholder)
         let markRead = UNNotificationAction(identifier: SmsNotificationKeys.markReadAction, title: L10n.Sms.markAsRead,
                                             options: [], icon: UNNotificationActionIcon(systemImageName: "envelope.open"))
         let placeholder = L10n.Sms.notificationHiddenBody

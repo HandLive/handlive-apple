@@ -4,7 +4,7 @@ import HLSMS
 import SwiftUI
 
 /// The conversation list (SMS-03 fields 1–5, SMS-01 fields 1–2): the sync banner above `ThreadRow`s sorted by the
-/// latest message, the empty state, and the row actions ("Mark as Read", "Copy Number").
+/// latest message, the empty state (E1), and the row actions ("Mark as Read", "Copy Number").
 public struct ThreadListView: View {
     @ObservedObject var model: MessagesModel
     /// "Copy Number" (Mac context menu): the platform's pasteboard.
@@ -41,6 +41,7 @@ public struct ThreadListView: View {
         VStack(spacing: HLSpacing.space8) {
             Image(systemName: "message").font(.largeTitle).foregroundStyle(Color.secondary)
             Text(L10n.Sms.emptyTitle).font(.headline)
+            Text(L10n.Sms.emptyBody).font(.subheadline).foregroundStyle(Color.secondary).multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, HLSpacing.space40)
@@ -61,14 +62,16 @@ public struct ThreadListView: View {
 }
 
 extension SmsDisplay {
-    /// SMS-01 field 1: "Syncing messages…" (with the count of the first sync), or "Couldn't sync — will try again when
-    /// connected"; nothing when idle or done.
+    /// SMS-01 fields 1, 2 and 7: "Syncing messages…" (with the count of the first sync), "Couldn't sync — will try
+    /// again when connected" (E4, E6), "Couldn't save messages on this device" (E7), the missing permission (E2);
+    /// nothing when idle or done.
     public static func syncBanner(_ status: SmsSyncStatus) -> String? {
         switch status {
         case .syncing(let downloaded, let firstSync) where firstSync && downloaded > 0:
             L10n.Sms.syncDownloaded(count: downloaded)
         case .syncing: L10n.Sms.syncing
-        case .failed(.interrupted), .failed(.phoneError), .failed(.storage): L10n.Sms.syncFailed
+        case .failed(.interrupted), .failed(.phoneError): L10n.Sms.syncFailed
+        case .failed(.storage): L10n.Error.smsSyncStorage
         case .failed(.permissionMissing): L10n.Pairing.reasonMissingSmsPermission
         case .idle, .done, .failed(.featureOff): nil
         }

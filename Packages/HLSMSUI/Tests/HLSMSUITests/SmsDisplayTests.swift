@@ -3,6 +3,7 @@ import HLDesignSystem
 import HLLocalization
 import HLProtocol
 import HLSMS
+import HLSMSNotifications
 import Testing
 @testable import HLSMSUI
 
@@ -34,7 +35,33 @@ struct SmsDisplayTests {
         #expect(SmsDisplay.syncBanner(.syncing(downloaded: 0, firstSync: true)) == L10n.Sms.syncing)
         #expect(SmsDisplay.syncBanner(.syncing(downloaded: 1500, firstSync: true)) == L10n.Sms.syncDownloaded(count: 1500))
         #expect(SmsDisplay.syncBanner(.failed(.interrupted)) == L10n.Sms.syncFailed)
+        #expect(SmsDisplay.syncBanner(.failed(.storage)) == L10n.Error.smsSyncStorage)
         #expect(SmsDisplay.syncBanner(.done) == nil && SmsDisplay.syncBanner(.idle) == nil)
+    }
+
+    @Test("Bubble VoiceOver labels: sender and time received, You with time and status sent; the number in a group")
+    func bubbleLabels() throws {
+        let ts: Int64 = 1_727_150_000_000
+        let time = SmsDisplay.bubbleTime(ts)
+        let decoder = JSONDecoder()
+        let thread = try decoder.decode(SmsThread.self, from: Data("""
+            {"pair_id": "p", "thread_id": 7, "addresses_json": "[\\"+84900000123\\"]", "display_name": "Lan",
+             "last_ts": \(ts), "unread_count": 0, "local_read_ts": 0}
+            """.utf8))
+        let received = try decoder.decode(SmsMessage.self, from: Data("""
+            {"message_key": "sms:1", "thread_id": 7, "address": "+84900000123", "body": "Hi", "box": "inbox",
+             "ts": \(ts), "read": true}
+            """.utf8))
+        #expect(SmsDisplay.bubbleAccessibility(received, thread: thread, status: nil)
+            == L10n.A11y.smsBubbleReceived(sender: "Lan", time: time))
+        var sent = received
+        sent.box = SmsBox.sent.rawValue
+        #expect(SmsDisplay.bubbleAccessibility(sent, thread: thread, status: .delivered)
+            == L10n.A11y.smsBubbleSent(time: time, status: L10n.Sms.statusDelivered))
+        var group = thread
+        group.addressesJSON = #"["+84900000123","+84900000456"]"#
+        #expect(SmsDisplay.bubbleAccessibility(received, thread: group, status: nil)
+            == L10n.A11y.smsBubbleReceived(sender: PhoneNumberDisplay.format("+84900000123"), time: time))
     }
 
     @Test("List time: today's time, a day marker for yesterday, the date otherwise")

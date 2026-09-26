@@ -32,7 +32,8 @@ let package = Package(
         ),
         .testTarget(
             name: "HLSMSUITests",
-            dependencies: ["HLSMSUI", "HLProtocol", .product(name: "HLSMS", package: "HLSMS")]
+            dependencies: ["HLSMSUI", "HLProtocol", .product(name: "HLSMS", package: "HLSMS"),
+                           .product(name: "HLSMSNotifications", package: "HLSMS")]
                 + (useSwiftTestingPackage ? [.product(name: "Testing", package: "swift-testing")] : [])
         ),
     ]
