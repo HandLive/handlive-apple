@@ -12,17 +12,26 @@ let package = Package(
     platforms: [.macOS(.v13), .iOS(.v16)],
     products: [
         .library(name: "HLSMS", targets: ["HLSMS"]),
+        // Notification content and categories only, without the database: the Notification Service Extension links this.
+        .library(name: "HLSMSNotifications", targets: ["HLSMSNotifications"]),
     ],
     dependencies: [
-        .package(path: "../HLProtocol"), .package(path: "../HLTransport"), .package(path: "../../ThirdParty/GRDB"),
+        .package(path: "../HLProtocol"), .package(path: "../HLCrypto"), .package(path: "../HLTransport"),
+        .package(path: "../HLLocalization"), .package(path: "../../ThirdParty/GRDB"),
     ] + (useSwiftTestingPackage
         ? [.package(url: "https://github.com/swiftlang/swift-testing.git", branch: "release/6.2")]
         : []),
     targets: [
         .target(name: "HLSMS", dependencies: ["HLProtocol", "HLTransport", .product(name: "GRDB", package: "GRDB")]),
+        .target(name: "HLSMSNotifications", dependencies: ["HLProtocol", "HLCrypto", "HLTransport", "HLLocalization"]),
         .testTarget(
             name: "HLSMSTests",
             dependencies: ["HLSMS", "HLProtocol", "HLTransport", .product(name: "GRDB", package: "GRDB")]
+                + (useSwiftTestingPackage ? [.product(name: "Testing", package: "swift-testing")] : [])
+        ),
+        .testTarget(
+            name: "HLSMSNotificationsTests",
+            dependencies: ["HLSMSNotifications", "HLProtocol", "HLCrypto", "HLLocalization"]
                 + (useSwiftTestingPackage ? [.product(name: "Testing", package: "swift-testing")] : [])
         ),
     ]
