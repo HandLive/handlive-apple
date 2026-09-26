@@ -1,6 +1,6 @@
 # CLAUDE.md — handlive-apple
 
-macOS and iOS/iPadOS apps of HandLive (Swift 6, macOS 13+ / iOS 16+; XcodeGen `project.yml`, packages `HLProtocol`, `HLCrypto`, `HLTransport`, `HLDesignSystem`, `HLLocalization`, `HLAppCore`, `HLMacUI`). One part of the HandLive **workspace**: the hub repository `handlive` is this directory's parent, holds the documents that are the contract for all code, and its `CLAUDE.md` applies here in full.
+macOS and iOS/iPadOS apps of HandLive (Swift 6, macOS 13+ / iOS 16+; XcodeGen `project.yml`, packages `HLProtocol`, `HLCrypto`, `HLTransport`, `HLDesignSystem`, `HLLocalization`, `HLAppCore`, `HLMacUI`). The apps receive data from Android and send data back. One part of the HandLive **workspace**: the hub repository `handlive` is this directory's parent, holds the specification that all code implements, and its `CLAUDE.md` applies here in full.
 
 ## Workspace layout (mandatory)
 
