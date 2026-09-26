@@ -55,6 +55,12 @@ public struct SimInfo: Codable, Equatable, Sendable {
     public var slot: Int32
     public var label: String
 
+    public init(subId: Int32, slot: Int32, label: String) {
+        self.subId = subId
+        self.slot = slot
+        self.label = label
+    }
+
     enum CodingKeys: String, CodingKey {
         case subId = "sub_id"
         case slot, label
