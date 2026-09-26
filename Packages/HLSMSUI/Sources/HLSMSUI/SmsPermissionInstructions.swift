@@ -50,8 +50,18 @@ public struct SmsInstructionsButton: View {
     public init() {}
 
     public var body: some View {
-        Button(L10n.Common.viewInstructions) { showing = true }
+        Button(Self.title) { showing = true }
             .smsPermissionInstructions(isPresented: $showing)
+    }
+
+    /// "View Instructions…" on the Mac, where a button that opens an alert ends with "…" (03-platforms/01-macos.md);
+    /// "View Instructions" on iPhone and iPad (SMS-01 field 7).
+    nonisolated static var title: String {
+        #if os(macOS)
+        L10n.Common.viewInstructionsEllipsis
+        #else
+        L10n.Common.viewInstructions
+        #endif
     }
 }
 

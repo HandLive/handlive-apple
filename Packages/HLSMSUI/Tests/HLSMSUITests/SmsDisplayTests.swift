@@ -80,6 +80,15 @@ struct SmsDisplayTests {
         #expect(missing?.text == L10n.Pairing.reasonMissingSmsPermission)
     }
 
+    @Test("View Instructions ends with an ellipsis on the Mac, where it opens an alert")
+    func instructionsTitle() {
+        #if os(macOS)
+        #expect(SmsInstructionsButton.title == L10n.Common.viewInstructionsEllipsis)
+        #else
+        #expect(SmsInstructionsButton.title == L10n.Common.viewInstructions)
+        #endif
+    }
+
     @Test("List time: today's time, a day marker for yesterday, the date otherwise")
     func times() {
         let now = Date(timeIntervalSince1970: 1_727_150_000)
