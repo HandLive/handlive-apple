@@ -7,6 +7,7 @@ public struct SessionConfiguration: Sendable {
     public var requestTimeout = TransportConstants.requestTimeout
     public var pingInterval = TransportConstants.pingInterval
     public var pongTimeout = TransportConstants.pongTimeout
+    public var relayPingInterval = TransportConstants.relayPingInterval
     public var rekeyAfterEnvelopes = TransportConstants.rekeyAfterEnvelopes
     public var rekeyAfterAge = TransportConstants.rekeyAfterAge
     public var rekeyOldKeyGrace = TransportConstants.rekeyOldKeyGrace

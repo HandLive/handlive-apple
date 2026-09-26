@@ -7,7 +7,7 @@ import HLProtocol
 public actor ControlSession {
     /// Everything the session reports; finishes after `.ended`.
     public nonisolated let events: AsyncStream<SessionEvent>
-    /// Route the channel took (Phase 1: always the LAN).
+    /// Route the channel took: the LAN, or the relay (CONN-03) with an end-to-end `ping/ping` every 30 s.
     public nonisolated let route: ConnectionRoute
     /// Capability of the phone: from its `capability/hello`, replaced by each `capability/update`.
     public internal(set) var peerCapability: CapabilityData?
@@ -22,6 +22,8 @@ public actor ControlSession {
     var ending: SessionEnd?
     var loops: [Task<Void, Never>] = []
     var outgoingRekey: OutgoingRekey?
+    /// Round trip of the last end-to-end `ping/ping` over the relay (diagnostics, CONN-02 API 2).
+    public internal(set) var endToEndRoundTrip: Duration?
 
     init(channel: any MessageChannel, pair: PairContext, route: ConnectionRoute, configuration: SessionConfiguration) {
         self.channel = channel
@@ -150,6 +152,7 @@ public actor ControlSession {
     private func startLoops() {
         loops.append(Task { await self.receiveLoop() })
         loops.append(Task { await self.keepAliveLoop() })
+        if route == .relay { loops.append(Task { await self.endToEndPingLoop() }) }
     }
 
     /// WebSocket ping every `WS_PING_INTERVAL` with an 8-byte counter; no pong within `PONG_TIMEOUT` → lost.
