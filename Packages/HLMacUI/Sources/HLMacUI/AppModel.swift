@@ -188,9 +188,18 @@ public final class AppModel: ObservableObject {
         return record.pairedPhone(clientDeviceId: identity.deviceId, prk: prk)
     }
 
-    /// SET-03 step 13: first run done; the phone can be paired now.
+    /// SET-03 step 13: first run done; the device registers with the relay and the phone can be paired now.
     public func completeSetup() {
-        if settings.setupCompletedAt == nil { settings.setupCompletedAt = HLUUID.currentTimeMs() }
+        guard settings.setupCompletedAt == nil else { return }
+        settings.setupCompletedAt = HLUUID.currentTimeMs()
+        registerWithRelay()
+    }
+
+    /// SET-03 step 13: `POST /v1/devices` in the background while the internet connection is on; a failure is retried
+    /// by the next relay use (E7).
+    func registerWithRelay() {
+        guard relayEnabled, let api = relay?.api else { return }
+        Task { try? await api.registerDevice() }
     }
 
     /// "Reconnect Now".

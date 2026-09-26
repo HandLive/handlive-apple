@@ -151,6 +151,15 @@ struct IOSAppModelTests {
         #expect(notifications.removedEverything == 1)
     }
 
+    @Test("SET-03 step 13: finishing setup registers this device with the relay in the background")
+    func registersAtSetup() async {
+        let relay = ScriptedRelayAPI()
+        let model = makeIOSModel(relay: relay)
+        model.launch()
+        model.completeSetup()
+        #expect(await eventually { relay.calls.contains("registerDevice") })
+    }
+
     @Test("Remove from Server keeps the pair with relay_registered = 0 and turns the relay off")
     func removeFromServer() async throws {
         let relay = ScriptedRelayAPI()

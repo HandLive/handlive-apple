@@ -182,11 +182,13 @@ public final class IOSAppModel: ObservableObject {
         return record.pairedPhone(clientDeviceId: identity.deviceId, prk: prk)
     }
 
-    /// SET-03 step 13: first run done; the phone can be paired now.
+    /// SET-03 step 13: first run done; the device registers with the relay in the background (a failure is retried by
+    /// the next relay use, E7) and the phone can be paired now.
     public func completeSetup() {
         guard settings.setupCompletedAt == nil else { return }
         objectWillChange.send()
         settings.setupCompletedAt = HLUUID.currentTimeMs()
+        if relayEnabled, let api = relay?.api { Task { try? await api.registerDevice() } }
     }
 
     /// "Reconnect Now".

@@ -20,6 +20,15 @@ struct AppModelAccountTests {
         return model
     }
 
+    @Test("SET-03 step 13: finishing setup registers this device with the relay in the background")
+    func registersAtSetup() async {
+        let relay = ScriptedRelayAPI()
+        let model = makeModel(relay: relay)
+        model.launch()
+        model.completeSetup()
+        #expect(await eventually { relay.calls.contains("registerDevice") })
+    }
+
     @Test("Remove Device from Server: revoke_pairs=false, the pair stays with relay_registered = 0, the relay turns off")
     func removeFromServer() async throws {
         let relay = ScriptedRelayAPI()
