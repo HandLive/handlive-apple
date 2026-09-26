@@ -55,6 +55,7 @@ final class StubPasteboard: ClipboardAccess {
 final class StubAlerts: ClipboardAlerting {
     var onSendAnyway: () -> Void = {}
     var onSendAgain: () -> Void = {}
+    var onSmsResponse: (SmsNotificationResponse) -> Void = { _ in }
     private(set) var posted: [ClipboardAlert] = []
 
     func post(_ alert: ClipboardAlert) {

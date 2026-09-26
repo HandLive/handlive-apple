@@ -1,6 +1,7 @@
 import Foundation
 import HLAppCore
 import HLLocalization
+import HLSMSNotifications
 import UserNotifications
 
 /// System notifications of the clipboard with a button (QC3 "Send Anyway", CLIP-01 API 6 "Send Again").
@@ -9,6 +10,8 @@ public protocol ClipboardAlerting: AnyObject {
     /// "Send Anyway" and "Send Again" chosen on the notification.
     var onSendAnyway: () -> Void { get set }
     var onSendAgain: () -> Void { get set }
+    /// A response to an SMS notification (the center has one delegate, this one).
+    var onSmsResponse: (SmsNotificationResponse) -> Void { get set }
     func post(_ alert: ClipboardAlert)
 }
 
@@ -23,12 +26,13 @@ public final class UserNotificationAlerts: NSObject, ClipboardAlerting, UNUserNo
 
     public var onSendAnyway: () -> Void = {}
     public var onSendAgain: () -> Void = {}
+    public var onSmsResponse: (SmsNotificationResponse) -> Void = { _ in }
 
     /// Registers the categories and becomes the delegate; call at launch, before any notification arrives.
     public func register() {
         let center = UNUserNotificationCenter.current()
         center.delegate = self
-        center.setNotificationCategories([
+        center.setNotificationCategories(SmsNotificationBuilder.categories().union([
             UNNotificationCategory(identifier: Self.sensitiveCategory,
                                    actions: [UNNotificationAction(identifier: Self.sendAnywayAction,
                                                                   title: L10n.Clipboard.sendAnyway)],
@@ -37,7 +41,7 @@ public final class UserNotificationAlerts: NSObject, ClipboardAlerting, UNUserNo
                                    actions: [UNNotificationAction(identifier: Self.sendAgainAction,
                                                                   title: L10n.Clipboard.sendAgain)],
                                    intentIdentifiers: []),
-        ])
+        ]))
     }
 
     public func post(_ alert: ClipboardAlert) {
@@ -64,10 +68,18 @@ public final class UserNotificationAlerts: NSObject, ClipboardAlerting, UNUserNo
     nonisolated public func userNotificationCenter(_ center: UNUserNotificationCenter,
                                                    didReceive response: UNNotificationResponse) async {
         let action = response.actionIdentifier
+        let sms = SmsNotificationInfo(response.notification.request.content.userInfo)
+        let text = (response as? UNTextInputNotificationResponse)?.userText
         await MainActor.run {
             switch action {
             case Self.sendAnywayAction: onSendAnyway()
             case Self.sendAgainAction: onSendAgain()
+            case SmsNotificationKeys.replyAction:
+                if let sms, let text { onSmsResponse(.reply(sms, text: text)) }
+            case SmsNotificationKeys.markReadAction:
+                if let sms { onSmsResponse(.markRead(sms)) }
+            case UNNotificationDefaultActionIdentifier:
+                if let sms { onSmsResponse(.open(sms)) }
             default: break
             }
         }
