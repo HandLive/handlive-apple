@@ -71,6 +71,24 @@ public final class AppSettings: @unchecked Sendable {
         set { set(newValue, .clipBlockSensitive) }
     }
 
+    /// `feature.sms` (SET-02 field 7).
+    public var smsEnabled: Bool {
+        get { bool(.featureSms) }
+        set { set(newValue, .featureSms) }
+    }
+
+    /// `sms.notify` (field 8): iOS advertises it in its capability; the Mac only decides locally.
+    public var smsNotify: Bool {
+        get { bool(.smsNotify) }
+        set { set(newValue, .smsNotify) }
+    }
+
+    /// `sms.preview` (field 9): the extension reads it from the App Group suite.
+    public var smsPreview: Bool {
+        get { bool(.smsPreview) }
+        set { set(newValue, .smsPreview) }
+    }
+
     public var relayEnabled: Bool {
         get { bool(.relayEnabled) }
         set { set(newValue, .relayEnabled) }
