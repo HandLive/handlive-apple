@@ -8,32 +8,52 @@
 	<string>Thiết bị này vừa có nội dung sao chép mới.</string>
 	<key>clipboard.conflict_title</key>
 	<string>Chưa ghi lên %1$@</string>
+	<key>clipboard.copy</key>
+	<string>Sao chép</string>
 	<key>clipboard.empty_or_not_text</key>
 	<string>Bảng nhớ tạm trống hoặc không phải văn bản</string>
 	<key>clipboard.image_receiving</key>
 	<string>Đang nhận ảnh từ %1$@ — %2$@</string>
 	<key>clipboard.image_sending</key>
 	<string>Đang gửi ảnh tới %1$@ — %2$@</string>
+	<key>clipboard.new_content_banner</key>
+	<string>Bảng nhớ tạm trên %1$@ có nội dung mới — dán để gửi sang %2$@</string>
+	<key>clipboard.new_image_banner</key>
+	<string>Bảng nhớ tạm trên %1$@ có ảnh mới — dán để gửi sang %2$@</string>
+	<key>clipboard.not_connected_to_phone</key>
+	<string>Chưa kết nối với điện thoại</string>
 	<key>clipboard.not_connected_will_send</key>
 	<string>Chưa kết nối — sẽ gửi nếu kết nối lại trong 2 phút</string>
+	<key>clipboard.nothing_received</key>
+	<string>Chưa nhận gì</string>
+	<key>clipboard.received_from</key>
+	<string>Từ %1$@ · %2$@</string>
 	<key>clipboard.send_again</key>
 	<string>Gửi lại</string>
 	<key>clipboard.send_anyway</key>
 	<string>Vẫn gửi</string>
+	<key>clipboard.send_to_phone_title</key>
+	<string>Gửi sang %1$@</string>
 	<key>clipboard.sensitive_blocked_body</key>
 	<string>HandLive không gửi nội dung có vẻ là mật khẩu hoặc số thẻ.</string>
 	<key>clipboard.sensitive_blocked_title</key>
 	<string>Đã chặn nội dung nhạy cảm</string>
+	<key>clipboard.sensitive_hidden</key>
+	<string>Nội dung nhạy cảm đã được ẩn</string>
 	<key>clipboard.sent_to</key>
 	<string>Đã gửi tới %1$@</string>
 	<key>clipboard.skipped_just_received</key>
 	<string>Không gửi: nội dung này vừa nhận từ %1$@.</string>
+	<key>clipboard.title</key>
+	<string>Bảng nhớ tạm</string>
 	<key>common.agree</key>
 	<string>Đồng ý</string>
 	<key>common.cancel</key>
 	<string>Hủy</string>
 	<key>common.continue</key>
 	<string>Tiếp tục</string>
+	<key>common.delete</key>
+	<string>Xóa</string>
 	<key>common.done</key>
 	<string>Xong</string>
 	<key>common.get_started</key>
@@ -48,6 +68,10 @@
 	<string>Mở Cài đặt hệ thống</string>
 	<key>common.retry</key>
 	<string>Thử lại</string>
+	<key>common.view_instructions</key>
+	<string>Xem hướng dẫn</string>
+	<key>error.clip_content_too_large</key>
+	<string>Nội dung quá lớn để gửi (tối đa 1 MB văn bản, 10 MB ảnh)</string>
 	<key>error.clip_image_no_space</key>
 	<string>Không đủ bộ nhớ để nhận ảnh</string>
 	<key>error.clip_image_send_failed</key>
@@ -56,8 +80,12 @@
 	<string>Ảnh quá lớn (tối đa 10 MB)</string>
 	<key>error.clip_image_unreadable</key>
 	<string>Không đọc được ảnh</string>
+	<key>error.clip_send_failed</key>
+	<string>Gửi không thành công, thử lại.</string>
 	<key>error.clip_text_too_large</key>
 	<string>Nội dung quá lớn để gửi (tối đa 1 MB văn bản)</string>
+	<key>error.clip_unsupported_mime</key>
+	<string>Chỉ gửi được văn bản hoặc ảnh</string>
 	<key>error.clip_write_failed_on_phone</key>
 	<string>Không ghi được bảng nhớ tạm trên điện thoại</string>
 	<key>error.feature_disabled</key>
@@ -66,8 +94,28 @@
 	<string>Ghép nối không an toàn, thử lại</string>
 	<key>error.pairing_failed</key>
 	<string>Không ghép nối được. Thử lại.</string>
+	<key>error.relay_device_revoked</key>
+	<string>Thiết bị đã bị xóa khỏi dịch vụ Internet</string>
+	<key>error.server_unreachable</key>
+	<string>Không kết nối được máy chủ, hãy thử lại sau.</string>
 	<key>error.session_auth_failed</key>
 	<string>Không xác thực được điện thoại</string>
+	<key>error.sms_generic_failure</key>
+	<string>Gửi không thành công</string>
+	<key>error.sms_invalid_address</key>
+	<string>Số không hợp lệ</string>
+	<key>error.sms_limit_exceeded</key>
+	<string>Đã vượt giới hạn gửi, thử lại sau.</string>
+	<key>error.sms_no_service</key>
+	<string>Không có sóng</string>
+	<key>error.sms_not_connected</key>
+	<string>Không kết nối được điện thoại</string>
+	<key>error.sms_radio_off</key>
+	<string>Điện thoại đang ở chế độ máy bay</string>
+	<key>error.sms_sim_unavailable</key>
+	<string>SIM không hoạt động</string>
+	<key>error.sms_thread_not_found</key>
+	<string>Hội thoại không còn trên điện thoại</string>
 	<key>error.update_phone_app</key>
 	<string>Cập nhật HandLive trên điện thoại</string>
 	<key>error.update_this_app</key>
@@ -136,8 +184,12 @@
 	<string>Hủy ghép nối với %1$@?</string>
 	<key>pairing.unpair_ellipsis</key>
 	<string>Hủy ghép nối…</string>
+	<key>pairing.unpaired</key>
+	<string>Đã hủy ghép nối</string>
 	<key>pairing.unpaired_by_peer</key>
 	<string>%1$@ đã hủy ghép nối với thiết bị này</string>
+	<key>pairing.unpaired_pending</key>
+	<string>Đã hủy ghép nối; %1$@ sẽ tự dọn khi kết nối lại</string>
 	<key>pairing.use_pin</key>
 	<string>Không quét được? Dùng mã PIN</string>
 	<key>permission.local_network_primer_title</key>
@@ -172,22 +224,62 @@
 	<string>Camera</string>
 	<key>settings.clipboard</key>
 	<string>Bảng nhớ tạm</string>
+	<key>settings.data</key>
+	<string>Dữ liệu</string>
+	<key>settings.delete_all_data</key>
+	<string>Xóa toàn bộ dữ liệu HandLive</string>
+	<key>settings.delete_all_data_ellipsis</key>
+	<string>Xóa toàn bộ dữ liệu HandLive…</string>
+	<key>settings.delete_all_data_warning</key>
+	<string>Xóa khóa bảo mật, thiết bị đã ghép, tin nhắn và nhật ký cuộc gọi đã đồng bộ cùng mọi cài đặt trên thiết bị này. Không thể hoàn tác.</string>
+	<key>settings.delete_all_offline_confirm</key>
+	<string>Không kết nối được máy chủ. Vẫn xóa trên thiết bị này?</string>
 	<key>settings.general</key>
 	<string>Chung</string>
 	<key>settings.internet_connection</key>
 	<string>Kết nối qua Internet</string>
+	<key>settings.local_network</key>
+	<string>Mạng cục bộ</string>
 	<key>settings.messages</key>
 	<string>Tin nhắn</string>
+	<key>settings.notifications</key>
+	<string>Thông báo</string>
 	<key>settings.open_at_login</key>
 	<string>Mở HandLive khi đăng nhập</string>
 	<key>settings.paste_from_other_apps</key>
 	<string>Dán từ ứng dụng khác</string>
 	<key>settings.paste_permission_hint</key>
 	<string>Để tự gửi bảng nhớ tạm, mở Cài đặt hệ thống › Quyền riêng tư &amp; Bảo mật › Dán từ ứng dụng khác và chọn Luôn cho phép cho HandLive.</string>
+	<key>settings.permissions</key>
+	<string>Quyền</string>
+	<key>settings.phone</key>
+	<string>Điện thoại</string>
+	<key>settings.remove_from_server</key>
+	<string>Xóa thiết bị khỏi máy chủ</string>
+	<key>settings.remove_from_server_ellipsis</key>
+	<string>Xóa thiết bị khỏi máy chủ…</string>
+	<key>settings.remove_from_server_warning</key>
+	<string>Xóa đăng ký của thiết bị này khỏi máy chủ HandLive. Các thiết bị đã ghép vẫn dùng được khi ở cùng mạng Wi-Fi; kết nối qua Internet sẽ tắt cho tới khi bạn bật lại.</string>
+	<key>settings.removed_from_server</key>
+	<string>Đã xóa khỏi máy chủ</string>
+	<key>settings.resync_sms</key>
+	<string>Đồng bộ lại toàn bộ SMS</string>
+	<key>settings.resync_sms_ellipsis</key>
+	<string>Đồng bộ lại toàn bộ SMS…</string>
 	<key>settings.show_in_menu_bar</key>
 	<string>Hiện HandLive trên thanh menu</string>
 	<key>settings.show_in_menu_bar_footer</key>
 	<string>Khi tắt, HandLive nằm trên Dock.</string>
+	<key>settings.sms_last_sync</key>
+	<string>Lần đồng bộ cuối: %1$@</string>
+	<key>settings.sms_messages</key>
+	<string>Tin nhắn SMS</string>
+	<key>settings.sms_notify</key>
+	<string>Thông báo SMS mới</string>
+	<key>settings.sms_preview</key>
+	<string>Hiện nội dung trong thông báo</string>
+	<key>settings.sms_read_note</key>
+	<string>Đánh dấu đã đọc trên máy này không đổi trạng thái trên điện thoại.</string>
 	<key>settings.sync_clipboard</key>
 	<string>Đồng bộ bảng nhớ tạm</string>
 	<key>settings.sync_images</key>
@@ -220,6 +312,68 @@
 	<string>HandLive và quyền riêng tư của bạn</string>
 	<key>setup.welcome_title</key>
 	<string>Chào mừng đến với HandLive</string>
+	<key>sms.beginning_of_conversation</key>
+	<string>Đầu hội thoại</string>
+	<key>sms.char_count</key>
+	<string>%1$@/%2$@</string>
+	<key>sms.char_counter</key>
+	<string>%1$@/%2$@ · %3$@</string>
+	<key>sms.compose_placeholder</key>
+	<string>Tin nhắn SMS</string>
+	<key>sms.contacts_permission_hint</key>
+	<string>Cho phép HandLive đọc danh bạ trên điện thoại để hiện tên</string>
+	<key>sms.copy_number</key>
+	<string>Sao chép số</string>
+	<key>sms.empty_title</key>
+	<string>Chưa có tin nhắn</string>
+	<key>sms.filter_all</key>
+	<string>Tất cả</string>
+	<key>sms.filter_unread</key>
+	<string>Chưa đọc</string>
+	<key>sms.group_reply_on_phone</key>
+	<string>Trả lời hội thoại nhóm trên điện thoại</string>
+	<key>sms.history_needs_connection</key>
+	<string>Kết nối điện thoại để tải tin cũ hơn</string>
+	<key>sms.loading_older</key>
+	<string>Đang tải tin cũ hơn</string>
+	<key>sms.mark_as_read</key>
+	<string>Đánh dấu đã đọc</string>
+	<key>sms.new_message</key>
+	<string>Tin nhắn mới</string>
+	<key>sms.notification_hidden_body</key>
+	<string>Tin nhắn SMS mới</string>
+	<key>sms.quick_reply_not_sent</key>
+	<string>Chưa gửi được, mở HandLive để thử lại.</string>
+	<key>sms.reply</key>
+	<string>Trả lời</string>
+	<key>sms.resync</key>
+	<string>Đồng bộ lại</string>
+	<key>sms.resync_confirm_message</key>
+	<string>Tin đang chờ gửi được giữ lại.</string>
+	<key>sms.resync_confirm_title</key>
+	<string>Xóa tin nhắn đã lưu trên %1$@ và tải lại từ điện thoại?</string>
+	<key>sms.send</key>
+	<string>Gửi</string>
+	<key>sms.status_delivered</key>
+	<string>Đã nhận</string>
+	<key>sms.status_failed</key>
+	<string>Gửi lỗi</string>
+	<key>sms.status_failed_reason</key>
+	<string>Gửi lỗi · %1$@</string>
+	<key>sms.status_pending</key>
+	<string>Đang chờ điện thoại</string>
+	<key>sms.status_sending</key>
+	<string>Đang gửi…</string>
+	<key>sms.status_sent</key>
+	<string>Đã gửi</string>
+	<key>sms.sync_failed</key>
+	<string>Đồng bộ lỗi — sẽ thử lại khi kết nối</string>
+	<key>sms.syncing</key>
+	<string>Đang đồng bộ tin nhắn…</string>
+	<key>sms.title</key>
+	<string>Tin nhắn</string>
+	<key>sms.unread_divider</key>
+	<string>Tin chưa đọc</string>
 	<key>status.channel_internet</key>
 	<string>Qua Internet</string>
 	<key>status.channel_lan</key>

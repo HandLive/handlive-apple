@@ -8,32 +8,52 @@
 	<string>That device just copied something new.</string>
 	<key>clipboard.conflict_title</key>
 	<string>Clipboard Not Updated on %1$@</string>
+	<key>clipboard.copy</key>
+	<string>Copy</string>
 	<key>clipboard.empty_or_not_text</key>
 	<string>The clipboard is empty or doesn't contain text</string>
 	<key>clipboard.image_receiving</key>
 	<string>Receiving image from %1$@ — %2$@</string>
 	<key>clipboard.image_sending</key>
 	<string>Sending image to %1$@ — %2$@</string>
+	<key>clipboard.new_content_banner</key>
+	<string>The %1$@ clipboard has new content — paste to send it to %2$@</string>
+	<key>clipboard.new_image_banner</key>
+	<string>The %1$@ clipboard has a new image — paste to send it to %2$@</string>
+	<key>clipboard.not_connected_to_phone</key>
+	<string>Not connected to the phone</string>
 	<key>clipboard.not_connected_will_send</key>
 	<string>Not connected — will send if reconnected within 2 minutes</string>
+	<key>clipboard.nothing_received</key>
+	<string>Nothing Received Yet</string>
+	<key>clipboard.received_from</key>
+	<string>From %1$@ · %2$@</string>
 	<key>clipboard.send_again</key>
 	<string>Send Again</string>
 	<key>clipboard.send_anyway</key>
 	<string>Send Anyway</string>
+	<key>clipboard.send_to_phone_title</key>
+	<string>Send to %1$@</string>
 	<key>clipboard.sensitive_blocked_body</key>
 	<string>HandLive doesn't send content that looks like a password or card number.</string>
 	<key>clipboard.sensitive_blocked_title</key>
 	<string>Sensitive Content Blocked</string>
+	<key>clipboard.sensitive_hidden</key>
+	<string>Sensitive content hidden</string>
 	<key>clipboard.sent_to</key>
 	<string>Sent to %1$@</string>
 	<key>clipboard.skipped_just_received</key>
 	<string>Not sent — this just came from %1$@.</string>
+	<key>clipboard.title</key>
+	<string>Clipboard</string>
 	<key>common.agree</key>
 	<string>Agree</string>
 	<key>common.cancel</key>
 	<string>Cancel</string>
 	<key>common.continue</key>
 	<string>Continue</string>
+	<key>common.delete</key>
+	<string>Delete</string>
 	<key>common.done</key>
 	<string>Done</string>
 	<key>common.get_started</key>
@@ -48,6 +68,10 @@
 	<string>Open System Settings</string>
 	<key>common.retry</key>
 	<string>Try Again</string>
+	<key>common.view_instructions</key>
+	<string>View Instructions</string>
+	<key>error.clip_content_too_large</key>
+	<string>Content is too large to send (up to 1 MB of text, 10 MB for images)</string>
 	<key>error.clip_image_no_space</key>
 	<string>Not enough storage to receive the image</string>
 	<key>error.clip_image_send_failed</key>
@@ -56,8 +80,12 @@
 	<string>Image is too large (up to 10 MB)</string>
 	<key>error.clip_image_unreadable</key>
 	<string>Couldn't read the image</string>
+	<key>error.clip_send_failed</key>
+	<string>Couldn't send. Try again.</string>
 	<key>error.clip_text_too_large</key>
 	<string>Content is too large to send (up to 1 MB of text)</string>
+	<key>error.clip_unsupported_mime</key>
+	<string>Only text or images can be sent</string>
 	<key>error.clip_write_failed_on_phone</key>
 	<string>Couldn't update the clipboard on the phone</string>
 	<key>error.feature_disabled</key>
@@ -66,8 +94,28 @@
 	<string>Pairing isn't secure — try again</string>
 	<key>error.pairing_failed</key>
 	<string>Pairing didn't finish. Try again.</string>
+	<key>error.relay_device_revoked</key>
+	<string>This device was removed from the internet service</string>
+	<key>error.server_unreachable</key>
+	<string>Couldn't connect to the server. Try again later.</string>
 	<key>error.session_auth_failed</key>
 	<string>Couldn't verify the phone</string>
+	<key>error.sms_generic_failure</key>
+	<string>Couldn't send</string>
+	<key>error.sms_invalid_address</key>
+	<string>Invalid number</string>
+	<key>error.sms_limit_exceeded</key>
+	<string>Sending limit reached. Try again later.</string>
+	<key>error.sms_no_service</key>
+	<string>No service</string>
+	<key>error.sms_not_connected</key>
+	<string>Couldn't connect to the phone</string>
+	<key>error.sms_radio_off</key>
+	<string>The phone is in airplane mode</string>
+	<key>error.sms_sim_unavailable</key>
+	<string>The SIM isn't active</string>
+	<key>error.sms_thread_not_found</key>
+	<string>This conversation is no longer on the phone</string>
 	<key>error.update_phone_app</key>
 	<string>Update HandLive on the phone</string>
 	<key>error.update_this_app</key>
@@ -136,8 +184,12 @@
 	<string>Unpair %1$@?</string>
 	<key>pairing.unpair_ellipsis</key>
 	<string>Unpair…</string>
+	<key>pairing.unpaired</key>
+	<string>Unpaired</string>
 	<key>pairing.unpaired_by_peer</key>
 	<string>%1$@ unpaired this device</string>
+	<key>pairing.unpaired_pending</key>
+	<string>Unpaired; %1$@ will clean up when it reconnects</string>
 	<key>pairing.use_pin</key>
 	<string>Can't Scan? Use a PIN</string>
 	<key>permission.local_network_primer_title</key>
@@ -172,22 +224,62 @@
 	<string>Camera</string>
 	<key>settings.clipboard</key>
 	<string>Clipboard</string>
+	<key>settings.data</key>
+	<string>Data</string>
+	<key>settings.delete_all_data</key>
+	<string>Delete All HandLive Data</string>
+	<key>settings.delete_all_data_ellipsis</key>
+	<string>Delete All HandLive Data…</string>
+	<key>settings.delete_all_data_warning</key>
+	<string>The security keys, paired devices, synced messages and call history, and all settings on this device will be deleted. This can't be undone.</string>
+	<key>settings.delete_all_offline_confirm</key>
+	<string>Couldn't connect to the server. Delete from this device anyway?</string>
 	<key>settings.general</key>
 	<string>General</string>
 	<key>settings.internet_connection</key>
 	<string>Internet Connection</string>
+	<key>settings.local_network</key>
+	<string>Local Network</string>
 	<key>settings.messages</key>
 	<string>Messages</string>
+	<key>settings.notifications</key>
+	<string>Notifications</string>
 	<key>settings.open_at_login</key>
 	<string>Open HandLive at Login</string>
 	<key>settings.paste_from_other_apps</key>
 	<string>Paste from Other Apps</string>
 	<key>settings.paste_permission_hint</key>
 	<string>To send the clipboard automatically, open System Settings › Privacy &amp; Security › Paste from Other Apps and choose Always Allow for HandLive.</string>
+	<key>settings.permissions</key>
+	<string>Permissions</string>
+	<key>settings.phone</key>
+	<string>Phone</string>
+	<key>settings.remove_from_server</key>
+	<string>Remove Device from Server</string>
+	<key>settings.remove_from_server_ellipsis</key>
+	<string>Remove Device from Server…</string>
+	<key>settings.remove_from_server_warning</key>
+	<string>This device's registration will be removed from the HandLive server. Paired devices keep working on the same Wi-Fi network; the internet connection stays off until you turn it back on.</string>
+	<key>settings.removed_from_server</key>
+	<string>Removed from the server</string>
+	<key>settings.resync_sms</key>
+	<string>Resync All SMS</string>
+	<key>settings.resync_sms_ellipsis</key>
+	<string>Resync All SMS…</string>
 	<key>settings.show_in_menu_bar</key>
 	<string>Show HandLive in Menu Bar</string>
 	<key>settings.show_in_menu_bar_footer</key>
 	<string>When this is off, HandLive appears in the Dock.</string>
+	<key>settings.sms_last_sync</key>
+	<string>Last synced: %1$@</string>
+	<key>settings.sms_messages</key>
+	<string>SMS Messages</string>
+	<key>settings.sms_notify</key>
+	<string>New SMS Notifications</string>
+	<key>settings.sms_preview</key>
+	<string>Show Content in Notifications</string>
+	<key>settings.sms_read_note</key>
+	<string>Marking as read on this device doesn't change the status on the phone.</string>
 	<key>settings.sync_clipboard</key>
 	<string>Sync Clipboard</string>
 	<key>settings.sync_images</key>
@@ -220,6 +312,68 @@
 	<string>HandLive and Your Privacy</string>
 	<key>setup.welcome_title</key>
 	<string>Welcome to HandLive</string>
+	<key>sms.beginning_of_conversation</key>
+	<string>Beginning of conversation</string>
+	<key>sms.char_count</key>
+	<string>%1$@/%2$@</string>
+	<key>sms.char_counter</key>
+	<string>%1$@/%2$@ · %3$@</string>
+	<key>sms.compose_placeholder</key>
+	<string>SMS Message</string>
+	<key>sms.contacts_permission_hint</key>
+	<string>Allow HandLive to read contacts on the phone to show names</string>
+	<key>sms.copy_number</key>
+	<string>Copy Number</string>
+	<key>sms.empty_title</key>
+	<string>No Messages Yet</string>
+	<key>sms.filter_all</key>
+	<string>All</string>
+	<key>sms.filter_unread</key>
+	<string>Unread</string>
+	<key>sms.group_reply_on_phone</key>
+	<string>Reply to group conversations on the phone</string>
+	<key>sms.history_needs_connection</key>
+	<string>Connect the phone to load older messages</string>
+	<key>sms.loading_older</key>
+	<string>Loading older messages</string>
+	<key>sms.mark_as_read</key>
+	<string>Mark as Read</string>
+	<key>sms.new_message</key>
+	<string>New Message</string>
+	<key>sms.notification_hidden_body</key>
+	<string>New SMS message</string>
+	<key>sms.quick_reply_not_sent</key>
+	<string>Not sent yet. Open HandLive to try again.</string>
+	<key>sms.reply</key>
+	<string>Reply</string>
+	<key>sms.resync</key>
+	<string>Resync</string>
+	<key>sms.resync_confirm_message</key>
+	<string>Messages waiting to be sent are kept.</string>
+	<key>sms.resync_confirm_title</key>
+	<string>Delete messages saved on %1$@ and download them again from the phone?</string>
+	<key>sms.send</key>
+	<string>Send</string>
+	<key>sms.status_delivered</key>
+	<string>Delivered</string>
+	<key>sms.status_failed</key>
+	<string>Not sent</string>
+	<key>sms.status_failed_reason</key>
+	<string>Not sent · %1$@</string>
+	<key>sms.status_pending</key>
+	<string>Waiting for phone</string>
+	<key>sms.status_sending</key>
+	<string>Sending…</string>
+	<key>sms.status_sent</key>
+	<string>Sent</string>
+	<key>sms.sync_failed</key>
+	<string>Couldn't sync — will try again when connected</string>
+	<key>sms.syncing</key>
+	<string>Syncing messages…</string>
+	<key>sms.title</key>
+	<string>Messages</string>
+	<key>sms.unread_divider</key>
+	<string>Unread messages</string>
 	<key>status.channel_internet</key>
 	<string>Internet</string>
 	<key>status.channel_lan</key>

@@ -38,7 +38,7 @@
       }
     },
     "clipboard.conflict_title" : {
-      "comment" : "Title of the conflict notification on the sending device; action clipboard.send_again",
+      "comment" : "Title of the conflict notification on the sending device (iPhone: reported on the send card while the app is open); action clipboard.send_again",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -51,6 +51,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chưa ghi lên %1$@"
+          }
+        }
+      }
+    },
+    "clipboard.copy" : {
+      "comment" : "Button that copies the last received content again (PasteCard)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sao chép"
           }
         }
       }
@@ -74,7 +92,7 @@
       }
     },
     "clipboard.image_receiving" : {
-      "comment" : "Progress of an incoming image over 1 MiB (Android notification, Mac menu bar menu); {percent} is formatted by the system",
+      "comment" : "Progress of an incoming image over 1 MiB (Android notification, Mac menu bar menu, iPhone Clipboard tab); {percent} is formatted by the system",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -92,7 +110,7 @@
       }
     },
     "clipboard.image_sending" : {
-      "comment" : "Progress of an image over 1 MiB (Android notification, Mac menu bar menu) with a Cancel button; {percent} is formatted by the system",
+      "comment" : "Progress of an image over 1 MiB (Android notification, Mac menu bar menu, iPhone send card) with a Cancel button; {percent} is formatted by the system",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -105,6 +123,60 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Đang gửi ảnh tới %1$@ — %2$@"
+          }
+        }
+      }
+    },
+    "clipboard.new_content_banner" : {
+      "comment" : "Suggestion banner with a close button when changeCount shows unsent local text (CLIP-04 field 3); {device_type} is “iPhone” or “iPad” (never translated), {device_name} is the phone",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The %1$@ clipboard has new content — paste to send it to %2$@"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bảng nhớ tạm trên %1$@ có nội dung mới — dán để gửi sang %2$@"
+          }
+        }
+      }
+    },
+    "clipboard.new_image_banner" : {
+      "comment" : "Suggestion banner when changeCount changed and hasImages is true (CLIP-04 API 2); {device_type} is “iPhone” or “iPad” (never translated), {device_name} is the phone",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The %1$@ clipboard has a new image — paste to send it to %2$@"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bảng nhớ tạm trên %1$@ có ảnh mới — dán để gửi sang %2$@"
+          }
+        }
+      }
+    },
+    "clipboard.not_connected_to_phone" : {
+      "comment" : "Line on the send card while there is no session; the Paste button is disabled (CLIP-04 E5)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not connected to the phone"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chưa kết nối với điện thoại"
           }
         }
       }
@@ -123,6 +195,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chưa kết nối — sẽ gửi nếu kết nối lại trong 2 phút"
+          }
+        }
+      }
+    },
+    "clipboard.nothing_received" : {
+      "comment" : "Empty state title of the last received content on the Clipboard tab (PasteCard)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing Received Yet"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chưa nhận gì"
+          }
+        }
+      }
+    },
+    "clipboard.received_from" : {
+      "comment" : "Line under the last received content on the Clipboard tab (PasteCard); {time} is formatted by the system",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "From %1$@ · %2$@"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Từ %1$@ · %2$@"
           }
         }
       }
@@ -163,6 +271,24 @@
         }
       }
     },
+    "clipboard.send_to_phone_title" : {
+      "comment" : "Title of the send card with the system Paste button on the Clipboard tab (CLIP-04 field 1); {device_name} is the phone",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send to %1$@"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gửi sang %1$@"
+          }
+        }
+      }
+    },
     "clipboard.sensitive_blocked_body" : {
       "comment" : "Body of the sensitive content notification (Android channel clipboard, Mac notification)",
       "extractionState" : "manual",
@@ -199,6 +325,24 @@
         }
       }
     },
+    "clipboard.sensitive_hidden" : {
+      "comment" : "Shown instead of the last received content when it was marked sensitive (PasteCard)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensitive content hidden"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nội dung nhạy cảm đã được ẩn"
+          }
+        }
+      }
+    },
     "clipboard.sent_to" : {
       "comment" : "Result of a manual send (Android toast or HUD, Mac status line, iPhone HUD)",
       "extractionState" : "manual",
@@ -231,6 +375,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Không gửi: nội dung này vừa nhận từ %1$@."
+          }
+        }
+      }
+    },
+    "clipboard.title" : {
+      "comment" : "Title of the Clipboard tab and its large title (iPhone, iPad)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clipboard"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bảng nhớ tạm"
           }
         }
       }
@@ -285,6 +447,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tiếp tục"
+          }
+        }
+      }
+    },
+    "common.delete" : {
+      "comment" : "Warning-colored confirm button of Remove Device from Server and Delete All HandLive Data (SET-02 field 28)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Xóa"
           }
         }
       }
@@ -398,7 +578,7 @@
       }
     },
     "common.retry" : {
-      "comment" : "Button of an error that the user can retry (service start, key creation)",
+      "comment" : "Button of an error that the user can retry (service start, key creation, loading older messages, a failed SMS)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -415,8 +595,44 @@
         }
       }
     },
+    "common.view_instructions" : {
+      "comment" : "Button next to a reason that needs a permission on the phone (SMS-01 E2); opens the instructions sheet",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View Instructions"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Xem hướng dẫn"
+          }
+        }
+      }
+    },
+    "error.clip_content_too_large" : {
+      "comment" : "Shown when the pasted text or image exceeds the limits (CLIP_TOO_LARGE, CLIP-04 E4)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Content is too large to send (up to 1 MB of text, 10 MB for images)"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nội dung quá lớn để gửi (tối đa 1 MB văn bản, 10 MB ảnh)"
+          }
+        }
+      }
+    },
     "error.clip_image_no_space" : {
-      "comment" : "Receiver of an image transfer cannot write the temporary file (acks INTERNAL); Android toast, Mac menu bar status line",
+      "comment" : "Receiver of an image transfer cannot write the temporary file (acks INTERNAL); Android toast, Mac menu bar status line, iPhone Clipboard tab",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -434,7 +650,7 @@
       }
     },
     "error.clip_image_send_failed" : {
-      "comment" : "Sender after the second CLIP_CHECKSUM_MISMATCH of one image; notification",
+      "comment" : "Sender after the second CLIP_CHECKSUM_MISMATCH of one image; shown in place (Android toast, Mac menu bar status line, iPhone send card)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -487,6 +703,24 @@
         }
       }
     },
+    "error.clip_send_failed" : {
+      "comment" : "Send result on the Clipboard tab when no ack arrives within 10 s (CLIP-04 E9); not replayed automatically",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't send. Try again."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gửi không thành công, thử lại."
+          }
+        }
+      }
+    },
     "error.clip_text_too_large" : {
       "comment" : "CLIP_TOO_LARGE for text; shown in place (Android toast, Mac menu bar status line), never as a notification",
       "extractionState" : "manual",
@@ -501,6 +735,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nội dung quá lớn để gửi (tối đa 1 MB văn bản)"
+          }
+        }
+      }
+    },
+    "error.clip_unsupported_mime" : {
+      "comment" : "Shown when the pasted content is not text, a URL or a supported image (CLIP_UNSUPPORTED_MIME, CLIP-04 E3)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only text or images can be sent"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chỉ gửi được văn bản hoặc ảnh"
           }
         }
       }
@@ -577,6 +829,42 @@
         }
       }
     },
+    "error.relay_device_revoked" : {
+      "comment" : "Shown when the relay answers 410 DEVICE_REVOKED (CONN-03 E3); the internet connection stays off until the user turns it back on",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This device was removed from the internet service"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thiết bị đã bị xóa khỏi dịch vụ Internet"
+          }
+        }
+      }
+    },
+    "error.server_unreachable" : {
+      "comment" : "Shown under Remove Device from Server when there is no network or the server fails (SET-02 E5); nothing changed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't connect to the server. Try again later."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không kết nối được máy chủ, hãy thử lại sau."
+          }
+        }
+      }
+    },
     "error.session_auth_failed" : {
       "comment" : "session/error AUTH_FAILED; status line on Mac/iPhone, no automatic retry for 5 minutes",
       "extractionState" : "manual",
@@ -591,6 +879,150 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Không xác thực được điện thoại"
+          }
+        }
+      }
+    },
+    "error.sms_generic_failure" : {
+      "comment" : "Reason of a failed SMS for SMS_GENERIC_FAILURE and any other code without its own text",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't send"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gửi không thành công"
+          }
+        }
+      }
+    },
+    "error.sms_invalid_address" : {
+      "comment" : "Reason of a failed SMS for SMS_INVALID_ADDRESS; also shown at the recipient field of New Message when the number is malformed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid number"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Số không hợp lệ"
+          }
+        }
+      }
+    },
+    "error.sms_limit_exceeded" : {
+      "comment" : "Reason of a failed SMS for SMS_LIMIT_EXCEEDED; shown in sms.status_failed_reason",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sending limit reached. Try again later."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã vượt giới hạn gửi, thử lại sau."
+          }
+        }
+      }
+    },
+    "error.sms_no_service" : {
+      "comment" : "Reason of a failed SMS for SMS_NO_SERVICE; shown in sms.status_failed_reason",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No service"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không có sóng"
+          }
+        }
+      }
+    },
+    "error.sms_not_connected" : {
+      "comment" : "Reason of a failed SMS with last_error NOT_CONNECTED: still waiting for the phone after 24 h (SMS-04 E1)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't connect to the phone"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không kết nối được điện thoại"
+          }
+        }
+      }
+    },
+    "error.sms_radio_off" : {
+      "comment" : "Reason of a failed SMS for SMS_RADIO_OFF; shown in sms.status_failed_reason",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The phone is in airplane mode"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Điện thoại đang ở chế độ máy bay"
+          }
+        }
+      }
+    },
+    "error.sms_sim_unavailable" : {
+      "comment" : "Reason of a failed SMS for SMS_SIM_UNAVAILABLE; the SIM picker opens",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The SIM isn't active"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SIM không hoạt động"
+          }
+        }
+      }
+    },
+    "error.sms_thread_not_found" : {
+      "comment" : "Banner at the top of a conversation for SMS_THREAD_NOT_FOUND (SMS-03 E3); local messages stay, no more loading",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This conversation is no longer on the phone"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hội thoại không còn trên điện thoại"
           }
         }
       }
@@ -1207,6 +1639,24 @@
         }
       }
     },
+    "pairing.unpaired" : {
+      "comment" : "PAIR-03 field 4, result done: both devices cleaned up (HUD)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unpaired"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã hủy ghép nối"
+          }
+        }
+      }
+    },
     "pairing.unpaired_by_peer" : {
       "comment" : "Shown on the other device after an unpair from {device_name}",
       "extractionState" : "manual",
@@ -1221,6 +1671,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ đã hủy ghép nối với thiết bị này"
+          }
+        }
+      }
+    },
+    "pairing.unpaired_pending" : {
+      "comment" : "PAIR-03 field 4, result done_pending_remote (flow B): cleaned up here, {device_name} was not connected and cleans up when it reconnects",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unpaired; %1$@ will clean up when it reconnects"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã hủy ghép nối; %1$@ sẽ tự dọn khi kết nối lại"
           }
         }
       }
@@ -1531,6 +1999,96 @@
         }
       }
     },
+    "settings.data" : {
+      "comment" : "Header of the last Settings group with Remove Device from Server and Delete All HandLive Data (iPhone, iPad, Android)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Data"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dữ liệu"
+          }
+        }
+      }
+    },
+    "settings.delete_all_data" : {
+      "comment" : "Destructive row, last in the Data group (SET-02 field 27), iPhone, iPad and Android; also the title of its confirmation",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete All HandLive Data"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Xóa toàn bộ dữ liệu HandLive"
+          }
+        }
+      }
+    },
+    "settings.delete_all_data_ellipsis" : {
+      "comment" : "Mac destructive button in the General pane (SET-02 field 27); “…” because it opens an alert",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete All HandLive Data…"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Xóa toàn bộ dữ liệu HandLive…"
+          }
+        }
+      }
+    },
+    "settings.delete_all_data_warning" : {
+      "comment" : "Message of the confirmation for Delete All HandLive Data (SET-02 field 29); buttons common.cancel and common.delete",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The security keys, paired devices, synced messages and call history, and all settings on this device will be deleted. This can't be undone."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Xóa khóa bảo mật, thiết bị đã ghép, tin nhắn và nhật ký cuộc gọi đã đồng bộ cùng mọi cài đặt trên thiết bị này. Không thể hoàn tác."
+          }
+        }
+      }
+    },
+    "settings.delete_all_offline_confirm" : {
+      "comment" : "Alert when the server can't be reached during Delete All HandLive Data (SET-02 E7); buttons common.cancel and common.delete",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't connect to the server. Delete from this device anyway?"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không kết nối được máy chủ. Vẫn xóa trên thiết bị này?"
+          }
+        }
+      }
+    },
     "settings.general" : {
       "comment" : "Mac Settings pane title (toolbar item)",
       "extractionState" : "manual",
@@ -1567,8 +2125,26 @@
         }
       }
     },
+    "settings.local_network" : {
+      "comment" : "Row in the Permissions group with the local network permission state, values common.on / common.off (SET-03 field 9)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Local Network"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mạng cục bộ"
+          }
+        }
+      }
+    },
     "settings.messages" : {
-      "comment" : "Mac Settings pane title (toolbar item)",
+      "comment" : "Mac Settings pane title (toolbar item); header of the Messages group of the Settings tab on iPhone and iPad",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -1581,6 +2157,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tin nhắn"
+          }
+        }
+      }
+    },
+    "settings.notifications" : {
+      "comment" : "Row with the notification permission state: Android Settings › Permissions & Background (SET-01 field 3, SET-02 field 23); iPhone Permissions group (SET-03 field 7)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notifications"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thông báo"
           }
         }
       }
@@ -1639,6 +2233,150 @@
         }
       }
     },
+    "settings.permissions" : {
+      "comment" : "Header of the Settings group with the Notifications and Local Network rows (iPhone, iPad)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permissions"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quyền"
+          }
+        }
+      }
+    },
+    "settings.phone" : {
+      "comment" : "Header of the first Settings group with the paired phone's DeviceRow (iPhone, iPad)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Phone"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Điện thoại"
+          }
+        }
+      }
+    },
+    "settings.remove_from_server" : {
+      "comment" : "Action row in the Data group (SET-02 field 26), iPhone, iPad and Android; also the title of its confirmation",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove Device from Server"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Xóa thiết bị khỏi máy chủ"
+          }
+        }
+      }
+    },
+    "settings.remove_from_server_ellipsis" : {
+      "comment" : "Mac button in the General pane (SET-02 field 26); “…” because it opens an alert",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove Device from Server…"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Xóa thiết bị khỏi máy chủ…"
+          }
+        }
+      }
+    },
+    "settings.remove_from_server_warning" : {
+      "comment" : "Message of the confirmation for Remove Device from Server (SET-02 field 29); buttons common.cancel and common.delete",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This device's registration will be removed from the HandLive server. Paired devices keep working on the same Wi-Fi network; the internet connection stays off until you turn it back on."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Xóa đăng ký của thiết bị này khỏi máy chủ HandLive. Các thiết bị đã ghép vẫn dùng được khi ở cùng mạng Wi-Fi; kết nối qua Internet sẽ tắt cho tới khi bạn bật lại."
+          }
+        }
+      }
+    },
+    "settings.removed_from_server" : {
+      "comment" : "Result under Remove Device from Server after the relay deleted the registration (SET-02 field 30)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Removed from the server"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã xóa khỏi máy chủ"
+          }
+        }
+      }
+    },
+    "settings.resync_sms" : {
+      "comment" : "Action row in Settings › Messages (SET-02 field 25, SMS-01 field 5), iPhone and iPad; disabled without a session to the phone",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resync All SMS"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đồng bộ lại toàn bộ SMS"
+          }
+        }
+      }
+    },
+    "settings.resync_sms_ellipsis" : {
+      "comment" : "Mac button in the Messages pane (SET-02 field 25); “…” because it opens an alert",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resync All SMS…"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đồng bộ lại toàn bộ SMS…"
+          }
+        }
+      }
+    },
     "settings.show_in_menu_bar" : {
       "comment" : "Mac switch (Settings › General) and first-run checkbox for mac.menu_bar_extra",
       "extractionState" : "manual",
@@ -1671,6 +2409,96 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Khi tắt, HandLive nằm trên Dock."
+          }
+        }
+      }
+    },
+    "settings.sms_last_sync" : {
+      "comment" : "Row in Settings › Messages (SMS-01 field 4); {time} is a relative time formatted by the system (“5 minutes ago”)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last synced: %1$@"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lần đồng bộ cuối: %1$@"
+          }
+        }
+      }
+    },
+    "settings.sms_messages" : {
+      "comment" : "Switch for feature.sms (SET-02 field 7): Android Settings tab, Mac Messages pane, iPhone Messages group",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SMS Messages"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tin nhắn SMS"
+          }
+        }
+      }
+    },
+    "settings.sms_notify" : {
+      "comment" : "Option for sms.notify under SMS Messages (SET-02 field 8): checkbox on the Mac, switch on iPhone and iPad",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New SMS Notifications"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thông báo SMS mới"
+          }
+        }
+      }
+    },
+    "settings.sms_preview" : {
+      "comment" : "Option for sms.preview under SMS Messages (SET-02 field 9); off → notifications only say sms.notification_hidden_body",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show Content in Notifications"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hiện nội dung trong thông báo"
+          }
+        }
+      }
+    },
+    "settings.sms_read_note" : {
+      "comment" : "Caption of the Messages settings group stating the one-way read status (SMS-05 field 6)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marking as read on this device doesn't change the status on the phone."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đánh dấu đã đọc trên máy này không đổi trạng thái trên điện thoại."
           }
         }
       }
@@ -1959,6 +2787,672 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chào mừng đến với HandLive"
+          }
+        }
+      }
+    },
+    "sms.beginning_of_conversation" : {
+      "comment" : "Line at the top of a conversation when the phone has no older messages (SMS-03 field 11)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beginning of conversation"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đầu hội thoại"
+          }
+        }
+      }
+    },
+    "sms.char_count" : {
+      "comment" : "Character counter under an empty compose field (“0/160”); {used} and {limit} are numbers formatted by the system",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@/%2$@"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@/%2$@"
+          }
+        }
+      }
+    },
+    "sms.char_counter" : {
+      "comment" : "Character and part counter under the compose field (“120/160 · 1 message”); {used} and {limit} are formatted numbers, {parts} is sms.part_count",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@/%2$@ · %3$@"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@/%2$@ · %3$@"
+          }
+        }
+      }
+    },
+    "sms.compose_placeholder" : {
+      "comment" : "Placeholder of the compose field at the bottom of a conversation (MessageBubble); at most 1,600 characters",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SMS Message"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tin nhắn SMS"
+          }
+        }
+      }
+    },
+    "sms.contacts_permission_hint" : {
+      "comment" : "Hint in the Messages view when the phone reports READ_CONTACTS in permissions_missing (SMS-01 E3); numbers are shown instead of names",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow HandLive to read contacts on the phone to show names"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cho phép HandLive đọc danh bạ trên điện thoại để hiện tên"
+          }
+        }
+      }
+    },
+    "sms.copy_number" : {
+      "comment" : "Context menu item of a conversation in the Messages window sidebar (Mac)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy Number"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sao chép số"
+          }
+        }
+      }
+    },
+    "sms.empty_title" : {
+      "comment" : "Empty state of the conversation list (SMS-03 E1), shown with the SMS-01 sync status",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Messages Yet"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chưa có tin nhắn"
+          }
+        }
+      }
+    },
+    "sms.filter_all" : {
+      "comment" : "Segment of the All / Unread filter above the conversation list (iPhone, iPad)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tất cả"
+          }
+        }
+      }
+    },
+    "sms.filter_unread" : {
+      "comment" : "Segment of the All / Unread filter above the conversation list (iPhone, iPad)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unread"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chưa đọc"
+          }
+        }
+      }
+    },
+    "sms.group_reply_on_phone" : {
+      "comment" : "Line shown instead of the compose field in a conversation with several recipients (SMS-04 E9)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reply to group conversations on the phone"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trả lời hội thoại nhóm trên điện thoại"
+          }
+        }
+      }
+    },
+    "sms.history_needs_connection" : {
+      "comment" : "Banner at the top of a conversation when older messages are needed and there is no session (SMS-03 E2); loading starts again by itself on reconnection",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connect the phone to load older messages"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kết nối điện thoại để tải tin cũ hơn"
+          }
+        }
+      }
+    },
+    "sms.loading_older" : {
+      "comment" : "Indicator at the top of a conversation while waiting for sms/history (SMS-03 field 10)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Loading older messages"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang tải tin cũ hơn"
+          }
+        }
+      }
+    },
+    "sms.mark_as_read" : {
+      "comment" : "HL_SMS_MARK_READ notification action; also the conversation context menu item (Mac) and swipe action (iPhone, iPad); marks read on this device only (SMS-05)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mark as Read"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đánh dấu đã đọc"
+          }
+        }
+      }
+    },
+    "sms.new_message" : {
+      "comment" : "Toolbar button (⌘N) and title of the compose view for a new number (SMS-04 field 1)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Message"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tin nhắn mới"
+          }
+        }
+      }
+    },
+    "sms.notification_hidden_body" : {
+      "comment" : "Body of a new SMS notification when Show Content in Notifications (sms.preview) is off, and hiddenPreviewsBodyPlaceholder of the HL_SMS category; the APNs fallback uses push.sms_new",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New SMS message"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tin nhắn SMS mới"
+          }
+        }
+      }
+    },
+    "sms.part_count" : {
+      "comment" : "Estimated number of SMS parts the text is split into (each part is billed as one SMS); used inside sms.char_counter",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$lld message"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$lld messages"
+                }
+              }
+            }
+          }
+        },
+        "vi" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$lld tin"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "sms.quick_reply_not_sent" : {
+      "comment" : "Body of the local notification when a quick reply from a notification got no ack within about 20 s (SMS-04 E8); no title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not sent yet. Open HandLive to try again."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chưa gửi được, mở HandLive để thử lại."
+          }
+        }
+      }
+    },
+    "sms.reply" : {
+      "comment" : "Title of the HL_SMS_REPLY notification action (text input) of a new SMS notification; not offered for group conversations",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reply"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trả lời"
+          }
+        }
+      }
+    },
+    "sms.resync" : {
+      "comment" : "Default button of the Resync All SMS alert (SMS-01 field 6); 1–2 words",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resync"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đồng bộ lại"
+          }
+        }
+      }
+    },
+    "sms.resync_confirm_message" : {
+      "comment" : "Message of the alert confirming Resync All SMS, under sms.resync_confirm_title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Messages waiting to be sent are kept."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tin đang chờ gửi được giữ lại."
+          }
+        }
+      }
+    },
+    "sms.resync_confirm_title" : {
+      "comment" : "Title of the alert confirming Resync All SMS (SMS-01 field 6); {device_name} is this Mac, iPhone or iPad; message sms.resync_confirm_message, buttons common.cancel and sms.resync",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete messages saved on %1$@ and download them again from the phone?"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Xóa tin nhắn đã lưu trên %1$@ và tải lại từ điện thoại?"
+          }
+        }
+      }
+    },
+    "sms.send" : {
+      "comment" : "Send button of the quick-reply text field in the SMS notification, and accessibility label of the send button of the compose field (SMS-04 field 5)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gửi"
+          }
+        }
+      }
+    },
+    "sms.status_delivered" : {
+      "comment" : "Status under an outgoing message whose delivery report arrived for every part (state delivered)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delivered"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã nhận"
+          }
+        }
+      }
+    },
+    "sms.status_failed" : {
+      "comment" : "Status of an outgoing message that failed (state failed), also the ThreadRow excerpt when the latest message failed; with a Try Again button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not sent"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gửi lỗi"
+          }
+        }
+      }
+    },
+    "sms.status_failed_reason" : {
+      "comment" : "Status under a failed outgoing message (MessageBubble); {reason} is the error.sms_* text for last_error",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not sent · %1$@"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gửi lỗi · %1$@"
+          }
+        }
+      }
+    },
+    "sms.status_pending" : {
+      "comment" : "Status under an outgoing message queued until the phone is reachable (state pending)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiting for phone"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang chờ điện thoại"
+          }
+        }
+      }
+    },
+    "sms.status_sending" : {
+      "comment" : "Status under an outgoing message the phone accepted and is sending (state sending)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sending…"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang gửi…"
+          }
+        }
+      }
+    },
+    "sms.status_sent" : {
+      "comment" : "Status under an outgoing message every part of which left the phone (state sent)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sent"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã gửi"
+          }
+        }
+      }
+    },
+    "sms.sync_downloaded" : {
+      "comment" : "Progress under the sync banner, first sync only (SMS-01 field 2)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Downloaded %1$lld message"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Downloaded %1$lld messages"
+                }
+              }
+            }
+          }
+        },
+        "vi" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Đã tải %1$lld tin"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "sms.sync_failed" : {
+      "comment" : "Status banner above the conversation list when SMS-01 stopped with an error (E4, E6, E7)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't sync — will try again when connected"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đồng bộ lỗi — sẽ thử lại khi kết nối"
+          }
+        }
+      }
+    },
+    "sms.syncing" : {
+      "comment" : "Status banner above the conversation list while SMS-01 runs; hidden when idle or done",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Syncing messages…"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang đồng bộ tin nhắn…"
+          }
+        }
+      }
+    },
+    "sms.title" : {
+      "comment" : "Title of the Messages window (Mac), and of the Messages tab and its large title (iPhone, iPad)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Messages"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tin nhắn"
+          }
+        }
+      }
+    },
+    "sms.unread_count" : {
+      "comment" : "Accessibility label of ThreadRow; the row itself shows only the unread dot (SMS-03 field 5)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$lld unread message"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$lld unread messages"
+                }
+              }
+            }
+          }
+        },
+        "vi" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$lld tin chưa đọc"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "sms.unread_divider" : {
+      "comment" : "Divider placed before the first unread incoming message when a conversation opens (SMS-05 field 3)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unread messages"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tin chưa đọc"
           }
         }
       }

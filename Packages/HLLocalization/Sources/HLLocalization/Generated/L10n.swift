@@ -13,6 +13,8 @@ public enum L10n {
         public static func conflictTitle(deviceName: String) -> String {
             L10nLookup.format("clipboard.conflict_title", deviceName)
         }
+        /// Copy
+        public static var copy: String { L10nLookup.string("clipboard.copy") }
         /// The clipboard is empty or doesn't contain text
         public static var emptyOrNotText: String { L10nLookup.string("clipboard.empty_or_not_text") }
         /// Receiving image from {device_name} — {percent}
@@ -23,16 +25,38 @@ public enum L10n {
         public static func imageSending(deviceName: String, percent: String) -> String {
             L10nLookup.format("clipboard.image_sending", deviceName, percent)
         }
+        /// The {device_type} clipboard has new content — paste to send it to {device_name}
+        public static func newContentBanner(deviceType: String, deviceName: String) -> String {
+            L10nLookup.format("clipboard.new_content_banner", deviceType, deviceName)
+        }
+        /// The {device_type} clipboard has a new image — paste to send it to {device_name}
+        public static func newImageBanner(deviceType: String, deviceName: String) -> String {
+            L10nLookup.format("clipboard.new_image_banner", deviceType, deviceName)
+        }
+        /// Not connected to the phone
+        public static var notConnectedToPhone: String { L10nLookup.string("clipboard.not_connected_to_phone") }
         /// Not connected — will send if reconnected within 2 minutes
         public static var notConnectedWillSend: String { L10nLookup.string("clipboard.not_connected_will_send") }
+        /// Nothing Received Yet
+        public static var nothingReceived: String { L10nLookup.string("clipboard.nothing_received") }
+        /// From {device_name} · {time}
+        public static func receivedFrom(deviceName: String, time: String) -> String {
+            L10nLookup.format("clipboard.received_from", deviceName, time)
+        }
         /// Send Again
         public static var sendAgain: String { L10nLookup.string("clipboard.send_again") }
         /// Send Anyway
         public static var sendAnyway: String { L10nLookup.string("clipboard.send_anyway") }
+        /// Send to {device_name}
+        public static func sendToPhoneTitle(deviceName: String) -> String {
+            L10nLookup.format("clipboard.send_to_phone_title", deviceName)
+        }
         /// HandLive doesn't send content that looks like a password or card number.
         public static var sensitiveBlockedBody: String { L10nLookup.string("clipboard.sensitive_blocked_body") }
         /// Sensitive Content Blocked
         public static var sensitiveBlockedTitle: String { L10nLookup.string("clipboard.sensitive_blocked_title") }
+        /// Sensitive content hidden
+        public static var sensitiveHidden: String { L10nLookup.string("clipboard.sensitive_hidden") }
         /// Sent to {device_name}
         public static func sentTo(deviceName: String) -> String {
             L10nLookup.format("clipboard.sent_to", deviceName)
@@ -41,6 +65,8 @@ public enum L10n {
         public static func skippedJustReceived(deviceName: String) -> String {
             L10nLookup.format("clipboard.skipped_just_received", deviceName)
         }
+        /// Clipboard
+        public static var title: String { L10nLookup.string("clipboard.title") }
     }
     public enum Common {
         /// Agree
@@ -49,6 +75,8 @@ public enum L10n {
         public static var cancel: String { L10nLookup.string("common.cancel") }
         /// Continue
         public static var `continue`: String { L10nLookup.string("common.continue") }
+        /// Delete
+        public static var delete: String { L10nLookup.string("common.delete") }
         /// Done
         public static var done: String { L10nLookup.string("common.done") }
         /// Get Started
@@ -63,8 +91,12 @@ public enum L10n {
         public static var openSystemSettings: String { L10nLookup.string("common.open_system_settings") }
         /// Try Again
         public static var retry: String { L10nLookup.string("common.retry") }
+        /// View Instructions
+        public static var viewInstructions: String { L10nLookup.string("common.view_instructions") }
     }
     public enum Error {
+        /// Content is too large to send (up to 1 MB of text, 10 MB for images)
+        public static var clipContentTooLarge: String { L10nLookup.string("error.clip_content_too_large") }
         /// Not enough storage to receive the image
         public static var clipImageNoSpace: String { L10nLookup.string("error.clip_image_no_space") }
         /// Couldn't send the image
@@ -73,8 +105,12 @@ public enum L10n {
         public static var clipImageTooLarge: String { L10nLookup.string("error.clip_image_too_large") }
         /// Couldn't read the image
         public static var clipImageUnreadable: String { L10nLookup.string("error.clip_image_unreadable") }
+        /// Couldn't send. Try again.
+        public static var clipSendFailed: String { L10nLookup.string("error.clip_send_failed") }
         /// Content is too large to send (up to 1 MB of text)
         public static var clipTextTooLarge: String { L10nLookup.string("error.clip_text_too_large") }
+        /// Only text or images can be sent
+        public static var clipUnsupportedMime: String { L10nLookup.string("error.clip_unsupported_mime") }
         /// Couldn't update the clipboard on the phone
         public static var clipWriteFailedOnPhone: String { L10nLookup.string("error.clip_write_failed_on_phone") }
         /// This feature is off on {device_name}
@@ -85,8 +121,28 @@ public enum L10n {
         public static var pairingAuthFailed: String { L10nLookup.string("error.pairing_auth_failed") }
         /// Pairing didn't finish. Try again.
         public static var pairingFailed: String { L10nLookup.string("error.pairing_failed") }
+        /// This device was removed from the internet service
+        public static var relayDeviceRevoked: String { L10nLookup.string("error.relay_device_revoked") }
+        /// Couldn't connect to the server. Try again later.
+        public static var serverUnreachable: String { L10nLookup.string("error.server_unreachable") }
         /// Couldn't verify the phone
         public static var sessionAuthFailed: String { L10nLookup.string("error.session_auth_failed") }
+        /// Couldn't send
+        public static var smsGenericFailure: String { L10nLookup.string("error.sms_generic_failure") }
+        /// Invalid number
+        public static var smsInvalidAddress: String { L10nLookup.string("error.sms_invalid_address") }
+        /// Sending limit reached. Try again later.
+        public static var smsLimitExceeded: String { L10nLookup.string("error.sms_limit_exceeded") }
+        /// No service
+        public static var smsNoService: String { L10nLookup.string("error.sms_no_service") }
+        /// Couldn't connect to the phone
+        public static var smsNotConnected: String { L10nLookup.string("error.sms_not_connected") }
+        /// The phone is in airplane mode
+        public static var smsRadioOff: String { L10nLookup.string("error.sms_radio_off") }
+        /// The SIM isn't active
+        public static var smsSimUnavailable: String { L10nLookup.string("error.sms_sim_unavailable") }
+        /// This conversation is no longer on the phone
+        public static var smsThreadNotFound: String { L10nLookup.string("error.sms_thread_not_found") }
         /// Update HandLive on the phone
         public static var updatePhoneApp: String { L10nLookup.string("error.update_phone_app") }
         /// Update HandLive on this device
@@ -173,9 +229,15 @@ public enum L10n {
         }
         /// Unpair…
         public static var unpairEllipsis: String { L10nLookup.string("pairing.unpair_ellipsis") }
+        /// Unpaired
+        public static var unpaired: String { L10nLookup.string("pairing.unpaired") }
         /// {device_name} unpaired this device
         public static func unpairedByPeer(deviceName: String) -> String {
             L10nLookup.format("pairing.unpaired_by_peer", deviceName)
+        }
+        /// Unpaired; {device_name} will clean up when it reconnects
+        public static func unpairedPending(deviceName: String) -> String {
+            L10nLookup.format("pairing.unpaired_pending", deviceName)
         }
         /// Can't Scan? Use a PIN
         public static var usePin: String { L10nLookup.string("pairing.use_pin") }
@@ -217,22 +279,64 @@ public enum L10n {
         public static var camera: String { L10nLookup.string("settings.camera") }
         /// Clipboard
         public static var clipboard: String { L10nLookup.string("settings.clipboard") }
+        /// Data
+        public static var data: String { L10nLookup.string("settings.data") }
+        /// Delete All HandLive Data
+        public static var deleteAllData: String { L10nLookup.string("settings.delete_all_data") }
+        /// Delete All HandLive Data…
+        public static var deleteAllDataEllipsis: String { L10nLookup.string("settings.delete_all_data_ellipsis") }
+        /// The security keys, paired devices, synced messages and call history, and all settings on this device will be deleted. This can't be undone.
+        public static var deleteAllDataWarning: String { L10nLookup.string("settings.delete_all_data_warning") }
+        /// Couldn't connect to the server. Delete from this device anyway?
+        public static var deleteAllOfflineConfirm: String { L10nLookup.string("settings.delete_all_offline_confirm") }
         /// General
         public static var general: String { L10nLookup.string("settings.general") }
         /// Internet Connection
         public static var internetConnection: String { L10nLookup.string("settings.internet_connection") }
+        /// Local Network
+        public static var localNetwork: String { L10nLookup.string("settings.local_network") }
         /// Messages
         public static var messages: String { L10nLookup.string("settings.messages") }
+        /// Notifications
+        public static var notifications: String { L10nLookup.string("settings.notifications") }
         /// Open HandLive at Login
         public static var openAtLogin: String { L10nLookup.string("settings.open_at_login") }
         /// Paste from Other Apps
         public static var pasteFromOtherApps: String { L10nLookup.string("settings.paste_from_other_apps") }
         /// To send the clipboard automatically, open System Settings › Privacy & Security › Paste from Other Apps and choose Always Allow for HandLive.
         public static var pastePermissionHint: String { L10nLookup.string("settings.paste_permission_hint") }
+        /// Permissions
+        public static var permissions: String { L10nLookup.string("settings.permissions") }
+        /// Phone
+        public static var phone: String { L10nLookup.string("settings.phone") }
+        /// Remove Device from Server
+        public static var removeFromServer: String { L10nLookup.string("settings.remove_from_server") }
+        /// Remove Device from Server…
+        public static var removeFromServerEllipsis: String { L10nLookup.string("settings.remove_from_server_ellipsis") }
+        /// This device's registration will be removed from the HandLive server. Paired devices keep working on the same Wi-Fi network; the internet connection stays off until you turn it back on.
+        public static var removeFromServerWarning: String { L10nLookup.string("settings.remove_from_server_warning") }
+        /// Removed from the server
+        public static var removedFromServer: String { L10nLookup.string("settings.removed_from_server") }
+        /// Resync All SMS
+        public static var resyncSms: String { L10nLookup.string("settings.resync_sms") }
+        /// Resync All SMS…
+        public static var resyncSmsEllipsis: String { L10nLookup.string("settings.resync_sms_ellipsis") }
         /// Show HandLive in Menu Bar
         public static var showInMenuBar: String { L10nLookup.string("settings.show_in_menu_bar") }
         /// When this is off, HandLive appears in the Dock.
         public static var showInMenuBarFooter: String { L10nLookup.string("settings.show_in_menu_bar_footer") }
+        /// Last synced: {time}
+        public static func smsLastSync(time: String) -> String {
+            L10nLookup.format("settings.sms_last_sync", time)
+        }
+        /// SMS Messages
+        public static var smsMessages: String { L10nLookup.string("settings.sms_messages") }
+        /// New SMS Notifications
+        public static var smsNotify: String { L10nLookup.string("settings.sms_notify") }
+        /// Show Content in Notifications
+        public static var smsPreview: String { L10nLookup.string("settings.sms_preview") }
+        /// Marking as read on this device doesn't change the status on the phone.
+        public static var smsReadNote: String { L10nLookup.string("settings.sms_read_note") }
         /// Sync Clipboard
         public static var syncClipboard: String { L10nLookup.string("settings.sync_clipboard") }
         /// Sync Images
@@ -267,6 +371,90 @@ public enum L10n {
         public static var welcomePrivacyLink: String { L10nLookup.string("setup.welcome_privacy_link") }
         /// Welcome to HandLive
         public static var welcomeTitle: String { L10nLookup.string("setup.welcome_title") }
+    }
+    public enum Sms {
+        /// Beginning of conversation
+        public static var beginningOfConversation: String { L10nLookup.string("sms.beginning_of_conversation") }
+        /// {used}/{limit}
+        public static func charCount(used: String, limit: String) -> String {
+            L10nLookup.format("sms.char_count", used, limit)
+        }
+        /// {used}/{limit} · {parts}
+        public static func charCounter(used: String, limit: String, parts: String) -> String {
+            L10nLookup.format("sms.char_counter", used, limit, parts)
+        }
+        /// SMS Message
+        public static var composePlaceholder: String { L10nLookup.string("sms.compose_placeholder") }
+        /// Allow HandLive to read contacts on the phone to show names
+        public static var contactsPermissionHint: String { L10nLookup.string("sms.contacts_permission_hint") }
+        /// Copy Number
+        public static var copyNumber: String { L10nLookup.string("sms.copy_number") }
+        /// No Messages Yet
+        public static var emptyTitle: String { L10nLookup.string("sms.empty_title") }
+        /// All
+        public static var filterAll: String { L10nLookup.string("sms.filter_all") }
+        /// Unread
+        public static var filterUnread: String { L10nLookup.string("sms.filter_unread") }
+        /// Reply to group conversations on the phone
+        public static var groupReplyOnPhone: String { L10nLookup.string("sms.group_reply_on_phone") }
+        /// Connect the phone to load older messages
+        public static var historyNeedsConnection: String { L10nLookup.string("sms.history_needs_connection") }
+        /// Loading older messages
+        public static var loadingOlder: String { L10nLookup.string("sms.loading_older") }
+        /// Mark as Read
+        public static var markAsRead: String { L10nLookup.string("sms.mark_as_read") }
+        /// New Message
+        public static var newMessage: String { L10nLookup.string("sms.new_message") }
+        /// New SMS message
+        public static var notificationHiddenBody: String { L10nLookup.string("sms.notification_hidden_body") }
+        /// one: {count} message | other: {count} messages
+        public static func partCount(count: Int) -> String {
+            L10nLookup.format("sms.part_count", count)
+        }
+        /// Not sent yet. Open HandLive to try again.
+        public static var quickReplyNotSent: String { L10nLookup.string("sms.quick_reply_not_sent") }
+        /// Reply
+        public static var reply: String { L10nLookup.string("sms.reply") }
+        /// Resync
+        public static var resync: String { L10nLookup.string("sms.resync") }
+        /// Messages waiting to be sent are kept.
+        public static var resyncConfirmMessage: String { L10nLookup.string("sms.resync_confirm_message") }
+        /// Delete messages saved on {device_name} and download them again from the phone?
+        public static func resyncConfirmTitle(deviceName: String) -> String {
+            L10nLookup.format("sms.resync_confirm_title", deviceName)
+        }
+        /// Send
+        public static var send: String { L10nLookup.string("sms.send") }
+        /// Delivered
+        public static var statusDelivered: String { L10nLookup.string("sms.status_delivered") }
+        /// Not sent
+        public static var statusFailed: String { L10nLookup.string("sms.status_failed") }
+        /// Not sent · {reason}
+        public static func statusFailedReason(reason: String) -> String {
+            L10nLookup.format("sms.status_failed_reason", reason)
+        }
+        /// Waiting for phone
+        public static var statusPending: String { L10nLookup.string("sms.status_pending") }
+        /// Sending…
+        public static var statusSending: String { L10nLookup.string("sms.status_sending") }
+        /// Sent
+        public static var statusSent: String { L10nLookup.string("sms.status_sent") }
+        /// one: Downloaded {count} message | other: Downloaded {count} messages
+        public static func syncDownloaded(count: Int) -> String {
+            L10nLookup.format("sms.sync_downloaded", count)
+        }
+        /// Couldn't sync — will try again when connected
+        public static var syncFailed: String { L10nLookup.string("sms.sync_failed") }
+        /// Syncing messages…
+        public static var syncing: String { L10nLookup.string("sms.syncing") }
+        /// Messages
+        public static var title: String { L10nLookup.string("sms.title") }
+        /// one: {count} unread message | other: {count} unread messages
+        public static func unreadCount(count: Int) -> String {
+            L10nLookup.format("sms.unread_count", count)
+        }
+        /// Unread messages
+        public static var unreadDivider: String { L10nLookup.string("sms.unread_divider") }
     }
     public enum Status {
         /// Internet
