@@ -83,6 +83,23 @@ struct PairingControllerTests {
                       signaturePeer: Data(repeating: 0x03, count: 64), prk: Data(repeating: 0x99, count: 32))
     }
 
+    @Test("Step 2 with the relay on: a relay that can't be reached leaves the QR code without rv, on the LAN only")
+    func rendezvousUnavailable() async throws {
+        let relayModel = makeModel(relay: ScriptedRelayAPI())
+        relayModel.launch()
+        let search = ScriptedSearch()
+        let pairing = PairingController(host: relayModel, search: search) { _ in }
+        pairing.start()
+        #expect(await eventually { search.all.count == 1 })
+        #expect(!pairing.qrURI.isEmpty && !pairing.qrURI.contains("&rv="))
+        guard case .qr(_, let rendezvous) = try #require(search.all.first).credential else {
+            Issue.record("expected a QR credential")
+            return
+        }
+        #expect(rendezvous == nil)
+        pairing.stop()
+    }
+
     @Test("Step 2: a QR code carrying this Mac's key and the search's secret, 120 s on the countdown")
     func showsQRCode() async throws {
         let pairing = controller()
