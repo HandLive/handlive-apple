@@ -4,8 +4,9 @@ import HLLocalization
 import SwiftUI
 
 /// The app's root (02-ios-ipados.md): setup (SET-03) until `setup.completed_at`, then the tab bar — Clipboard,
-/// Messages with the unread badge, Settings. The pairing sheet opens by itself once while no phone is paired
-/// (PAIR-01 step 1); the tabs never hide, they explain the next step in their content.
+/// Messages with the unread badge, Calls with the missed-call badge, Settings — under the banner of a ringing call
+/// (CALL-01 step 8). The pairing sheet opens by itself once while no phone is paired (PAIR-01 step 1); the tabs never
+/// hide, they explain the next step in their content.
 public struct IOSRootView: View {
     @ObservedObject var model: IOSAppModel
     private let registerForPush: @MainActor () -> Void
@@ -44,9 +45,15 @@ public struct IOSRootView: View {
                 .tabItem { Label(L10n.Sms.title, systemImage: "message.fill") }
                 .badge(unreadBadge)
                 .tag(IOSTab.messages)
+            CallsTabView(calls: model.calls)
+                .tabItem { Label(L10n.Call.title, systemImage: "phone.fill") }
+                .tag(IOSTab.calls)
             SettingsTabView(model: model) { pairing = true }
                 .tabItem { Label(L10n.Settings.title, systemImage: "gearshape.fill") }
                 .tag(IOSTab.settings)
+        }
+        .overlay(alignment: .top) {
+            CallBannerView(calls: model.calls, phoneName: model.pairedDevice?.peerName ?? "")
         }
         .onAppear {
             guard model.pairedDevice == nil, !offeredPairing else { return }
