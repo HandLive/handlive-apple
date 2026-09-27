@@ -186,6 +186,9 @@ struct CallPushDecoderTests {
                                                                 decode: decode) == ["ring"])
         #expect(CallNotificationFilter.staleIncomingIdentifiers(in: delivered, nowMs: state.startedAt + 1000,
                                                                 decode: decode).isEmpty)
+        // A push too old to open is judged by its envelope's ts; a missed-call push is never an incoming one.
+        #expect(CallNotificationFilter.staleIncomingIdentifiers(in: delivered, nowMs: ringing.ts + 61_000) { _ in nil }
+            == ["ring"])
         let pairId = "9a8b7c6d-5e4f-4a3b-9c2d-1e0f2a3b4c5d"
         #expect(CallNotificationFilter.missedIdentifiers(in: delivered, pairId: pairId) == ["missed"])
         #expect(CallNotificationFilter.missedIdentifiers(in: delivered, pairId: pairId, entryId: 5120).isEmpty)

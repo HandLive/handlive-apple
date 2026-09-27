@@ -24,15 +24,15 @@ public enum CallNotificationFilter {
 
     /// Every incoming-call notification whose call started more than `CallNotificationBuilder.latePushMs` ago, when
     /// the app enters the foreground (CALL-01 API 6 logic 4). A generic one is judged by the ringing state `decode`
-    /// finds in its push, when there is one.
+    /// finds in its push, or by its envelope's `ts` (sent while the call rang) when the push no longer opens.
     public static func staleIncomingIdentifiers(in delivered: [DeliveredNotification], nowMs: Int64,
                                                 decode: ([AnyHashable: Any]) -> CallStateData?) -> [String] {
         delivered.compactMap { item in
             let startedAt: Int64?
             if case .incoming(_, _, let started)? = CallNotificationInfo(item.userInfo) {
                 startedAt = started
-            } else if genericPush(item.userInfo) != nil {
-                startedAt = decode(item.userInfo).map(\.startedAt)
+            } else if let push = genericPush(item.userInfo), !push.missed {
+                startedAt = decode(item.userInfo).map(\.startedAt) ?? push.envelopeTs
             } else {
                 startedAt = nil
             }
@@ -64,11 +64,21 @@ public enum CallNotificationFilter {
             .map(\.identifier)
     }
 
-    /// A generic call push: the pair and whether the relay sent it as a missed call; `nil` for anything else.
-    static func genericPush(_ userInfo: [AnyHashable: Any]) -> (pairId: String, missed: Bool)? {
+    /// What the plain part of a generic call push says.
+    struct GenericPush {
+        let pairId: String
+        /// The relay sent it as a missed call (its `loc-key`).
+        let missed: Bool
+        /// When the phone sealed it: while the call rang, for an incoming call.
+        let envelopeTs: Int64
+    }
+
+    /// A generic call push; `nil` for anything else.
+    static func genericPush(_ userInfo: [AnyHashable: Any]) -> GenericPush? {
         guard CallNotificationInfo(userInfo) == nil, let fields = PushAlertFields(userInfo: userInfo),
               fields.envelope.type == .callEvent else { return nil }
         let alert = (userInfo["aps"] as? [String: Any])?["alert"] as? [String: Any]
-        return (fields.pairId, alert?["loc-key"] as? String == missedLocKey)
+        return GenericPush(pairId: fields.pairId, missed: alert?["loc-key"] as? String == missedLocKey,
+                           envelopeTs: fields.envelope.ts)
     }
 }
