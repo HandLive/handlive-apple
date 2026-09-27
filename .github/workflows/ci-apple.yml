@@ -126,6 +126,12 @@ jobs:
             echo "::endgroup::"
           done
 
+      # The headless dev client (apple/Tools/HandLiveDevClient) is not part of the apps: built only, so it keeps
+      # compiling against the packages.
+      - name: swift build dev client
+        working-directory: apple/Tools/HandLiveDevClient
+        run: swift build
+
       - name: Cài XcodeGen + SwiftLint
         run: brew install xcodegen swiftlint
 
