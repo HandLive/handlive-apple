@@ -72,7 +72,9 @@ extension CallController {
 
     /// CALL-02 flow B: "Decline" on the iPhone/iPad notification. The app may have been woken in the background, so
     /// the call need not be on screen: the command goes out for `callId` as soon as a session exists, all within
-    /// `deadline` (`CALL_REJECT_BG_TIMEOUT`, 15 s, the background connection included; B2–B3).
+    /// `deadline` (`CALL_REJECT_BG_TIMEOUT`, 15 s, the background connection included; B2–B3). `CALL_NOT_FOUND` and
+    /// every `CALL_ACTION_NOT_ALLOWED` come back as `.callEnded` or `.answeredOnPhone`: the phone no longer has that
+    /// ringing call, so the notification goes without a failure notice (B3).
     public func declineFromNotification(callId: String, within deadline: Duration) async -> CommandOutcome {
         BenchLog.event("call_action_tap", ["call": callId, "action": CallAction.reject.rawValue, "from": "notification"])
         guard let ack = await send(CallActionRequest(callId: callId, action: .reject), within: deadline) else {
@@ -82,7 +84,10 @@ extension CallController {
         if let code = ack.error?.code { fields.append(("code", code.rawValue)) }
         BenchLog.event("call_action_ack_received", fields: fields)
         guard !ack.ok else { return .accepted }
-        return .failed(ack.error.map { CallProblem(error: $0, command: .reject(reply: nil)) } ?? .commandNotSent)
+        guard let error = ack.error else { return .failed(.commandNotSent) }
+        let problem = CallProblem(error: error, command: .reject(reply: nil))
+        if error.code == .callActionNotAllowed, problem != .callEnded { return .failed(.answeredOnPhone) }
+        return .failed(problem)
     }
 
     /// One `ack` wait of `window` from the click; the same envelope `id` whenever a session is there.

@@ -136,6 +136,23 @@ struct CallNotificationDeclineTests {
         #expect(await controller.declineFromNotification(callId: CallSamples.callId, within: .seconds(2))
             == .failed(.callEnded))
     }
+
+    @Test("Any refusal because the call moved on means the notification can go; other errors are failures")
+    func refusals() async {
+        let controller = CallController(now: { 0 })
+        controller.setPair(CallSamples.pairId, capability: CallSamples.capability())
+        controller.connected(peer: FakeCallPeer([
+            .refused(CallSamples.refused(.callActionNotAllowed, state: .ringing, reason: .system)),
+            .refused(CallSamples.refused(.callActionNotAllowed, state: .idle, reason: .state)),
+            .refused(CallSamples.refused(.permissionMissing)),
+        ]), capability: CallSamples.capability())
+        #expect(await controller.declineFromNotification(callId: CallSamples.callId, within: .seconds(2))
+            == .failed(.answeredOnPhone))
+        #expect(await controller.declineFromNotification(callId: CallSamples.callId, within: .seconds(2))
+            == .failed(.callEnded))
+        #expect(await controller.declineFromNotification(callId: CallSamples.callId, within: .seconds(2))
+            == .failed(.answerPermissionMissing))
+    }
 }
 
 /// CALL-02 API 5: the quick reply of "Decline with Message…" and E9.
