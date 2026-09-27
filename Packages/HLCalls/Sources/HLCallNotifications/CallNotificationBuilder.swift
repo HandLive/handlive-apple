@@ -19,7 +19,7 @@ public enum CallNotificationBuilder {
 
     /// The incoming call (field 11 on iPhone/iPad, field 15 on the Mac): the caller as the title, "Incoming call" (with
     /// the SIM label when the phone has two SIMs) as the body. A late push on iPhone/iPad keeps no button and the level
-    /// the relay gave it (E7).
+    /// the relay gave it (E7); so does a call the phone lets nobody decline (`controls.reject = false`, field 7).
     public static func incoming(_ state: CallStateData, pairId: String, platform: Platform,
                                 level: CallNotificationContent.Level, nowMs: Int64) -> CallNotificationContent {
         let late = platform == .mobile && nowMs - state.startedAt > latePushMs
@@ -31,7 +31,8 @@ public enum CallNotificationBuilder {
         } else {
             body = L10n.Call.incomingBody
         }
-        let category = platform == .mac ? CallNotificationKeys.incomingMacCategory : CallNotificationKeys.incomingCategory
+        let category = platform == .mac ? CallNotificationKeys.incomingMacCategory
+            : state.controls.reject ? CallNotificationKeys.incomingCategory : nil
         return CallNotificationContent(
             identifier: platform == .mac ? state.callId : nil, title: CallNames.title(CallerIdentity(state: state)),
             body: body, threadIdentifier: CallNotificationKeys.threadIdentifier,

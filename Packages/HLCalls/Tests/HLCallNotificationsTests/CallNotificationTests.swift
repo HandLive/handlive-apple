@@ -73,6 +73,13 @@ struct CallNotificationTests {
         #expect(late.categoryIdentifier == nil && late.interruptionLevel == nil)
         #expect(late.body == L10n.Call.incomingLate(time: CallNames.time(Self.startedAt)))
         expectValid(late, "call-notification.schema.json#/$defs/incoming")
+        // The phone may not decline for us (ANSWER_PHONE_CALLS missing): no "Decline".
+        let locked = CallStateData(callId: Self.callId, direction: .incoming, state: .ringing, number: "+84900000123",
+                                   displayName: nil, presentation: .allowed, startedAt: Self.startedAt, controls: .none)
+        let noButton = CallNotificationBuilder.incoming(locked, pairId: Self.pairId, platform: .mobile,
+                                                        level: .timeSensitive, nowMs: Self.startedAt + 2000)
+        #expect(noButton.categoryIdentifier == nil && noButton.interruptionLevel == .timeSensitive)
+        expectValid(noButton, "call-notification.schema.json#/$defs/incoming")
     }
 
     @Test("Titles: the name, the number in national format, Unknown Caller without the call log, No Caller ID if hidden")
