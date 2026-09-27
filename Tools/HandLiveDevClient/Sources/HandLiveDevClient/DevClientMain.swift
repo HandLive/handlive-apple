@@ -68,9 +68,11 @@ enum DevClientMain {
         case .smsSend(let target, let text): return await commands.smsSend(target: target, text: text)
         case .clipPush(let text): return await commands.clipPush(text)
         case .logSync: return await commands.logSync()
-        case .demo, .pair, .status:
-            DevConsole.line("\(options.command) is not available in this build")
-            return false
+        case .demo:
+            try await lock?.acquire("the Swift dev client demo: gsm calls and SMS")
+            defer { lock?.release() }
+            return await DemoScenario(commands: commands, phone: phone).run().allSatisfy(\.passed)
+        case .pair, .status: return false
         }
     }
 
