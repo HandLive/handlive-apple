@@ -1,5 +1,6 @@
 import AppKit
 import HLAppCore
+import HLCallNotifications
 import HLDesignSystem
 import HLLocalization
 import HLTransport
@@ -9,14 +10,17 @@ import SwiftUI
 /// otherwise; a manual clipboard send briefly shows a checkmark (Feedback).
 public struct MenuBarIcon: View {
     @ObservedObject var model: AppModel
+    @ObservedObject var calls: MacCalls
 
     public init(model: AppModel) {
         self.model = model
+        calls = model.calls
     }
 
     public var body: some View {
         let status = model.connectionStatus
-        let symbol = model.menuBarFeedback ?? status.menuBarSymbolName
+        // A ringing call shows `phone.fill` (MenuBarMenu README).
+        let symbol = calls.ringingCall != nil ? "phone.fill" : (model.menuBarFeedback ?? status.menuBarSymbolName)
         HStack(spacing: 2) {
             icon(symbol)
             if let badge = model.unreadBadgeText {
@@ -24,7 +28,8 @@ public struct MenuBarIcon: View {
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text(model.menuBarAccessibilityLabel))
+        .accessibilityLabel(Text(calls.ringingCall.map { CallNames.incomingAnnouncement($0.caller) }
+            ?? model.menuBarAccessibilityLabel))
     }
 
     @ViewBuilder
@@ -49,13 +54,16 @@ extension HLConnectionStatus {
     }
 }
 
-/// Menu of the menu bar icon (MenuBarMenu): phone and status, commands, Settings and Quit.
+/// Menu of the menu bar icon (MenuBarMenu): phone and status, a ringing call, commands, recent missed calls,
+/// Settings and Quit.
 public struct MenuBarMenu: View {
     @ObservedObject var model: AppModel
+    @ObservedObject var calls: MacCalls
     let actions: AppActions
 
     public init(model: AppModel, actions: AppActions) {
         self.model = model
+        calls = model.calls
         self.actions = actions
     }
 
@@ -70,6 +78,9 @@ public struct MenuBarMenu: View {
             Text(L10n.Status.notPaired)
             Button(L10n.Pairing.addPhone) { actions.showPairing() }
         }
+        if let call = calls.ringingCall {
+            RingingCallItems(call: call, calls: calls)
+        }
         Divider()
         Button(L10n.Menu.sendClipboardToPhone) { actions.sendClipboard() }
             .disabled(!model.canSendClipboard)
@@ -78,6 +89,12 @@ public struct MenuBarMenu: View {
             .disabled(model.messages == nil)
         if let line = model.menuStatusLine {
             Text(line)
+        }
+        if !calls.recentMissed.isEmpty {
+            Divider()
+            ForEach(Array(calls.recentMissed.enumerated()), id: \.offset) { _, missed in
+                MissedCallItem(missed: missed) { model.showCalls() }
+            }
         }
         ForEach([ClipboardProgress.Direction.sending, .receiving], id: \.self) { direction in
             if let progress = model.clipboardProgress[direction] {
