@@ -45,6 +45,14 @@ public struct ChannelConnection: Sendable {
     /// Address actually used, to store as `last_host` / `last_port` (CONN-01 API 2 logic 2).
     public let host: String
     public let port: UInt16
+
+    /// A connector outside this module (a test double, a wrapper that traces the channel) returns one too.
+    public init(channel: any MessageChannel, certificateSHA256: Data, host: String, port: UInt16) {
+        self.channel = channel
+        self.certificateSHA256 = certificateSHA256
+        self.host = host
+        self.port = port
+    }
 }
 
 /// Opens WebSocket channels; the connection manager and pairing depend on this protocol so tests can connect
