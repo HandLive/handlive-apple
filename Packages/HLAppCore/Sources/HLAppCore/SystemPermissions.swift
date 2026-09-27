@@ -22,6 +22,21 @@ public enum NotificationPermission: Equatable, Sendable {
     }
 }
 
+/// SET-03 field 8: the app's Time Sensitive notification setting (`timeSensitiveSetting`); `disabled` shows "Focus may
+/// silence call notifications".
+public enum TimeSensitiveSetting: Equatable, Sendable {
+    case enabled, disabled, notSupported
+
+    public static func current() async -> TimeSensitiveSetting {
+        let settings = await UNUserNotificationCenter.current().notificationSettings()
+        switch settings.timeSensitiveSetting {
+        case .enabled: return .enabled
+        case .disabled: return .disabled
+        default: return .notSupported
+        }
+    }
+}
+
 /// SET-03 API 5: browse `_handlive._tcp` so the system shows the local network prompt (iOS, macOS 15+). A phone in
 /// the results means allowed, `PolicyDenied` means denied; with neither after `settle`, the answer is taken as allowed
 /// and a later denial still shows up as a connection issue (CONN-01 E8).
