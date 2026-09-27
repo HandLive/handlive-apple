@@ -135,4 +135,18 @@ struct AppModelCallsTests {
         model.calls.setCallsEnabled(false)
         #expect(!model.settings.callsEnabled && stubs.notifier.removedAll == 1)
     }
+
+    @Test("Why calls don't work: off here, off on the phone, the phone state permission; which permissions are calls'")
+    func reasons() throws {
+        let stubs = CallStubs()
+        let model = try ready(stubs)
+        #expect(model.callsFeatureReason == nil) // no capability stored yet
+        model.calls.setCallsEnabled(false)
+        #expect(model.callsFeatureReason == L10n.Pairing.reasonOffOnDevice(deviceName: model.device.name))
+        #expect(MissingPermissionsSection.isCall("android.permission.READ_CALL_LOG", callsOnPhone: false))
+        #expect(MissingPermissionsSection.isCall("ANSWER_PHONE_CALLS", callsOnPhone: false))
+        #expect(!MissingPermissionsSection.isCall("READ_PHONE_STATE", callsOnPhone: false))
+        #expect(MissingPermissionsSection.isCall("READ_PHONE_STATE", callsOnPhone: true))
+        #expect(!MissingPermissionsSection.hasOwnPhase("READ_CALL_LOG") && MissingPermissionsSection.hasOwnPhase("CAMERA"))
+    }
 }
