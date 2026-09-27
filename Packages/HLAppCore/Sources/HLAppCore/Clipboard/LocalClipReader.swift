@@ -5,25 +5,39 @@ import UniformTypeIdentifiers
 enum LocalClip: Equatable {
     /// The item carries `app.handlive.clip-id`: HandLive wrote it (E1).
     case ownWrite(clipId: String?)
-    /// Empty (an empty text too), a copied file (`public.file-url`) or a type HandLive does not send (E3).
+    /// Empty (an empty text too), a copied file that is not an image, or a type HandLive does not send (E3).
     case unsupported
     case text(String, sensitiveType: Bool)
     /// Image bytes and their type identifier; normalized later, off the main actor.
     case image(Data, typeIdentifier: String, sensitiveType: Bool)
+    /// An image file copied in Finder and the type its extension names; read and normalized later, off the main actor.
+    case imageFile(URL, typeIdentifier: String, sensitiveType: Bool)
+}
+
+/// An image file copied in Finder, as read off the main actor (CLIP-03 API 2 logic 5).
+enum ImageFileContent: Equatable, Sendable {
+    case data(Data)
+    /// Larger than `CLIP_MAX_IMAGE`: not read (E2).
+    case tooLarge
+    /// macOS refused access to its folder, or the file is gone (E3).
+    case unreadable
 }
 
 @MainActor
 enum LocalClipReader {
     /// Picks the kind from the first type of the first item that is text or an image, in the source app's order of
-    /// preference; an item with a file URL is skipped whole (the file name is never sent). An empty text is nothing
-    /// copied.
+    /// preference. An item with a file URL is a copied file: an image file is the copied image, any other file skips
+    /// the item whole (the file name is never sent). An empty text is nothing copied.
     static func read(_ access: ClipboardAccess) -> LocalClip {
         guard let types = access.firstItemTypes(), !types.isEmpty else { return .unsupported }
         if types.contains(PasteboardTypeID.clipId) {
             return .ownWrite(clipId: access.string(forType: PasteboardTypeID.clipId))
         }
-        if types.contains(PasteboardTypeID.fileURL) { return .unsupported }
         let sensitive = !SensitiveContent.pasteboardTypes.isDisjoint(with: types)
+        if types.contains(PasteboardTypeID.fileURL) {
+            guard let (url, identifier) = imageFile(access) else { return .unsupported }
+            return .imageFile(url, typeIdentifier: identifier, sensitiveType: sensitive)
+        }
         for type in types {
             if isText(type) {
                 guard let text = access.string(forType: PasteboardTypeID.text), !text.isEmpty else { return .unsupported }
@@ -43,6 +57,23 @@ enum LocalClipReader {
 
     static func isImage(_ type: String) -> Bool {
         UTType(type)?.conforms(to: .image) ?? false
+    }
+
+    /// The copied file and its type when its extension names an image type.
+    private static func imageFile(_ access: ClipboardAccess) -> (URL, String)? {
+        guard let string = access.string(forType: PasteboardTypeID.fileURL), let url = URL(string: string),
+              url.isFileURL, let type = UTType(filenameExtension: url.pathExtension), type.conforms(to: .image)
+        else { return nil }
+        return (url, type.identifier)
+    }
+
+    /// Reads an image file copied in Finder; only a file within `CLIP_MAX_IMAGE`. The first read of a file on the
+    /// Desktop or in Documents or Downloads may make macOS ask for access to that folder.
+    nonisolated static func readImageFile(_ url: URL) -> ImageFileContent {
+        guard let size = try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize else { return .unreadable }
+        guard size <= ClipboardConstants.maxImageBytes else { return .tooLarge }
+        guard let data = try? Data(contentsOf: url) else { return .unreadable }
+        return .data(data)
     }
 
     /// `public.png` → `public.jpeg` → `public.tiff` → any other image type of the item (API 2 request order).

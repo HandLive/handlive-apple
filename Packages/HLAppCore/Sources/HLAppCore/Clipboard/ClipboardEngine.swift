@@ -170,6 +170,24 @@ public final class ClipboardEngine {
                 }.value
                 captureImage(image, sensitiveType: sensitiveType, manual: manual)
             }
+        case .imageFile(let url, let type, let sensitiveType):
+            guard settings.sendImages else {
+                detectedLocalChange = nil
+                if manual { onNotice(.emptyOrNotText) }
+                return
+            }
+            Task {
+                let file = await Task.detached(priority: .userInitiated) { LocalClipReader.readImageFile(url) }.value
+                guard case .data(let data) = file else {
+                    detectedLocalChange = nil
+                    if file == .tooLarge { onNotice(.imageTooLarge) } else if manual { onNotice(.imageUnreadable) }
+                    return
+                }
+                let image = await Task.detached(priority: .userInitiated) {
+                    ImageNormalizer.normalize(data, typeIdentifier: type)
+                }.value
+                captureImage(image, sensitiveType: sensitiveType, manual: manual)
+            }
         }
     }
 
