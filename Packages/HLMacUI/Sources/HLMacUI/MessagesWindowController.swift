@@ -60,7 +60,7 @@ final class MessagesWindowController: NSWindowController, NSWindowDelegate, NSTo
 
     private func splitView() -> NSSplitViewController {
         let split = NSSplitViewController()
-        let sidebarView = MessagesSidebar(messages: messages, search: search) { number in
+        let sidebarView = MessagesSidebar(messages: messages, calls: model.calls, search: search) { number in
             NSPasteboard.general.clearContents()
             NSPasteboard.general.setString(number, forType: .string)
         }
@@ -70,7 +70,7 @@ final class MessagesWindowController: NSWindowController, NSWindowDelegate, NSTo
         sidebar.minimumThickness = 240
         sidebar.maximumThickness = 420
         sidebar.canCollapse = true
-        let detailHost = NSHostingController(rootView: MessagesDetail(messages: messages))
+        let detailHost = NSHostingController(rootView: MessagesDetail(messages: messages, calls: model.calls))
         detailHost.sizingOptions = []
         let detail = NSSplitViewItem(viewController: detailHost)
         detail.minimumThickness = 380
@@ -85,6 +85,8 @@ final class MessagesWindowController: NSWindowController, NSWindowDelegate, NSTo
         guard let window else { return }
         if messages.newMessage != nil {
             window.subtitle = L10n.Sms.newMessage
+        } else if messages.selection == MessagesModel.callsItem {
+            window.subtitle = L10n.Call.title
         } else if let thread = messages.threads.first(where: { $0.threadId == messages.selection }) {
             window.subtitle = SmsNames.title(displayName: thread.displayName, addresses: thread.addresses)
         } else {
