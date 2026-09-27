@@ -56,11 +56,13 @@ struct CallPanelView: View {
         .accessibilityElement(children: .combine)
     }
 
-    /// Field 1: "Incoming Call", "Call Waiting"; in a call, the status and the timer; "Call ended · 02:05".
+    /// Field 1: "Incoming Call"; in a call, the status and the timer: "On call", or "Call waiting" while a second call
+    /// rings — the Mac keeps the in-call panel for it (CALL-01 field 1, CALL-03 field 3; "Call Waiting" is the
+    /// iPhone/iPad banner's title); "Call ended · 02:05".
     static func title(_ call: ActiveCall) -> String {
         switch call.phase {
         case .ringing: L10n.Call.incomingTitle
-        case .waiting: L10n.Call.waitingTitle
+        case .waiting: L10n.Call.statusWaiting
         case .inCall: L10n.Call.statusOnCall
         case .ended: L10n.Call.statusEnded(duration: CallDisplay.timer(call.elapsedSeconds(nowMs: 0)))
         }
@@ -119,7 +121,7 @@ struct CallPanelView: View {
         case .ringing:
             ringingControls(call)
         case .inCall, .waiting:
-            if call.state.controls.end && !call.state.waiting {
+            if Self.offersEnd(call) {
                 HStack {
                     Spacer()
                     CallRoundButton(title: L10n.Call.end, symbol: "phone.down.fill", fill: .callDeclineFill,
@@ -130,6 +132,12 @@ struct CallPanelView: View {
         case .ended:
             EmptyView()
         }
+    }
+
+    /// "End" in a call; none while a call waits, where `controls.end` is `false` and the waiting call is handled on the
+    /// phone or over Bluetooth (CALL-03 E7).
+    static func offersEnd(_ call: ActiveCall) -> Bool {
+        call.state.controls.end && !call.state.waiting
     }
 
     @ViewBuilder
