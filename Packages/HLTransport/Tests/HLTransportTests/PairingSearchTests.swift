@@ -134,6 +134,21 @@ struct PairingSearchTests {
         #expect(connector.attemptCount == 3)
     }
 
+    @Test("PIN: a phone waiting for its PIN again times the attempt out, then answers PAIRING_CLOSED; the search goes on")
+    func pinRetriesWhileThePhoneWaitsForThePIN() async throws {
+        // After PIN_INVALID the phone holds a client without `pair/offer` until the PIN is confirmed again (A4).
+        let waiting = FakePairingPhone(window: .pin("042917"), fault: .silent)
+        let closed = FakePairingPhone(window: .pin("042917"), fault: .closed)
+        let good = FakePairingPhone(window: .pin("042917"))
+        let connector = FakePairingConnector([.phone(waiting), .phone(closed), .phone(closed), .phone(good)])
+        let discovery = FakeDiscovery()
+        discovery.publish(.results([Self.instance("phone", txt: ["pm": "1"])]))
+        let result = try await search(connector, discovery: discovery).run(
+            identity: identity, credential: .pin("042917", attemptsLeft: 3), offerTimeout: .milliseconds(300)) { _ in }
+        #expect(result.phoneDeviceId == good.deviceId)
+        #expect(connector.attemptCount == 4)
+    }
+
     @Test("A wrong PIN and AUTH_FAILED end the search for the caller to handle")
     func endsOnAuthenticationFailures() async throws {
         let discovery = FakeDiscovery()
