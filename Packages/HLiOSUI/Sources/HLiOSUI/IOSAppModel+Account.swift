@@ -47,6 +47,7 @@ extension IOSAppModel: PairingHost {
         }
         pairedDevice = record
         pairChangedForMessages()
+        calls.setPair(record)
         let phone = activePhone()
         Task { await manager?.setPhone(phone) }
     }
@@ -81,6 +82,9 @@ extension IOSAppModel: PairingHost {
         clipboard?.phoneDisconnected()
         received = nil
         forgetMessages(pairId: record.pairId)
+        calls.forget(pairId: record.pairId)
+        calls.setPair(nil)
+        settings.setPeerCanSend(nil, pairId: record.pairId)
     }
 
     /// PAIR-03 steps 8–9 and E3: each tombstone is revoked on the relay, then deleted for good.

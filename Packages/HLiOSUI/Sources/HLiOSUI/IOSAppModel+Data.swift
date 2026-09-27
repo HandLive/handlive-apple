@@ -78,6 +78,7 @@ extension IOSAppModel {
         smsEngine?.setPair(nil)
         smsEngine = nil
         messages?.close()
+        calls.stop()
     }
 
     /// SET-02 API 7 in its order: the keys first, then the database and the pair store, settings and notifications.
@@ -118,6 +119,7 @@ extension IOSAppModel {
         smsEnabled = settings.smsEnabled
         smsNotify = settings.smsNotify
         smsPreview = settings.smsPreview
+        calls.reloadSettings()
         selectedTab = .clipboard
         launch()
         didEraseAllData()

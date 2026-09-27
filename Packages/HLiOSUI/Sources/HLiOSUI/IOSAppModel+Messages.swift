@@ -6,9 +6,9 @@ import HLSMSNotifications
 import HLSMSUI
 import HLTransport
 
-/// The tabs of the app (02-ios-ipados.md, Tab bar); Calls comes with Phase 3.
+/// The tabs of the app (02-ios-ipados.md, Tab bar).
 public enum IOSTab: Hashable, Sendable {
-    case clipboard, messages, settings
+    case clipboard, messages, calls, settings
 }
 
 extension IOSAppModel {
@@ -99,6 +99,7 @@ extension IOSAppModel {
         settings.smsEnabled = enabled
         smsEnabled = enabled
         scheduleCapabilityUpdate()
+        storePeerCanSend(pairedDevice?.peerCapability) // "Message" on pushed missed calls follows SMS here too
     }
 
     public func setSmsNotify(_ enabled: Bool) {

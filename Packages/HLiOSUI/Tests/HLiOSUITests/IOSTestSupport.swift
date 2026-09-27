@@ -69,9 +69,11 @@ final class StubIOSNotifications: IOSNotifying {
     func setBadge(_ count: Int) { badges.append(count) }
     func postNotSentYet(pairId: String, threadId: Int64) { notSentYet.append(threadId) }
     var answer = NotificationPermission.allowed
+    var timeSensitiveSetting = TimeSensitiveSetting.enabled
     private(set) var requests = 0
 
     func permission() async -> NotificationPermission { requests == 0 ? .notDetermined : answer }
+    func timeSensitive() async -> TimeSensitiveSetting { timeSensitiveSetting }
 
     func requestPermission() async -> NotificationPermission {
         requests += 1
@@ -132,6 +134,7 @@ struct ClosedRelaySockets: RelaySocketOpening {
 @MainActor
 func makeIOSModel(secrets: any SecretStore = InMemorySecretStore(), pasteboard: StubIOSPasteboard = StubIOSPasteboard(),
                   notifications: StubIOSNotifications = StubIOSNotifications(),
+                  calls: StubIOSCallNotifications = StubIOSCallNotifications(),
                   relay: ScriptedRelayAPI? = nil, platform: CapabilityData.Platform = .ios) -> IOSAppModel {
     let defaults = UserDefaults(suiteName: "app.handlive.ios.tests.\(UUID().uuidString)")!
     let folder = FileManager.default.temporaryDirectory.appendingPathComponent("handlive-ios-tests-\(UUID().uuidString)")
@@ -140,7 +143,8 @@ func makeIOSModel(secrets: any SecretStore = InMemorySecretStore(), pasteboard: 
                                            name: "iPhone của Lan", platform: platform),
                        pairStoreURL: folder.appendingPathComponent("paired-devices.bin"),
                        smsDatabaseURL: folder.appendingPathComponent("handlive.sqlite"),
-                       pasteboard: pasteboard, notifications: notifications, pushProvider: .apnsSandbox,
+                       pasteboard: pasteboard, notifications: notifications, callNotifications: calls,
+                       pushProvider: .apnsSandbox,
                        pushTopic: "app.handlive.ios",
                        makeRelay: { _ in relay.map { RelayServices(api: $0, sockets: ClosedRelaySockets()) } },
                        makeManager: { capability, _ in

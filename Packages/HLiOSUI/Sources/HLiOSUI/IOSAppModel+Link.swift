@@ -10,7 +10,10 @@ import HLTransport
 extension IOSAppModel {
     /// Connection manager events (CONN-01 step 10, CONN-02, CONN-03, PAIR-03 flow B).
     func handle(_ event: LinkEvent) async {
-        defer { messagesLinkEvent(event) }
+        defer {
+            messagesLinkEvent(event)
+            callsLinkEvent(event)
+        }
         switch event {
         case .status(let status):
             link = status
