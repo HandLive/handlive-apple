@@ -29,6 +29,8 @@ packages:
     path: Packages/HLSMS
   HLSMSUI:
     path: Packages/HLSMSUI
+  HLCalls:
+    path: Packages/HLCalls
   HLMacUI:
     path: Packages/HLMacUI
   HLiOSUI:
@@ -54,7 +56,9 @@ targets:
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
         # Màu nhấn toàn app = Color Set AccentColor (accent-fill, sinh bởi generate-design-tokens.py).
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
-        # keychain-access-groups: the data-protection keychain of 0.6.1 needs it once the app is signed (Developer ID).
+        # keychain-access-groups: the data-protection keychain of 0.6.1 needs it once the app is signed (Developer ID);
+        # communication notifications (also what reading the Focus status needs) and time-sensitive notifications for
+        # calls during a Focus (CALL-01 API 7).
         CODE_SIGN_ENTITLEMENTS: macOS/HandLive.entitlements
     dependencies:
       - package: HLProtocol
