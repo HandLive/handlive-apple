@@ -28,6 +28,21 @@ struct SmsStoreTests {
         #expect(throws: SmsDatabaseError.invalidKey) { _ = try SmsDatabase(url: database.url, key: Data(count: 16)) }
     }
 
+    @Test("The database also holds the call log of 0.9.3 with its index and type check")
+    func callLogTable() async throws {
+        let database = try SmsFixtures.database()
+        let (columns, indexes) = try await database.pool.read { db in
+            (try db.columns(in: "call_log_entry").map(\.name), try db.indexes(on: "call_log_entry").map(\.name))
+        }
+        #expect(columns == ["pair_id", "entry_id", "number", "display_name", "type", "ts", "duration_s", "sub_id", "seen"])
+        #expect(indexes.contains("idx_call_log_ts"))
+        await #expect(throws: (any Error).self) {
+            try await database.pool.write { db in
+                try db.execute(sql: "INSERT INTO call_log_entry (pair_id, entry_id, type, ts) VALUES ('p', 1, 'video', 1)")
+            }
+        }
+    }
+
     @Test("SMS-01: pages upsert, the cursor is saved only on the last page, local_read_ts and local_id are kept")
     func syncPages() async throws {
         let store = SmsStore(database: try SmsFixtures.database())

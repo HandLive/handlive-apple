@@ -9,9 +9,10 @@ public enum SmsDatabaseError: Error, Equatable, Sendable {
     case invalidKey
 }
 
-/// `handlive.sqlite` (0.9.3): the SMS tables in a SQLCipher database keyed with the raw 32-byte `db_key` from the
-/// Keychain (0.6.1, SET-03 Query `PRAGMA key = "x'<hex>'"`). The pairs stay in the sealed pair store, so the tables
-/// carry `pair_id` without a foreign key; PAIR-03 and SET-02 delete a pair's rows explicitly.
+/// `handlive.sqlite` (0.9.3): the SMS tables and the call log in a SQLCipher database keyed with the raw 32-byte
+/// `db_key` from the Keychain (0.6.1, SET-03 Query `PRAGMA key = "x'<hex>'"`). The pairs stay in the sealed pair store,
+/// so the tables carry `pair_id` without a foreign key; PAIR-03 and SET-02 delete a pair's rows explicitly. The call
+/// log's queries live with the calls (`HLCalls`); this type only owns the file and its migrations.
 public final class SmsDatabase: Sendable {
     public static let fileName = "handlive.sqlite"
 
@@ -68,6 +69,9 @@ public final class SmsDatabase: Sendable {
         migrator.registerMigration("v1-sms") { db in
             try db.execute(sql: Self.smsSchema)
         }
+        migrator.registerMigration("v2-call-log") { db in
+            try db.execute(sql: Self.callLogSchema)
+        }
         return migrator
     }
 
@@ -119,5 +123,22 @@ public final class SmsDatabase: Sendable {
           updated_at        INTEGER NOT NULL,
           PRIMARY KEY (pair_id, stream)
         );
+        """
+
+    /// The call log of 0.9.3 (`call_log_entry`, CALL-04); its cursor is the `calllog` row of `sync_cursor`.
+    static let callLogSchema = """
+        CREATE TABLE call_log_entry (
+          pair_id           TEXT    NOT NULL,
+          entry_id          INTEGER NOT NULL,
+          number            TEXT,
+          display_name      TEXT,
+          type              TEXT    NOT NULL CHECK (type IN ('incoming','outgoing','missed','rejected','blocked','voicemail')),
+          ts                INTEGER NOT NULL,
+          duration_s        INTEGER NOT NULL DEFAULT 0,
+          sub_id            INTEGER,
+          seen              INTEGER NOT NULL DEFAULT 0,
+          PRIMARY KEY (pair_id, entry_id)
+        );
+        CREATE INDEX idx_call_log_ts ON call_log_entry (pair_id, ts DESC);
         """
 }
