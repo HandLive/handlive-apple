@@ -11,10 +11,11 @@ import UserNotifications
 /// pair named by `p`, while the iPhone is unlocked — the `PRK` sits in the Keychain group shared with the app, readable
 /// only when unlocked (C3). A new SMS becomes a communication notification with the sender, the text (unless previews
 /// are off) and the conversation's thread; a ringing call a time-sensitive `INStartCallIntent` notification with
-/// "Decline" (`HL_CALL_INCOMING`), or "Incoming call at <time>" without a button when the push is over 60 s late (E7);
-/// a missed call its title and time, with "Message" only when the app's copy of the phone's SMS send capability says
-/// so. Locked, another pair, older than 24 h, already shown or anything unexpected: the generic text the APNs
-/// `loc-key` names stays (E5–E7, E9). No database, no network: well under the 30 MB limit.
+/// "Decline" (`HL_CALL_INCOMING`) when the phone allows it, or "Incoming call at <time>" without a button at the active
+/// level when the push is over 60 s late (E7); a missed call its title and time, with "Message" only when the app's
+/// copy of the phone's SMS send capability says so. Locked, another pair, older than 24 h, already shown or anything
+/// unexpected: the generic text the APNs `loc-key` names stays (E5–E7, E9). No database, no network: well under the
+/// 30 MB limit.
 final class NotificationService: UNNotificationServiceExtension {
     private static let appGroup = "group.app.handlive"
     private var contentHandler: ((UNNotificationContent) -> Void)?

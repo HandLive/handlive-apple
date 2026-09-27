@@ -38,8 +38,8 @@ public struct CallNotificationContent: Equatable, Sendable {
     }
 
     /// The content with its `userInfo`, level and sound. The extension passes the push's own content as `base`, so what
-    /// this content leaves open (the level of a late push) stays as the relay sent it, and the push's `p` and `hl` stay
-    /// in `userInfo` next to the call's keys (the app reads them back to judge a notification it did not post).
+    /// this content leaves open (the level of a pushed missed call) stays as the relay sent it, and the push's `p` and
+    /// `hl` stay in `userInfo` next to the call's keys (the app reads them back to judge a notification it did not post).
     public func makeContent(base: UNNotificationContent? = nil) -> UNMutableNotificationContent {
         let content = (base?.mutableCopy() as? UNMutableNotificationContent) ?? UNMutableNotificationContent()
         content.title = title

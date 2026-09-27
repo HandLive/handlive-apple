@@ -81,7 +81,7 @@ struct CallPushDecoderTests {
         #expect(CallerIdentity(state: unknown) == .unknownCaller && unknown.simLabel == nil)
     }
 
-    @Test("Rebuilt from the push: p and hl stay next to the call's keys; a late push has no button and keeps its level")
+    @Test("Rebuilt from the push: p and hl stay next to the call's keys; a late push has no button, level active")
     func rebuilt() throws {
         let vector = try #require(try Self.vectors().first { $0.name == "pair 2 / call_event/state ringing" })
         let decoded = try Self.decoded(vector.name)
@@ -102,7 +102,7 @@ struct CallPushDecoderTests {
         let late = CallNotificationBuilder.incoming(state, pairId: decoded.pairId, platform: .mobile,
                                                     level: .timeSensitive, nowMs: state.startedAt + 61_000)
             .makeContent(base: push)
-        #expect(late.categoryIdentifier.isEmpty && late.interruptionLevel == .timeSensitive)
+        #expect(late.categoryIdentifier.isEmpty && late.interruptionLevel == .active)
         #expect(late.body == L10n.Call.incomingLate(time: CallNames.time(state.startedAt)))
     }
 

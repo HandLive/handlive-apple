@@ -76,7 +76,7 @@ struct CallNotificationTests {
                                                  nowMs: Self.startedAt).categoryIdentifier == nil)
     }
 
-    @Test("iPhone: HL_CALL_INCOMING with the system's identifier; a push over 60 s late has no button (E7)")
+    @Test("iPhone: HL_CALL_INCOMING with the system's identifier; a push over 60 s late has no button, level active")
     func incomingMobile() {
         let content = CallNotificationBuilder.incoming(Self.ringing(), pairId: Self.pairId, platform: .mobile,
                                                        level: .timeSensitive, nowMs: Self.startedAt + 2000)
@@ -84,7 +84,7 @@ struct CallNotificationTests {
         expectValid(content, "call-notification.schema.json#/$defs/incoming")
         let late = CallNotificationBuilder.incoming(Self.ringing(), pairId: Self.pairId, platform: .mobile,
                                                     level: .timeSensitive, nowMs: Self.startedAt + 61_000)
-        #expect(late.categoryIdentifier == nil && late.interruptionLevel == nil)
+        #expect(late.categoryIdentifier == nil && late.interruptionLevel == .active && !late.playsSound)
         #expect(late.body == L10n.Call.incomingLate(time: CallNames.time(Self.startedAt)))
         expectValid(late, "call-notification.schema.json#/$defs/incoming")
         // The phone may not decline for us (ANSWER_PHONE_CALLS missing): no "Decline".

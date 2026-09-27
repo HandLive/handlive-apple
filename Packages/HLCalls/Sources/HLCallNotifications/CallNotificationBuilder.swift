@@ -20,7 +20,8 @@ public enum CallNotificationBuilder {
     /// The incoming call (field 11 on iPhone/iPad, field 15 on the Mac): the caller as the title, "Incoming call" (with
     /// the SIM label when the phone has two SIMs) as the body. The buttons follow `controls` (field 7), so none of them
     /// ever does nothing: iPhone and iPad get "Decline" when the phone allows it, the Mac "Answer" and "Decline" only
-    /// when it allows both. A late push on iPhone/iPad has no button and keeps the level the relay gave it (E7).
+    /// when it allows both. A late push on iPhone/iPad has no button and drops to the active level, so it no longer
+    /// breaks through a Focus (E7).
     public static func incoming(_ state: CallStateData, pairId: String, platform: Platform,
                                 level: CallNotificationContent.Level, nowMs: Int64) -> CallNotificationContent {
         let late = platform == .mobile && nowMs - state.startedAt > latePushMs
@@ -36,7 +37,7 @@ public enum CallNotificationBuilder {
         return CallNotificationContent(
             identifier: platform == .mac ? state.callId : nil, title: CallNames.title(CallerIdentity(state: state)),
             body: body, threadIdentifier: CallNotificationKeys.threadIdentifier,
-            categoryIdentifier: late ? nil : category, interruptionLevel: late ? nil : level,
+            categoryIdentifier: late ? nil : category, interruptionLevel: late ? .active : level,
             playsSound: platform == .mac && level == .timeSensitive,
             info: .incoming(pairId: pairId, callId: state.callId, startedAt: state.startedAt))
     }
