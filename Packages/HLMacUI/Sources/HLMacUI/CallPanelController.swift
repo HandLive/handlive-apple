@@ -28,6 +28,8 @@ public final class CallPanelController: CallPanelPresenting {
     private var panel: CallPanelWindow?
     private var shownCallId: String?
     private var sizeObserver: NSObjectProtocol?
+    /// The SwiftUI content, whose fitting size is the panel's height: the glass container reports none of its own.
+    private var hosting: NSView?
 
     public init(model: CallPanelModel) {
         self.model = model
@@ -49,6 +51,7 @@ public final class CallPanelController: CallPanelPresenting {
                                                 .priority: NSAccessibilityPriorityLevel.high.rawValue])
             }
         }
+        DispatchQueue.main.async { [weak self] in self?.fitHeight() } // after SwiftUI's first layout pass
     }
 
     public func hide() {
@@ -73,6 +76,7 @@ public final class CallPanelController: CallPanelPresenting {
         panel.hasShadow = true
         let hosting = NSHostingView(rootView: CallPanelView(model: model))
         hosting.sizingOptions = [.intrinsicContentSize]
+        self.hosting = hosting
         panel.contentView = Self.material(around: hosting)
         sizeObserver = NotificationCenter.default.addObserver(forName: NSView.frameDidChangeNotification,
                                                               object: hosting, queue: .main) { [weak self] _ in
@@ -131,7 +135,7 @@ public final class CallPanelController: CallPanelPresenting {
     }
 
     private func fittingHeight(_ panel: NSPanel) -> CGFloat {
-        max(80, panel.contentView?.fittingSize.height ?? 160)
+        max(80, hosting?.fittingSize.height ?? panel.contentView?.fittingSize.height ?? 160)
     }
 
     /// Slides in from the top-right corner and fades in, like a notification; only fades with Reduce Motion
