@@ -106,6 +106,29 @@ struct LocalCapabilityTests {
         #expect(phone.capability(settings: settings).features.sms?.notify == false)
     }
 
+    @Test("Calls follow feature.call; iPhone and iPad add call.notify, which decides the call pushes (SET-02 field 11)")
+    func calls() {
+        let settings = AppSettings(defaults: freshDefaults())
+        let mac = LocalDevice(appVersion: "1.0.0 (100)", osVersion: "15.6", model: "Mac15,3", name: "Mac", platform: .macos)
+        #expect(mac.capability(settings: settings).features.call == CallFeature(enabled: true))
+        let phone = LocalDevice(appVersion: "1.0.0 (100)", osVersion: "18.6", model: "iPhone16,1", name: "iPhone",
+                                platform: .ios)
+        #expect(phone.capability(settings: settings).features.call == CallFeature(enabled: true, notify: true))
+        settings.callNotify = false
+        settings.callsEnabled = false
+        #expect(phone.capability(settings: settings).features.call == CallFeature(enabled: false, notify: false))
+        #expect(settings.callRingtone && settings.quickReplies == nil)
+    }
+
+    @Test("Quick replies keep at most 6 templates of 160 characters")
+    func quickReplies() {
+        let settings = AppSettings(defaults: freshDefaults())
+        settings.quickReplies = (1...8).map { "\($0)" + String(repeating: "x", count: 200) }
+        #expect(settings.quickReplies?.count == 6 && settings.quickReplies?.allSatisfy { $0.count == 160 } == true)
+        settings.removeAll()
+        #expect(settings.quickReplies == nil)
+    }
+
     @Test("The device name sent at pairing is cut to 64 characters")
     func nameLimit() {
         let device = LocalDevice(appVersion: "", osVersion: "", model: "", name: String(repeating: "a", count: 80),
