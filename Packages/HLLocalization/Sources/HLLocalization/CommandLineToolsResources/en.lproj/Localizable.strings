@@ -16,6 +16,8 @@
 	<string>Answer on Mac</string>
 	<key>call.answer_on_phone</key>
 	<string>Answer on Phone</string>
+	<key>call.answer_tooltip</key>
+	<string>Answer the call</string>
 	<key>call.answering</key>
 	<string>Answering…</string>
 	<key>call.audio_on_mac</key>
@@ -34,14 +36,22 @@
 	<string>Decline</string>
 	<key>call.decline_failed</key>
 	<string>Couldn't decline the call. It's still ringing on the phone.</string>
+	<key>call.decline_tooltip</key>
+	<string>Decline the call</string>
 	<key>call.decline_with_message_ellipsis</key>
 	<string>Decline with Message…</string>
 	<key>call.declining</key>
 	<string>Declining…</string>
+	<key>call.empty_body</key>
+	<string>Calls from your phone appear here after the first sync.</string>
+	<key>call.empty_title</key>
+	<string>No Calls Yet</string>
 	<key>call.end</key>
 	<string>End</string>
 	<key>call.end_and_answer</key>
 	<string>End &amp; Answer</string>
+	<key>call.end_tooltip</key>
+	<string>End the call</string>
 	<key>call.hold</key>
 	<string>Hold</string>
 	<key>call.hold_and_answer</key>
@@ -74,6 +84,10 @@
 	<string>No Caller ID</string>
 	<key>call.outgoing_call</key>
 	<string>Outgoing Call</string>
+	<key>call.permission_instructions_body</key>
+	<string>On your phone, open HandLive and go to Settings › Permissions &amp; Background. Tap Grant Permission under Calls, or Open Settings if the permission was denied, and allow Phone, Call logs, and Contacts.</string>
+	<key>call.permission_instructions_title</key>
+	<string>Grant Call Permission on Your Phone</string>
 	<key>call.quick_reply_call_back</key>
 	<string>I'll call you back later</string>
 	<key>call.quick_reply_in_meeting</key>
@@ -92,6 +106,18 @@
 	<string>Call waiting</string>
 	<key>call.title</key>
 	<string>Calls</string>
+	<key>call.type_blocked</key>
+	<string>Blocked call</string>
+	<key>call.type_incoming</key>
+	<string>Incoming call</string>
+	<key>call.type_missed</key>
+	<string>Missed call</string>
+	<key>call.type_outgoing</key>
+	<string>Outgoing call</string>
+	<key>call.type_rejected</key>
+	<string>Declined call</string>
+	<key>call.type_voicemail</key>
+	<string>Voicemail</string>
 	<key>call.unknown_caller</key>
 	<string>Unknown Caller</string>
 	<key>call.waiting_handle_on_phone</key>
@@ -378,6 +404,8 @@
 	<string>The security keys, paired devices, synced messages and call history, and all settings on this device will be deleted. This can't be undone.</string>
 	<key>settings.delete_all_offline_confirm</key>
 	<string>Couldn't connect to the server. Delete from this device anyway?</string>
+	<key>settings.focus_permission_hint</key>
+	<string>To ring, allow HandLive to read your Focus status in System Settings › Privacy &amp; Security › Focus.</string>
 	<key>settings.general</key>
 	<string>General</string>
 	<key>settings.internet_connection</key>
@@ -400,6 +428,12 @@
 	<string>Phone</string>
 	<key>settings.quick_replies</key>
 	<string>Quick Replies</string>
+	<key>settings.quick_replies_footer</key>
+	<string>Up to 6 replies of 160 characters. Choose one when you decline a call on this Mac.</string>
+	<key>settings.quick_reply_add</key>
+	<string>Add Quick Reply</string>
+	<key>settings.quick_reply_remove</key>
+	<string>Remove Quick Reply</string>
 	<key>settings.remove_from_server</key>
 	<string>Remove Device from Server</string>
 	<key>settings.remove_from_server_confirm</key>

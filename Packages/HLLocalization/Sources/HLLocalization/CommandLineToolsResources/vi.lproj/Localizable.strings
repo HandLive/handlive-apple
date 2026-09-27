@@ -16,6 +16,8 @@
 	<string>Nghe trên Mac</string>
 	<key>call.answer_on_phone</key>
 	<string>Nghe trên điện thoại</string>
+	<key>call.answer_tooltip</key>
+	<string>Trả lời cuộc gọi</string>
 	<key>call.answering</key>
 	<string>Đang trả lời…</string>
 	<key>call.audio_on_mac</key>
@@ -34,14 +36,22 @@
 	<string>Từ chối</string>
 	<key>call.decline_failed</key>
 	<string>Không gửi được lệnh từ chối. Cuộc gọi vẫn đổ chuông trên điện thoại.</string>
+	<key>call.decline_tooltip</key>
+	<string>Từ chối cuộc gọi</string>
 	<key>call.decline_with_message_ellipsis</key>
 	<string>Từ chối kèm tin nhắn…</string>
 	<key>call.declining</key>
 	<string>Đang từ chối…</string>
+	<key>call.empty_body</key>
+	<string>Cuộc gọi từ điện thoại sẽ hiện ở đây sau lần đồng bộ đầu tiên.</string>
+	<key>call.empty_title</key>
+	<string>Chưa có cuộc gọi</string>
 	<key>call.end</key>
 	<string>Kết thúc</string>
 	<key>call.end_and_answer</key>
 	<string>Kết thúc và nghe</string>
+	<key>call.end_tooltip</key>
+	<string>Kết thúc cuộc gọi</string>
 	<key>call.hold</key>
 	<string>Giữ máy</string>
 	<key>call.hold_and_answer</key>
@@ -74,6 +84,10 @@
 	<string>Số ẩn</string>
 	<key>call.outgoing_call</key>
 	<string>Cuộc gọi đi</string>
+	<key>call.permission_instructions_body</key>
+	<string>Trên điện thoại, mở HandLive và vào Cài đặt › Quyền và chạy nền. Chạm Cấp quyền ở mục Cuộc gọi, hoặc Mở cài đặt nếu quyền đã bị từ chối, rồi cho phép Điện thoại, Nhật ký cuộc gọi và Danh bạ.</string>
+	<key>call.permission_instructions_title</key>
+	<string>Cấp quyền cuộc gọi trên điện thoại</string>
 	<key>call.quick_reply_call_back</key>
 	<string>Tôi sẽ gọi lại sau</string>
 	<key>call.quick_reply_in_meeting</key>
@@ -92,6 +106,18 @@
 	<string>Có cuộc gọi chờ</string>
 	<key>call.title</key>
 	<string>Cuộc gọi</string>
+	<key>call.type_blocked</key>
+	<string>Cuộc gọi bị chặn</string>
+	<key>call.type_incoming</key>
+	<string>Cuộc gọi đến</string>
+	<key>call.type_missed</key>
+	<string>Cuộc gọi nhỡ</string>
+	<key>call.type_outgoing</key>
+	<string>Cuộc gọi đi</string>
+	<key>call.type_rejected</key>
+	<string>Cuộc gọi bị từ chối</string>
+	<key>call.type_voicemail</key>
+	<string>Thư thoại</string>
 	<key>call.unknown_caller</key>
 	<string>Không rõ số</string>
 	<key>call.waiting_handle_on_phone</key>
@@ -378,6 +404,8 @@
 	<string>Xóa khóa bảo mật, thiết bị đã ghép, tin nhắn và nhật ký cuộc gọi đã đồng bộ cùng mọi cài đặt trên thiết bị này. Không thể hoàn tác.</string>
 	<key>settings.delete_all_offline_confirm</key>
 	<string>Không kết nối được máy chủ. Vẫn xóa trên thiết bị này?</string>
+	<key>settings.focus_permission_hint</key>
+	<string>Để đổ chuông, hãy cho phép HandLive đọc trạng thái Tập trung trong Cài đặt hệ thống › Quyền riêng tư &amp; Bảo mật › Tập trung.</string>
 	<key>settings.general</key>
 	<string>Chung</string>
 	<key>settings.internet_connection</key>
@@ -400,6 +428,12 @@
 	<string>Điện thoại</string>
 	<key>settings.quick_replies</key>
 	<string>Tin trả lời nhanh</string>
+	<key>settings.quick_replies_footer</key>
+	<string>Tối đa 6 tin, mỗi tin 160 ký tự. Chọn một tin khi từ chối cuộc gọi trên Mac này.</string>
+	<key>settings.quick_reply_add</key>
+	<string>Thêm tin trả lời nhanh</string>
+	<key>settings.quick_reply_remove</key>
+	<string>Xóa tin trả lời nhanh</string>
 	<key>settings.remove_from_server</key>
 	<string>Xóa thiết bị khỏi máy chủ</string>
 	<key>settings.remove_from_server_confirm</key>

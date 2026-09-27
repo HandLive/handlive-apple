@@ -11,6 +11,10 @@ public enum L10n {
         public static func callIncomingFrom(caller: String) -> String {
             L10nLookup.format("a11y.call_incoming_from", caller)
         }
+        /// one: {count} missed call | other: {count} missed calls
+        public static func missedCalls(count: Int) -> String {
+            L10nLookup.format("a11y.missed_calls", count)
+        }
         /// {sender}, {time}
         public static func smsBubbleReceived(sender: String, time: String) -> String {
             L10nLookup.format("a11y.sms_bubble_received", sender, time)
@@ -31,6 +35,8 @@ public enum L10n {
         public static var answerOnMac: String { L10nLookup.string("call.answer_on_mac") }
         /// Answer on Phone
         public static var answerOnPhone: String { L10nLookup.string("call.answer_on_phone") }
+        /// Answer the call
+        public static var answerTooltip: String { L10nLookup.string("call.answer_tooltip") }
         /// Answering…
         public static var answering: String { L10nLookup.string("call.answering") }
         /// Audio: Mac
@@ -49,14 +55,22 @@ public enum L10n {
         public static var decline: String { L10nLookup.string("call.decline") }
         /// Couldn't decline the call. It's still ringing on the phone.
         public static var declineFailed: String { L10nLookup.string("call.decline_failed") }
+        /// Decline the call
+        public static var declineTooltip: String { L10nLookup.string("call.decline_tooltip") }
         /// Decline with Message…
         public static var declineWithMessageEllipsis: String { L10nLookup.string("call.decline_with_message_ellipsis") }
         /// Declining…
         public static var declining: String { L10nLookup.string("call.declining") }
+        /// Calls from your phone appear here after the first sync.
+        public static var emptyBody: String { L10nLookup.string("call.empty_body") }
+        /// No Calls Yet
+        public static var emptyTitle: String { L10nLookup.string("call.empty_title") }
         /// End
         public static var end: String { L10nLookup.string("call.end") }
         /// End & Answer
         public static var endAndAnswer: String { L10nLookup.string("call.end_and_answer") }
+        /// End the call
+        public static var endTooltip: String { L10nLookup.string("call.end_tooltip") }
         /// Hold
         public static var hold: String { L10nLookup.string("call.hold") }
         /// Hold & Answer
@@ -97,6 +111,10 @@ public enum L10n {
         public static var noCallerId: String { L10nLookup.string("call.no_caller_id") }
         /// Outgoing Call
         public static var outgoingCall: String { L10nLookup.string("call.outgoing_call") }
+        /// On your phone, open HandLive and go to Settings › Permissions & Background. Tap Grant Permission under Calls, or Open Settings if the permission was denied, and allow Phone, Call logs, and Contacts.
+        public static var permissionInstructionsBody: String { L10nLookup.string("call.permission_instructions_body") }
+        /// Grant Call Permission on Your Phone
+        public static var permissionInstructionsTitle: String { L10nLookup.string("call.permission_instructions_title") }
         /// I'll call you back later
         public static var quickReplyCallBack: String { L10nLookup.string("call.quick_reply_call_back") }
         /// I'm in a meeting
@@ -117,6 +135,18 @@ public enum L10n {
         public static var statusWaiting: String { L10nLookup.string("call.status_waiting") }
         /// Calls
         public static var title: String { L10nLookup.string("call.title") }
+        /// Blocked call
+        public static var typeBlocked: String { L10nLookup.string("call.type_blocked") }
+        /// Incoming call
+        public static var typeIncoming: String { L10nLookup.string("call.type_incoming") }
+        /// Missed call
+        public static var typeMissed: String { L10nLookup.string("call.type_missed") }
+        /// Outgoing call
+        public static var typeOutgoing: String { L10nLookup.string("call.type_outgoing") }
+        /// Declined call
+        public static var typeRejected: String { L10nLookup.string("call.type_rejected") }
+        /// Voicemail
+        public static var typeVoicemail: String { L10nLookup.string("call.type_voicemail") }
         /// Unknown Caller
         public static var unknownCaller: String { L10nLookup.string("call.unknown_caller") }
         /// Handle it on the phone or connect via Bluetooth
@@ -461,6 +491,8 @@ public enum L10n {
         public static var deleteAllDataWarning: String { L10nLookup.string("settings.delete_all_data_warning") }
         /// Couldn't connect to the server. Delete from this device anyway?
         public static var deleteAllOfflineConfirm: String { L10nLookup.string("settings.delete_all_offline_confirm") }
+        /// To ring, allow HandLive to read your Focus status in System Settings › Privacy & Security › Focus.
+        public static var focusPermissionHint: String { L10nLookup.string("settings.focus_permission_hint") }
         /// General
         public static var general: String { L10nLookup.string("settings.general") }
         /// Internet Connection
@@ -483,6 +515,12 @@ public enum L10n {
         public static var phone: String { L10nLookup.string("settings.phone") }
         /// Quick Replies
         public static var quickReplies: String { L10nLookup.string("settings.quick_replies") }
+        /// Up to 6 replies of 160 characters. Choose one when you decline a call on this Mac.
+        public static var quickRepliesFooter: String { L10nLookup.string("settings.quick_replies_footer") }
+        /// Add Quick Reply
+        public static var quickReplyAdd: String { L10nLookup.string("settings.quick_reply_add") }
+        /// Remove Quick Reply
+        public static var quickReplyRemove: String { L10nLookup.string("settings.quick_reply_remove") }
         /// Remove Device from Server
         public static var removeFromServer: String { L10nLookup.string("settings.remove_from_server") }
         /// Remove from Server

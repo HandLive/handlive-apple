@@ -37,6 +37,42 @@
         }
       }
     },
+    "a11y.missed_calls" : {
+      "comment" : "VoiceOver text of the missed-call badge on the Calls item of the Mac Messages window and on the Calls tab (iPhone, iPad): the pair's unseen missed calls (CALL-04 field 7)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$lld missed call"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$lld missed calls"
+                }
+              }
+            }
+          }
+        },
+        "vi" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$lld cuộc gọi nhỡ"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "a11y.sms_bubble_received" : {
       "comment" : "VoiceOver label of a received message bubble (SMS-03 special requirements); {sender} = the conversation name, or the sender's number in national format in a group conversation; {time} formatted by the system; the message text is the accessibility value, read after the label",
       "extractionState" : "manual",
@@ -159,6 +195,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nghe trên điện thoại"
+          }
+        }
+      }
+    },
+    "call.answer_tooltip" : {
+      "comment" : "Tooltip of the round Answer button of the ringing Mac call panel (CALL-01 field 6); at most 75 characters",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Answer the call"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trả lời cuộc gọi"
           }
         }
       }
@@ -325,6 +379,24 @@
         }
       }
     },
+    "call.decline_tooltip" : {
+      "comment" : "Tooltip of the round Decline button of the ringing Mac call panel (CALL-01 field 7); at most 75 characters",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Decline the call"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Từ chối cuộc gọi"
+          }
+        }
+      }
+    },
     "call.decline_with_message_ellipsis" : {
       "comment" : "Text button of the ringing Mac call panel opening the quick-reply menu (the call.quick_replies templates, then call.custom_message_ellipsis); only when controls.reject = true, the number is known, SMS is in effect and the phone can send SMS (CALL-01 field 8, CALL-02 field 5)",
       "extractionState" : "manual",
@@ -361,6 +433,42 @@
         }
       }
     },
+    "call.empty_body" : {
+      "comment" : "Empty-state sentence under call.empty_title (CALL-04 field 1)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Calls from your phone appear here after the first sync."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuộc gọi từ điện thoại sẽ hiện ở đây sau lần đồng bộ đầu tiên."
+          }
+        }
+      }
+    },
+    "call.empty_title" : {
+      "comment" : "Empty state of the call list (Mac Messages window › Calls, iPhone/iPad Calls tab), like SMS-03 E1 (CALL-04 field 1); sentence call.empty_body",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Calls Yet"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chưa có cuộc gọi"
+          }
+        }
+      }
+    },
     "call.end" : {
       "comment" : "Red round End button of the in-call Mac call panel (phone.down.fill; also its accessibility label); shown when waiting = false and controls.end = true or the Mac has a Bluetooth HFP link (CALL-03 field 5)",
       "extractionState" : "manual",
@@ -393,6 +501,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kết thúc và nghe"
+          }
+        }
+      }
+    },
+    "call.end_tooltip" : {
+      "comment" : "Tooltip of the round End button of the in-call Mac call panel (CALL-03 field 5); at most 75 characters",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "End the call"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kết thúc cuộc gọi"
           }
         }
       }
@@ -560,7 +686,7 @@
       }
     },
     "call.missed_body" : {
-      "comment" : "Body of a missed-call notification; {time} = the call's ts formatted by the system (“2:05 PM”); with a SIM label: call.missed_body_sim (CALL-04 field 8, API 4)",
+      "comment" : "Body of a missed-call notification, and the text of a missed call among the recent items of the Mac menu bar menu (CALL-04 API 4 logic 5); {time} = the call's ts formatted by the system (“2:05 PM”); with a SIM label: call.missed_body_sim (CALL-04 field 8, API 4)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -578,7 +704,7 @@
       }
     },
     "call.missed_body_sim" : {
-      "comment" : "Body of a missed-call notification when the phone has more than one SIM; {time} as in call.missed_body; {sim_label} = the label of the SIM with the call's sub_id in features.sms.sims (never translated) (CALL-04 fields 6, 8, API 4)",
+      "comment" : "call.missed_body when the phone has more than one SIM (notification body, Mac menu bar recent item); {time} as in call.missed_body; {sim_label} = the label of the SIM with the call's sub_id in features.sms.sims (never translated) (CALL-04 fields 6, 8, API 4)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -596,7 +722,7 @@
       }
     },
     "call.missed_call" : {
-      "comment" : "hiddenPreviewsBodyPlaceholder of the HL_CALL_MISSED category (design system Notifications); the APNs text for a locked iPhone is push.call_missed (CALL-04 API 4)",
+      "comment" : "hiddenPreviewsBodyPlaceholder of the HL_CALL_MISSED category (CALL-04 API 4); the APNs text for a locked iPhone is push.call_missed",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -632,7 +758,7 @@
       }
     },
     "call.mute_tooltip" : {
-      "comment" : "Tooltip of call.mute in the Mac call panel (design system CallPanel); at most 75 characters",
+      "comment" : "Tooltip of call.mute in the in-call Mac call panel (CALL-03 field 9); at most 75 characters",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -650,7 +776,7 @@
       }
     },
     "call.no_caller_id" : {
-      "comment" : "Shown instead of the caller's name and number when the caller withholds the number (presentation = restricted): Mac call panel, iPhone/iPad banner, notification titles; also the call log row and the missed-call notification title when number = null (CALL-01 field 3, CALL-04 fields 2, 8)",
+      "comment" : "Shown instead of the caller's name and number when the caller withholds the number (presentation = restricted): Mac call panel, iPhone/iPad banner, notification titles; also the call log row and the missed-call notification title of a call log entry without number (CALL-01 field 3, CALL-04 fields 2, 8)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -681,6 +807,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cuộc gọi đi"
+          }
+        }
+      }
+    },
+    "call.permission_instructions_body" : {
+      "comment" : "Message of the same alert (PAIR-02 field 9); the Android names are the catalog texts of settings.title, settings.permissions_background, settings.calls, permission.grant, common.open_settings; the Android permission group names (Phone, Call logs, Contacts) are to be checked on a device",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On your phone, open HandLive and go to Settings › Permissions & Background. Tap Grant Permission under Calls, or Open Settings if the permission was denied, and allow Phone, Call logs, and Contacts."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trên điện thoại, mở HandLive và vào Cài đặt › Quyền và chạy nền. Chạm Cấp quyền ở mục Cuộc gọi, hoặc Mở cài đặt nếu quyền đã bị từ chối, rồi cho phép Điện thoại, Nhật ký cuộc gọi và Danh bạ."
+          }
+        }
+      }
+    },
+    "call.permission_instructions_title" : {
+      "comment" : "Title of the alert opened by a missing call permission in the device details (PAIR-02 field 9): READ_CALL_LOG, ANSWER_PHONE_CALLS, and READ_PHONE_STATE or READ_CONTACTS while the phone's calls are on; message call.permission_instructions_body, single button common.ok",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grant Call Permission on Your Phone"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cấp quyền cuộc gọi trên điện thoại"
           }
         }
       }
@@ -847,8 +1009,116 @@
         }
       }
     },
+    "call.type_blocked" : {
+      "comment" : "VoiceOver label of the call type icon of a call log row, type blocked (CALL-04 field 3)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blocked call"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuộc gọi bị chặn"
+          }
+        }
+      }
+    },
+    "call.type_incoming" : {
+      "comment" : "VoiceOver label of the call type icon of a call log row, type incoming (CALL-04 field 3)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Incoming call"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuộc gọi đến"
+          }
+        }
+      }
+    },
+    "call.type_missed" : {
+      "comment" : "VoiceOver label of the call type icon of a call log row, type missed (CALL-04 field 3)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Missed call"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuộc gọi nhỡ"
+          }
+        }
+      }
+    },
+    "call.type_outgoing" : {
+      "comment" : "VoiceOver label of the call type icon of a call log row, type outgoing (CALL-04 field 3)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Outgoing call"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuộc gọi đi"
+          }
+        }
+      }
+    },
+    "call.type_rejected" : {
+      "comment" : "VoiceOver label of the call type icon of a call log row, type rejected (CALL-04 field 3)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Declined call"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuộc gọi bị từ chối"
+          }
+        }
+      }
+    },
+    "call.type_voicemail" : {
+      "comment" : "VoiceOver label of the call type icon of a call log row, type voicemail (CALL-04 field 3)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voicemail"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thư thoại"
+          }
+        }
+      }
+    },
     "call.unknown_caller" : {
-      "comment" : "Shown instead of the caller's number when it is unknown (presentation = unknown, for example READ_CALL_LOG missing on the phone, then with call.caller_id_permission_hint), and for a waiting caller without number and name (CALL-01 fields 3, 5, E2)",
+      "comment" : "Shown instead of the caller's number when it is unknown (presentation = unknown, for example READ_CALL_LOG missing on the phone, then with call.caller_id_permission_hint), for a waiting caller without number and name (CALL-01 fields 3, 5, E2), and as the missed-call notification title without the call log, flow A (CALL-04 field 8, API 4)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -2702,7 +2972,7 @@
       }
     },
     "pairing.reason_missing_permission" : {
-      "comment" : "Reason under a feature that lacks an Android permission (permissions_missing)",
+      "comment" : "Reason under a feature that lacks an Android permission (permissions_missing); on Android, the Calls row of a device's details when READ_PHONE_STATE is missing",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -3421,6 +3691,24 @@
         }
       }
     },
+    "settings.focus_permission_hint" : {
+      "comment" : "Hint under Ring on Mac in the Mac Calls pane while HandLive may not read the Focus status, so the panel shows without ringing (SET-02 field 12, CALL-01 E4); macOS names as the system shows them, to be checked on a real Mac",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To ring, allow HandLive to read your Focus status in System Settings › Privacy & Security › Focus."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Để đổ chuông, hãy cho phép HandLive đọc trạng thái Tập trung trong Cài đặt hệ thống › Quyền riêng tư & Bảo mật › Tập trung."
+          }
+        }
+      }
+    },
     "settings.general" : {
       "comment" : "Mac Settings pane title (toolbar item)",
       "extractionState" : "manual",
@@ -3602,7 +3890,7 @@
       }
     },
     "settings.quick_replies" : {
-      "comment" : "Title of the list of call.quick_replies templates in the Mac Calls pane: add, edit, delete, reorder, at most 6 templates of 160 characters (CALL-02 field 8; design system Settings)",
+      "comment" : "Title of the list of call.quick_replies templates in the Mac Calls pane (SET-02 field 33): add (settings.quick_reply_add), edit, remove (settings.quick_reply_remove), reorder, at most 6 templates of 160 characters, caption settings.quick_replies_footer (CALL-02 field 8)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -3615,6 +3903,60 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tin trả lời nhanh"
+          }
+        }
+      }
+    },
+    "settings.quick_replies_footer" : {
+      "comment" : "Caption under the Quick Replies list of the Mac Calls pane (CALL-02 field 8)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Up to 6 replies of 160 characters. Choose one when you decline a call on this Mac."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tối đa 6 tin, mỗi tin 160 ký tự. Chọn một tin khi từ chối cuộc gọi trên Mac này."
+          }
+        }
+      }
+    },
+    "settings.quick_reply_add" : {
+      "comment" : "Adds a template to the Quick Replies list of the Mac Calls pane: the add button's label, or its accessibility label and tooltip when the button only shows +; unavailable at 6 templates (CALL-02 field 8)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Quick Reply"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thêm tin trả lời nhanh"
+          }
+        }
+      }
+    },
+    "settings.quick_reply_remove" : {
+      "comment" : "Removes the selected template from the Quick Replies list of the Mac Calls pane: the remove button's label, or its accessibility label and tooltip when the button only shows − (CALL-02 field 8)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove Quick Reply"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Xóa tin trả lời nhanh"
           }
         }
       }
