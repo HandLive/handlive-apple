@@ -53,7 +53,7 @@ final class NotificationService: UNNotificationServiceExtension {
         case .incoming(let state):
             let content = CallNotificationBuilder.incoming(state, pairId: call.pairId, platform: .mobile,
                                                            level: .timeSensitive, nowMs: nowMs)
-            let late = content.categoryIdentifier == nil
+            let late = nowMs - state.startedAt > CallNotificationBuilder.latePushMs
             BenchLog.event("call_push_shown", ["call": state.callId, "reason": "call_incoming",
                                                "late": late ? "true" : "false"])
             let base = content.makeContent(base: request.content)
