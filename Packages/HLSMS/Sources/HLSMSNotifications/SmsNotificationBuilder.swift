@@ -61,10 +61,11 @@ public enum SmsNotificationBuilder {
     }
 
     /// `HL_SMS` with "Reply" (text field, "Send") and "Mark as Read"; `HL_SMS_GROUP` with "Mark as Read" only. The
-    /// placeholder replaces the body when the user hides previews in the system settings.
+    /// placeholder replaces the body when the user hides previews in the system settings. "Reply" runs only on an
+    /// unlocked device: sending needs the pair's `PRK`, which the Keychain gives out only then (C3).
     public static func categories() -> Set<UNNotificationCategory> {
         let reply = UNTextInputNotificationAction(
-            identifier: SmsNotificationKeys.replyAction, title: L10n.Sms.reply, options: [],
+            identifier: SmsNotificationKeys.replyAction, title: L10n.Sms.reply, options: [.authenticationRequired],
             icon: UNNotificationActionIcon(systemImageName: "arrowshape.turn.up.left"),
             textInputButtonTitle: L10n.Sms.send, textInputPlaceholder: L10n.Sms.composePlaceholder)
         let markRead = UNNotificationAction(identifier: SmsNotificationKeys.markReadAction, title: L10n.Sms.markAsRead,

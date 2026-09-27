@@ -41,12 +41,13 @@ struct SmsNotificationTests {
         #expect(group.categoryIdentifier == "HL_SMS_GROUP" && group.title == "090 000 0123, 090 000 0456")
     }
 
-    @Test("Categories: Reply with a text field and Mark as Read; groups only Mark as Read")
+    @Test("Categories: Reply with a text field, only once unlocked, and Mark as Read; groups only Mark as Read")
     func categories() throws {
         let categories = SmsNotificationBuilder.categories()
         let single = try #require(categories.first { $0.identifier == "HL_SMS" })
         #expect(single.actions.map(\.identifier) == ["HL_SMS_REPLY", "HL_SMS_MARK_READ"])
         #expect(single.actions.first is UNTextInputNotificationAction)
+        #expect(single.actions.first?.options.contains(.authenticationRequired) == true)
         #expect(!single.actions.contains { $0.options.contains(.foreground) })
         let group = try #require(categories.first { $0.identifier == "HL_SMS_GROUP" })
         #expect(group.actions.map(\.identifier) == ["HL_SMS_MARK_READ"])
