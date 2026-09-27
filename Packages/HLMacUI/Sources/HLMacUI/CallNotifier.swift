@@ -50,38 +50,17 @@ public final class UserNotificationCalls: CallNotifying {
     }
 
     public func postMissed(_ missed: MissedCall, canMessage: Bool) {
-        let content = CallNotificationBuilder.missed(missed, canMessage: canMessage)
-        let request = UNNotificationRequest(identifier: content.identifier ?? UUID().uuidString,
-                                            content: content.makeContent(), trigger: nil)
-        var bench = [("call", missed.callId ?? "none"), ("source", missed.entryId == nil ? "state" : "log_new")]
-        if let entry = missed.entryId { bench.append(("entry", String(entry))) }
-        let fields = bench
-        UNUserNotificationCenter.current().add(request) {
-            if $0 == nil { BenchLog.event("call_missed_notified", fields: fields) }
-        }
+        CallNotificationCenter.postMissed(missed, canMessage: canMessage)
     }
 
     public func removeMissed(pairId: String, entryId: Int64?) {
-        let center = UNUserNotificationCenter.current()
-        center.getDeliveredNotifications { delivered in
-            let identifiers = CallNotificationFilter.missedIdentifiers(in: delivered.map(Self.item), pairId: pairId,
-                                                                       entryId: entryId)
-            if !identifiers.isEmpty { center.removeDeliveredNotifications(withIdentifiers: identifiers) }
+        CallNotificationCenter.removeDelivered {
+            CallNotificationFilter.missedIdentifiers(in: $0, pairId: pairId, entryId: entryId)
         }
     }
 
     public func removeAllCalls() {
         posted.removeAll()
-        let center = UNUserNotificationCenter.current()
-        center.getDeliveredNotifications { delivered in
-            let identifiers = CallNotificationFilter.callIdentifiers(in: delivered.map(Self.item))
-            if !identifiers.isEmpty { center.removeDeliveredNotifications(withIdentifiers: identifiers) }
-        }
-    }
-
-    nonisolated static func item(_ notification: UNNotification) -> DeliveredNotification {
-        DeliveredNotification(identifier: notification.request.identifier,
-                              userInfo: notification.request.content.userInfo,
-                              category: notification.request.content.categoryIdentifier)
+        CallNotificationCenter.removeDelivered { CallNotificationFilter.callIdentifiers(in: $0) }
     }
 }

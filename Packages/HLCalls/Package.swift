@@ -28,7 +28,7 @@ let package = Package(
     targets: [
         .target(
             name: "HLCallNotifications",
-            dependencies: ["HLProtocol", "HLCrypto", "HLAppCore", "HLLocalization",
+            dependencies: ["HLProtocol", "HLCrypto", "HLTransport", "HLAppCore", "HLLocalization",
                            .product(name: "HLSMSNotifications", package: "HLSMS")]
         ),
         .target(
