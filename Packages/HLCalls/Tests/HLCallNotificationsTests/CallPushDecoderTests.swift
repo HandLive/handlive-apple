@@ -5,6 +5,7 @@ import HLLocalization
 import HLProtocol
 import HLSMSNotifications
 import Testing
+import UserNotifications
 @testable import HLCallNotifications
 
 /// CONN-04 step 9b with the call pushes of `shared/test-vectors/push-envelope.json`: ringing with and without the
@@ -78,6 +79,31 @@ struct CallPushDecoderTests {
             return
         }
         #expect(CallerIdentity(state: unknown) == .unknownCaller && unknown.simLabel == nil)
+    }
+
+    @Test("Rebuilt from the push: p and hl stay next to the call's keys; a late push has no button and keeps its level")
+    func rebuilt() throws {
+        let vector = try #require(try Self.vectors().first { $0.name == "pair 2 / call_event/state ringing" })
+        let decoded = try Self.decoded(vector.name)
+        guard case .incoming(let state) = decoded.content else {
+            Issue.record("not an incoming call")
+            return
+        }
+        let push = UNMutableNotificationContent()
+        push.userInfo = vector.payload
+        push.interruptionLevel = .timeSensitive
+        let onTime = CallNotificationBuilder.incoming(state, pairId: decoded.pairId, platform: .mobile,
+                                                      level: .timeSensitive, nowMs: state.startedAt + 1000)
+            .makeContent(base: push)
+        #expect(onTime.userInfo["p"] as? String == decoded.pairId && onTime.userInfo["hl"] is String)
+        #expect(CallNotificationInfo(onTime.userInfo)
+            == .incoming(pairId: decoded.pairId, callId: state.callId, startedAt: state.startedAt))
+        #expect(onTime.categoryIdentifier == "HL_CALL_INCOMING" && onTime.threadIdentifier == "calls")
+        let late = CallNotificationBuilder.incoming(state, pairId: decoded.pairId, platform: .mobile,
+                                                    level: .timeSensitive, nowMs: state.startedAt + 61_000)
+            .makeContent(base: push)
+        #expect(late.categoryIdentifier.isEmpty && late.interruptionLevel == .timeSensitive)
+        #expect(late.body == L10n.Call.incomingLate(time: CallNames.time(state.startedAt)))
     }
 
     @Test("Missed: from log_new with and without a matching call, and from the state without the call log")
