@@ -181,6 +181,7 @@ public final class ClipboardEngine {
             if manual, let phone { onNotice(.skippedJustReceived(deviceName: phone.name)) }
             return
         }
+        if !manual, echoesLatestLocal(content) { return }
         if settings.blockSensitive, sensitiveType || SensitiveContent.looksLikeCardNumber(text) {
             hold(content, as: .sensitiveBlocked)
             return
@@ -205,11 +206,25 @@ public final class ClipboardEngine {
         let content = ClipContent.image(image)
         if let received, received.sha256 == content.sha256,
            now().timeIntervalSince(received.at) < ClipboardConstants.loopWindow { return }
+        if !manual, echoesLatestLocal(content) { return }
         if settings.blockSensitive, sensitiveType {
             hold(content, as: .sensitiveBlocked)
             return
         }
         send(content, sensitive: false, manual: manual)
+    }
+
+    /// The clip this device just sent came back as a new change: another clipboard tool (an emulator's clipboard
+    /// sharing, Universal Clipboard, a clipboard manager) wrote it again once the phone had it. Sending it once more
+    /// would loop (QC4). The echo can overtake the phone's ack, so a clip not acknowledged yet (in flight, or kept for
+    /// replay) counts too; an applied one for `CLIP_LOOP_WINDOW` after the ack.
+    private func echoesLatestLocal(_ content: ClipContent) -> Bool {
+        guard let latestLocal, latestLocal.content.sha256 == content.sha256 else { return false }
+        if let appliedAt = latestLocal.appliedAt {
+            return now().timeIntervalSince(appliedAt) < ClipboardConstants.loopWindow
+        }
+        return !latestLocal.acknowledged
+            && now().timeIntervalSince(latestLocal.createdAt) <= ClipboardConstants.staleAfter
     }
 
     private func hold(_ content: ClipContent, as alert: ClipboardAlert) {
