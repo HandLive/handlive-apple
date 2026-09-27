@@ -27,11 +27,12 @@ struct CallNotificationTests {
     static let callId = "0192f3f0-6a1b-7c2d-8e3f-4a5b6c7d8e90"
     static let startedAt: Int64 = 1_727_150_400_123
 
+    /// As the phone reports it to an iPhone (Decline only); `answer` as to a Mac that may answer too.
     static func ringing(number: String? = "+84900000123", name: String? = "Nguyễn Văn A", sim: String? = "SIM 1",
-                        presentation: CallPresentation = .allowed) -> CallStateData {
+                        presentation: CallPresentation = .allowed, answer: Bool = false) -> CallStateData {
         CallStateData(callId: callId, direction: .incoming, state: .ringing, number: number, displayName: name,
                       presentation: presentation, subId: sim == nil ? nil : 1, simLabel: sim, startedAt: startedAt,
-                      controls: CallControls(reject: true))
+                      controls: CallControls(answer: answer, reject: true))
     }
 
     let validator: SchemaValidator
@@ -48,7 +49,7 @@ struct CallNotificationTests {
 
     @Test("Mac, panel showing: passive, identifier = call_id, Answer and Decline, SIM label in the body")
     func incomingMac() {
-        let content = CallNotificationBuilder.incoming(Self.ringing(), pairId: Self.pairId, platform: .mac,
+        let content = CallNotificationBuilder.incoming(Self.ringing(answer: true), pairId: Self.pairId, platform: .mac,
                                                        level: .passive, nowMs: Self.startedAt + 100)
         #expect(content.identifier == Self.callId && content.title == "Nguyễn Văn A")
         #expect(content.body == L10n.Call.incomingBodySim(simLabel: "SIM 1"))
@@ -56,10 +57,23 @@ struct CallNotificationTests {
         #expect(content.interruptionLevel == .passive && !content.playsSound)
         #expect(content.info == .incoming(pairId: Self.pairId, callId: Self.callId, startedAt: Self.startedAt))
         expectValid(content, "call-notification.schema.json#/$defs/incoming")
-        let focus = CallNotificationBuilder.incoming(Self.ringing(sim: nil), pairId: Self.pairId, platform: .mac,
-                                                     level: .timeSensitive, nowMs: Self.startedAt)
+        let focus = CallNotificationBuilder.incoming(Self.ringing(sim: nil, answer: true), pairId: Self.pairId,
+                                                     platform: .mac, level: .timeSensitive, nowMs: Self.startedAt)
         #expect(focus.interruptionLevel == .timeSensitive && focus.playsSound && focus.body == L10n.Call.incomingBody)
         expectValid(focus, "call-notification.schema.json#/$defs/incoming")
+    }
+
+    @Test("Mac: no Answer and Decline unless the phone allows both — never a button that does nothing")
+    func incomingMacWithoutButtons() {
+        let declineOnly = CallNotificationBuilder.incoming(Self.ringing(), pairId: Self.pairId, platform: .mac,
+                                                           level: .passive, nowMs: Self.startedAt)
+        #expect(declineOnly.categoryIdentifier == nil && declineOnly.identifier == Self.callId)
+        #expect(declineOnly.interruptionLevel == .passive)
+        expectValid(declineOnly, "call-notification.schema.json#/$defs/incoming")
+        let none = CallStateData(callId: Self.callId, direction: .incoming, state: .ringing, number: "+84900000123",
+                                 displayName: nil, presentation: .allowed, startedAt: Self.startedAt, controls: .none)
+        #expect(CallNotificationBuilder.incoming(none, pairId: Self.pairId, platform: .mac, level: .timeSensitive,
+                                                 nowMs: Self.startedAt).categoryIdentifier == nil)
     }
 
     @Test("iPhone: HL_CALL_INCOMING with the system's identifier; a push over 60 s late has no button (E7)")

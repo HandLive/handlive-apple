@@ -5,9 +5,9 @@ import UserNotifications
 /// Identifiers of call notifications (CALL-01 API 6–7, CALL-04 API 4): categories, actions, thread and request
 /// identifiers, and the `userInfo` keys the actions read back.
 public enum CallNotificationKeys {
-    /// iPhone and iPad: "Decline" only (CALL-01 API 6).
+    /// iPhone and iPad: "Decline" only (CALL-01 API 6), when `controls.reject` allows it.
     public static let incomingCategory = "HL_CALL_INCOMING"
-    /// Mac: "Answer" and "Decline" (CALL-01 API 7).
+    /// Mac: "Answer" and "Decline" (CALL-01 API 7), when `controls` allow both.
     public static let incomingMacCategory = "HL_CALL_INCOMING_MAC"
     /// Missed call with "Message" (CALL-04 API 4).
     public static let missedCategory = "HL_CALL_MISSED"

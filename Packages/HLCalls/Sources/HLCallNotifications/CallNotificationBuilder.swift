@@ -18,8 +18,9 @@ public enum CallNotificationBuilder {
     public static let latePushMs: Int64 = 60_000
 
     /// The incoming call (field 11 on iPhone/iPad, field 15 on the Mac): the caller as the title, "Incoming call" (with
-    /// the SIM label when the phone has two SIMs) as the body. A late push on iPhone/iPad keeps no button and the level
-    /// the relay gave it (E7); so does a call the phone lets nobody decline (`controls.reject = false`, field 7).
+    /// the SIM label when the phone has two SIMs) as the body. The buttons follow `controls` (field 7), so none of them
+    /// ever does nothing: iPhone and iPad get "Decline" when the phone allows it, the Mac "Answer" and "Decline" only
+    /// when it allows both. A late push on iPhone/iPad has no button and keeps the level the relay gave it (E7).
     public static func incoming(_ state: CallStateData, pairId: String, platform: Platform,
                                 level: CallNotificationContent.Level, nowMs: Int64) -> CallNotificationContent {
         let late = platform == .mobile && nowMs - state.startedAt > latePushMs
@@ -31,14 +32,21 @@ public enum CallNotificationBuilder {
         } else {
             body = L10n.Call.incomingBody
         }
-        let category = platform == .mac ? CallNotificationKeys.incomingMacCategory
-            : state.controls.reject ? CallNotificationKeys.incomingCategory : nil
+        let category = category(state.controls, platform: platform)
         return CallNotificationContent(
             identifier: platform == .mac ? state.callId : nil, title: CallNames.title(CallerIdentity(state: state)),
             body: body, threadIdentifier: CallNotificationKeys.threadIdentifier,
             categoryIdentifier: late ? nil : category, interruptionLevel: late ? nil : level,
             playsSound: platform == .mac && level == .timeSensitive,
             info: .incoming(pairId: pairId, callId: state.callId, startedAt: state.startedAt))
+    }
+
+    /// The category whose actions `controls` all allow, or none.
+    static func category(_ controls: CallControls, platform: Platform) -> String? {
+        switch platform {
+        case .mac: controls.answer && controls.reject ? CallNotificationKeys.incomingMacCategory : nil
+        case .mobile: controls.reject ? CallNotificationKeys.incomingCategory : nil
+        }
     }
 
     /// A missed call (CALL-04 field 8): the caller, "Missed call · 2:05 PM" (with the SIM label), and "Message" only
@@ -80,7 +88,8 @@ public enum CallNotificationBuilder {
         return (try? content.updating(from: intent)) ?? content
     }
 
-    /// The Mac's categories: `HL_CALL_INCOMING_MAC` with "Answer" and "Decline", `HL_CALL_MISSED` with "Message".
+    /// The Mac's categories: `HL_CALL_INCOMING_MAC` with "Answer" and "Decline" (set only when the phone allows both),
+    /// `HL_CALL_MISSED` with "Message".
     public static func macCategories() -> Set<UNNotificationCategory> {
         let incoming = UNNotificationCategory(
             identifier: CallNotificationKeys.incomingMacCategory,
