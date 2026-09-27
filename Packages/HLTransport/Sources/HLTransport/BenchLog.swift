@@ -8,18 +8,22 @@ public enum BenchLog {
         case macos, ios
     }
 
-    /// `dev` and `role` of the lines.
+    /// `dev` and `role` of the lines, and the unified-log subsystem they go to.
     struct Identity: Equatable {
         var device = "00000000"
         var role = Role.macos
+        var subsystem = "app.handlive.mac"
     }
 
     private static let identity = OSAllocatedUnfairLock(initialState: Identity())
 
-    /// Sets the `dev` (first 8 hex digits of `device_id`) and `role` of every later line.
-    public static func configure(deviceId: String, role: Role) {
+    /// Sets the `dev` (first 8 hex digits of `device_id`) and `role` of every later line. The subsystem is the app's
+    /// (`app.handlive.mac`, `app.handlive.ios`) unless given: the Notification Service Extension logs under
+    /// `app.handlive.ios.nse` with the role `ios` (shared/tools/bench/README.md).
+    public static func configure(deviceId: String, role: Role, subsystem: String? = nil) {
         let prefix = String(deviceId.replacingOccurrences(of: "-", with: "").prefix(8))
-        identity.withLock { $0 = Identity(device: prefix, role: role) }
+        let name = subsystem ?? (role == .macos ? "app.handlive.mac" : "app.handlive.ios")
+        identity.withLock { $0 = Identity(device: prefix, role: role, subsystem: name) }
     }
 
     /// Logs one event in debug builds: `BenchLog.event("state", ["from": "Discovering", "to": "Connected"])`.
@@ -33,8 +37,7 @@ public enum BenchLog {
         let current = identity.withLock { $0 }
         let text = line(wallMs: Date().timeIntervalSince1970 * 1000, monoNs: clock_gettime_nsec_np(CLOCK_MONOTONIC_RAW),
                         identity: current, event: name, fields: fields)
-        Logger(subsystem: current.role == .macos ? "app.handlive.mac" : "app.handlive.ios", category: "bench")
-            .info("\(text, privacy: .public)")
+        Logger(subsystem: current.subsystem, category: "bench").info("\(text, privacy: .public)")
         #endif
     }
 
