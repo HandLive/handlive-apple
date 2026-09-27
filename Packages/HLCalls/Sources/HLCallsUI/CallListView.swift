@@ -23,7 +23,7 @@ public struct CallListView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             if model.entries.isEmpty, model.status != .permissionMissing {
-                emptyState
+                CallsEmptyView()
             }
             ForEach(model.entries) { record in
                 CallRowView(record: record, simLabel: model.simLabel(subId: record.subId))
@@ -34,8 +34,14 @@ public struct CallListView: View {
         .onDisappear { model.setVisible(false) }
     }
 
-    /// Field 1 with no entries yet, like SMS-03 E1: "No Calls Yet".
-    private var emptyState: some View {
+}
+
+/// Field 1 with no entries yet, like SMS-03 E1: "No Calls Yet" · "Calls from your phone appear here after the first
+/// sync."
+public struct CallsEmptyView: View {
+    public init() {}
+
+    public var body: some View {
         VStack(spacing: HLSpacing.space8) {
             Image(systemName: "phone").font(.largeTitle).foregroundStyle(Color.secondary)
             Text(L10n.Call.emptyTitle).font(.headline)

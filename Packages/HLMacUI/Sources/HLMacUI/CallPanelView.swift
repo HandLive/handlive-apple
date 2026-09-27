@@ -100,7 +100,7 @@ struct CallPanelView: View {
             note(L10n.Call.connectionLost, color: .hl(.textOrange))
         }
         if let problem = call.problem {
-            note(Self.text(problem, phoneName: model.phoneName), color: .hl(.textRed))
+            note(CallDisplay.problemText(problem, phoneName: model.phoneName), color: .hl(.textRed))
         }
     }
 
@@ -109,20 +109,6 @@ struct CallPanelView: View {
             .hlTextStyle(.macFootnote)
             .foregroundStyle(color)
             .fixedSize(horizontal: false, vertical: true)
-    }
-
-    /// CALL-02 field 10, CALL-03 field 12.
-    static func text(_ problem: CallProblem, phoneName: String) -> String {
-        switch problem {
-        case .callEnded: L10n.Error.callNotFound
-        case .answeredOnPhone: L10n.Error.callActionNotAllowed
-        case .endOnPhone: L10n.Error.callEndOnPhone
-        case .answerPermissionMissing: L10n.Error.callAnswerPermission
-        case .featureOffOnPhone: L10n.Error.featureDisabled(deviceName: phoneName)
-        case .commandNotSent: L10n.Error.callCommandNotSent
-        case .messageNotSent: L10n.Error.callMessageNotSent
-        case .bluetoothRequired: L10n.Error.callHfpRequired
-        }
     }
 
     // MARK: - Buttons

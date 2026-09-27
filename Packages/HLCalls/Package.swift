@@ -39,7 +39,8 @@ let package = Package(
         .target(
             name: "HLCallsUI",
             dependencies: ["HLCalls", "HLCallNotifications", "HLAppCore", "HLDesignSystem", "HLLocalization",
-                           "HLProtocol", .product(name: "GRDB", package: "GRDB")],
+                           "HLProtocol", .product(name: "HLSMSNotifications", package: "HLSMS"),
+                           .product(name: "GRDB", package: "GRDB")],
             swiftSettings: useSwiftTestingPackage ? [.define("HL_COMMAND_LINE_TOOLS_ONLY")] : []
         ),
         .testTarget(

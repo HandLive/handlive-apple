@@ -3,12 +3,17 @@ import HLDesignSystem
 import HLSMSNotifications
 import SwiftUI
 
-/// The caller's avatar: initials on the Contacts gray, or a person symbol for a number.
-struct CallerAvatar: View {
+/// The caller's avatar on the Mac panel and the iPhone/iPad banner: initials on the Contacts gray, or a person symbol
+/// for a number.
+public struct CallerAvatar: View {
     let caller: CallerIdentity
     private let side: CGFloat = HLSize.avatar
 
-    var body: some View {
+    public init(caller: CallerIdentity) {
+        self.caller = caller
+    }
+
+    public var body: some View {
         ZStack {
             Circle().fill(LinearGradient(colors: [Color(white: 0.66), Color(white: 0.53)], startPoint: .top,
                                          endPoint: .bottom))
