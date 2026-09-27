@@ -596,7 +596,7 @@
       }
     },
     "call.incoming_body_sim" : {
-      "comment" : "Body of the incoming-call notification when the phone has more than one SIM and the ringing SIM is known; {sim_label} = sim_label of call_event/state, the SIM name set on the phone (never translated); the design system's call panel shows the same line under the caller (CALL-01 fields 4, 11, 15, API 6, API 7)",
+      "comment" : "Body of the incoming-call notification when the phone has more than one SIM and the ringing SIM is known: the iPhone/iPad notification rebuilt by the service extension and the Mac communication notification; {sim_label} = sim_label of call_event/state, the SIM name set on the phone (never translated). The Mac call panel and the iPhone/iPad in-app banner do not use it: they show call.incoming_title and the SIM label as separate fields (CALL-01 fields 1, 4, 11, 15, API 6, API 7)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -632,7 +632,7 @@
       }
     },
     "call.incoming_title" : {
-      "comment" : "Title of the ringing Mac call panel and of the iPhone/iPad in-app banner; call.waiting_title for a call waiting during another call (CALL-01 field 1)",
+      "comment" : "Title of the ringing Mac call panel and of the iPhone/iPad in-app banner; the banner uses call.waiting_title for a call waiting during another call, the Mac shows it inside the in-call panel (CALL-01 field 1)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -1154,7 +1154,7 @@
       }
     },
     "call.waiting_title" : {
-      "comment" : "Title of the Mac call panel and of the iPhone/iPad banner instead of call.incoming_title when a second call rings during a call (waiting = true) (CALL-01 field 1, E9)",
+      "comment" : "Title of the iPhone/iPad in-app banner only, instead of call.incoming_title when a second call rings during a call (waiting = true) (CALL-01 field 1, E9); the Mac shows a waiting call inside the in-call panel with call.status_waiting instead (CALL-03 field 3, E7)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
