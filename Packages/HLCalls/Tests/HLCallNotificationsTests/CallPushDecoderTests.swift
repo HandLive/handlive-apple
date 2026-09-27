@@ -156,8 +156,41 @@ struct CallPushDecoderTests {
             CallStateData(callId: "c3", direction: .incoming, state: .ringing, number: nil, displayName: nil,
                           presentation: .unknown, startedAt: 2000, controls: .none)
         }
-        #expect(stale == ["a", "d"])
+        #expect(stale == ["a"]) // "d" is no push of ours
         #expect(CallNotificationFilter.missedIdentifiers(in: delivered, pairId: pairId) == ["c"])
         #expect(CallNotificationFilter.missedIdentifiers(in: delivered, pairId: pairId, entryId: 8).isEmpty)
+        #expect(CallNotificationFilter.callIdentifiers(in: delivered) == ["a", "b", "c"])
+    }
+
+    @Test("Generic call pushes: removed with their call, when stale, with the pair's missed calls; SMS pushes stay")
+    func genericFilters() throws {
+        let vectors = try Self.vectors()
+        let ringing = try #require(vectors.first { $0.name == "pair 2 / call_event/state ringing" })
+        let missed = try #require(vectors.first { $0.name == "pair 2 / call_event/log_new missed call" })
+        let sms = try #require(vectors.first { $0.type == "sms" })
+        let delivered = [
+            DeliveredNotification(identifier: "ring", userInfo: ringing.payload),
+            DeliveredNotification(identifier: "missed", userInfo: missed.payload),
+            DeliveredNotification(identifier: "sms", userInfo: sms.payload),
+        ]
+        let prk: (String) -> Data? = { _ in ringing.prk }
+        let decode: ([AnyHashable: Any]) -> CallStateData? = { userInfo in
+            let pushed = CallPushDecoder.decode(userInfo: userInfo, nowMs: ringing.ts + 1000, prk: prk)
+            guard case .incoming(let state)? = pushed?.content else { return nil }
+            return state
+        }
+        let state = try #require(decode(ringing.payload))
+        #expect(CallNotificationFilter.incomingIdentifiers(in: delivered, callId: state.callId, decode: decode) == ["ring"])
+        #expect(CallNotificationFilter.incomingIdentifiers(in: delivered, callId: "other", decode: decode).isEmpty)
+        #expect(CallNotificationFilter.staleIncomingIdentifiers(in: delivered, nowMs: state.startedAt + 61_000,
+                                                                decode: decode) == ["ring"])
+        #expect(CallNotificationFilter.staleIncomingIdentifiers(in: delivered, nowMs: state.startedAt + 1000,
+                                                                decode: decode).isEmpty)
+        let pairId = "9a8b7c6d-5e4f-4a3b-9c2d-1e0f2a3b4c5d"
+        #expect(CallNotificationFilter.missedIdentifiers(in: delivered, pairId: pairId) == ["missed"])
+        #expect(CallNotificationFilter.missedIdentifiers(in: delivered, pairId: pairId, entryId: 5120).isEmpty)
+        #expect(CallNotificationFilter.missedIdentifiers(in: delivered, pairId: "7a6b5c4d-3e2f-4a1b-9c8d-7e6f5a4b3c2d")
+            .isEmpty)
+        #expect(CallNotificationFilter.callIdentifiers(in: delivered) == ["ring", "missed"])
     }
 }
