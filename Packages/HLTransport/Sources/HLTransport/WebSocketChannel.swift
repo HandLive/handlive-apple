@@ -74,33 +74,19 @@ public final class WebSocketChannel: MessageChannel, @unchecked Sendable {
     // MARK: - Reading (on `queue`)
 
     private func receiveNext() {
-        connection.receiveMessage { [weak self] data, context, _, error in
+        connection.receiveMessage { [weak self] data, context, isComplete, error in
             guard let self else { return }
-            if let error {
-                finish(ChannelClosed(code: nil, detail: "receive: \(error)"))
-                return
-            }
             let metadata = context?.protocolMetadata(definition: NWProtocolWebSocket.definition)
                 as? NWProtocolWebSocket.Metadata
-            switch metadata?.opcode {
-            case .text?:
-                // Invalid UTF-8 becomes an empty text that no envelope parser accepts.
-                inbox.deliver(.text(String(bytes: data ?? Data(), encoding: .utf8) ?? ""))
-            case .binary?:
-                inbox.deliver(.binary(data ?? Data()))
-            case .close?:
-                closed = true
-                finish(ChannelClosed(code: metadata.map { CloseCode(nw: $0.closeCode) }, detail: "closed by peer"))
-                connection.cancel()
-                return
-            default:
-                break // ping/pong/cont frames are handled by the stack
-            }
-            if context?.isFinal == true && data == nil && metadata == nil {
-                finish(ChannelClosed(code: nil, detail: "end of stream"))
-                return
-            }
-            receiveNext()
+            let frame = ReceivedFrame(opcode: metadata?.opcode, closeCode: metadata?.closeCode, data: data,
+                                      isComplete: isComplete,
+                                      endOfStream: context?.isFinal == true && data == nil && metadata == nil,
+                                      error: error)
+            if let message = frame.message { inbox.deliver(message) }
+            guard let closure = frame.closure else { return receiveNext() }
+            if frame.closedByPeer { closed = true }
+            finish(closure)
+            if frame.closedByPeer { connection.cancel() }
         }
     }
 
@@ -114,6 +100,39 @@ public final class WebSocketChannel: MessageChannel, @unchecked Sendable {
 
     private func finish(_ closure: ChannelClosed) {
         inbox.close(closure)
+    }
+}
+
+/// What one completed `receiveMessage` means for the channel: a message to deliver, and whether the channel ended.
+struct ReceivedFrame: Equatable {
+    var message: ChannelMessage?
+    var closure: ChannelClosed?
+    /// The peer's close frame: this side stops reading and cancels the connection.
+    var closedByPeer = false
+
+    init(opcode: NWProtocolWebSocket.Opcode?, closeCode: NWProtocolWebSocket.CloseCode?, data: Data?, isComplete: Bool,
+         endOfStream: Bool, error: NWError?) {
+        switch opcode {
+        case .close?:
+            // The peer's close frame can arrive together with an error: the stack's own reply to it hits a socket the
+            // peer has already closed ("Broken pipe"). Its code still decides what the client does (4403 unpairs,
+            // 4409 never reconnects), so the frame is read before the error.
+            closure = ChannelClosed(code: closeCode.map(CloseCode.init(nw:)), detail: "closed by peer")
+            closedByPeer = true
+            return
+        case .text? where error == nil || isComplete:
+            // Invalid UTF-8 becomes an empty text that no envelope parser accepts.
+            message = .text(String(bytes: data ?? Data(), encoding: .utf8) ?? "")
+        case .binary? where error == nil || isComplete:
+            message = .binary(data ?? Data())
+        default:
+            break // ping/pong/cont frames are handled by the stack
+        }
+        if let error {
+            closure = ChannelClosed(code: nil, detail: "receive: \(error)")
+        } else if endOfStream {
+            closure = ChannelClosed(code: nil, detail: "end of stream")
+        }
     }
 }
 
