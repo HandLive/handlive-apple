@@ -1,5 +1,6 @@
 import Foundation
 import HLAppCore
+import HLCallNotifications
 import HLCrypto
 import HLProtocol
 import HLSMS
@@ -58,6 +59,7 @@ final class StubAlerts: ClipboardAlerting {
     var onSendAnyway: () -> Void = {}
     var onSendAgain: () -> Void = {}
     var onSmsResponse: (SmsNotificationResponse) -> Void = { _ in }
+    var onCallResponse: (CallNotificationResponse) -> Void = { _ in }
     private(set) var posted: [ClipboardAlert] = []
 
     func post(_ alert: ClipboardAlert) {
