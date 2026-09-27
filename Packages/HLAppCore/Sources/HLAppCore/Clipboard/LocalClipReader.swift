@@ -5,7 +5,7 @@ import UniformTypeIdentifiers
 enum LocalClip: Equatable {
     /// The item carries `app.handlive.clip-id`: HandLive wrote it (E1).
     case ownWrite(clipId: String?)
-    /// Empty, a copied file (`public.file-url`) or a type HandLive does not send (E3).
+    /// Empty (an empty text too), a copied file (`public.file-url`) or a type HandLive does not send (E3).
     case unsupported
     case text(String, sensitiveType: Bool)
     /// Image bytes and their type identifier; normalized later, off the main actor.
@@ -15,7 +15,8 @@ enum LocalClip: Equatable {
 @MainActor
 enum LocalClipReader {
     /// Picks the kind from the first type of the first item that is text or an image, in the source app's order of
-    /// preference; an item with a file URL is skipped whole (the file name is never sent).
+    /// preference; an item with a file URL is skipped whole (the file name is never sent). An empty text is nothing
+    /// copied.
     static func read(_ access: ClipboardAccess) -> LocalClip {
         guard let types = access.firstItemTypes(), !types.isEmpty else { return .unsupported }
         if types.contains(PasteboardTypeID.clipId) {
@@ -25,7 +26,7 @@ enum LocalClipReader {
         let sensitive = !SensitiveContent.pasteboardTypes.isDisjoint(with: types)
         for type in types {
             if isText(type) {
-                guard let text = access.string(forType: PasteboardTypeID.text) else { return .unsupported }
+                guard let text = access.string(forType: PasteboardTypeID.text), !text.isEmpty else { return .unsupported }
                 return .text(text, sensitiveType: sensitive)
             }
             if isImage(type) {

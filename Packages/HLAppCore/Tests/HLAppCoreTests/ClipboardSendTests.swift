@@ -154,6 +154,18 @@ struct ClipboardSendTests {
         #expect(harness.peer.pushes.count == 1)
     }
 
+    @Test("An empty text is nothing copied: not sent; the menu item says the clipboard is empty")
+    func emptyText() async {
+        let harness = ClipboardHarness()
+        // An emulator's clipboard sharing writes an empty text once the phone holds an image.
+        harness.pasteboard.copy(text: "")
+        harness.engine.poll()
+        try? await Task.sleep(for: .milliseconds(50))
+        #expect(harness.peer.pushes.isEmpty && harness.notices.isEmpty)
+        harness.engine.sendClipboardNow()
+        #expect(harness.notices == [.emptyOrNotText] && harness.peer.pushes.isEmpty)
+    }
+
     @Test("Acks: INTERNAL → 'Couldn't update the clipboard on the phone'; FEATURE_DISABLED suspends until an update")
     func ackErrors() async {
         let harness = ClipboardHarness()

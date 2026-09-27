@@ -62,6 +62,8 @@ struct ClipboardRulesTests {
         #expect(LocalClipReader.read(pasteboard) == .text("x", sensitiveType: false))
         pasteboard.copy([(PasteboardTypeID.fileURL, Data("file:///a".utf8)), (PasteboardTypeID.text, Data("a".utf8))])
         #expect(LocalClipReader.read(pasteboard) == .unsupported)
+        pasteboard.copy(text: "")
+        #expect(LocalClipReader.read(pasteboard) == .unsupported) // an empty text is nothing copied
         pasteboard.copy([(PasteboardTypeID.tiff, Data([1])), (PasteboardTypeID.png, Data([2])),
                          (PasteboardTypeID.text, Data("name.png".utf8))])
         #expect(LocalClipReader.read(pasteboard) == .image(Data([2]), typeIdentifier: PasteboardTypeID.png,
