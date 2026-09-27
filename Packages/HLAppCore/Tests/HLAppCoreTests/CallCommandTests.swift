@@ -106,6 +106,38 @@ struct CallCommandTests {
     }
 }
 
+/// CALL-02 flow B: "Decline" from the iPhone/iPad notification, with or without the call on screen.
+@Suite("Decline from a notification")
+@MainActor
+struct CallNotificationDeclineTests {
+    @Test("Sent for the notification's call once a session exists, within the deadline")
+    func sentWhenConnected() async {
+        let controller = CallController(now: { 0 })
+        controller.setPair(CallSamples.pairId, capability: CallSamples.capability())
+        let peer = FakeCallPeer([.ok])
+        let connect = Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(100))
+            controller.connected(peer: peer, capability: CallSamples.capability())
+        }
+        let outcome = await controller.declineFromNotification(callId: CallSamples.callId, within: .seconds(3))
+        await connect.value
+        #expect(outcome == .accepted)
+        #expect(peer.sent.map(\.data) == [.object(["call_id": .string(CallSamples.callId), "action": .string("reject")])])
+    }
+
+    @Test("No session in time: not sent; the call already over: the phone says so")
+    func failures() async {
+        let controller = CallController(now: { 0 })
+        controller.setPair(CallSamples.pairId, capability: CallSamples.capability())
+        #expect(await controller.declineFromNotification(callId: CallSamples.callId, within: .milliseconds(200))
+            == .failed(.commandNotSent))
+        controller.connected(peer: FakeCallPeer([.refused(CallSamples.refused(.callNotFound))]),
+                             capability: CallSamples.capability())
+        #expect(await controller.declineFromNotification(callId: CallSamples.callId, within: .seconds(2))
+            == .failed(.callEnded))
+    }
+}
+
 /// CALL-02 API 5: the quick reply of "Decline with Message…" and E9.
 @Suite("Decline with a message")
 @MainActor

@@ -41,7 +41,7 @@ extension CallController {
         var audio: CallAudioLocation?
         if case .answer(let location) = command { audio = location }
         let request = CallActionRequest(callId: callId, action: command.action, audio: audio)
-        guard let ack = await send(request) else {
+        guard let ack = await send(request, within: requestTimeout) else {
             finish(callId: callId, problem: .commandNotSent)
             return .failed(.commandNotSent)
         }
@@ -70,10 +70,25 @@ extension CallController {
         return .failed(problem)
     }
 
-    /// One `ack` wait of `requestTimeout` from the click; the same envelope `id` whenever a session is there.
-    private func send(_ request: CallActionRequest) async -> Ack? {
+    /// CALL-02 flow B: "Decline" on the iPhone/iPad notification. The app may have been woken in the background, so
+    /// the call need not be on screen: the command goes out for `callId` as soon as a session exists, all within
+    /// `deadline` (`CALL_REJECT_BG_TIMEOUT`, 15 s, the background connection included; B2–B3).
+    public func declineFromNotification(callId: String, within deadline: Duration) async -> CommandOutcome {
+        BenchLog.event("call_action_tap", ["call": callId, "action": CallAction.reject.rawValue, "from": "notification"])
+        guard let ack = await send(CallActionRequest(callId: callId, action: .reject), within: deadline) else {
+            return .failed(.commandNotSent)
+        }
+        var fields = [("call", callId), ("env", ack.re), ("peer", benchPeer), ("ok", ack.ok ? "true" : "false")]
+        if let code = ack.error?.code { fields.append(("code", code.rawValue)) }
+        BenchLog.event("call_action_ack_received", fields: fields)
+        guard !ack.ok else { return .accepted }
+        return .failed(ack.error.map { CallProblem(error: $0, command: .reject(reply: nil)) } ?? .commandNotSent)
+    }
+
+    /// One `ack` wait of `window` from the click; the same envelope `id` whenever a session is there.
+    private func send(_ request: CallActionRequest, within window: Duration) async -> Ack? {
         let id = HLUUID.v7()
-        let deadline = ContinuousClock.now.advanced(by: requestTimeout)
+        let deadline = ContinuousClock.now.advanced(by: window)
         var attempt = 0
         while true {
             let remaining = ContinuousClock.now.duration(to: deadline)

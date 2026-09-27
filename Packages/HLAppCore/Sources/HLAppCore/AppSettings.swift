@@ -16,6 +16,7 @@ public enum SettingsKey: String, CaseIterable, Sendable {
     case clipSeenChangeCount = "clip.seen_change_count"
     case smsNotify = "sms.notify"
     case smsPreview = "sms.preview"
+    case smsPeerCanSend = "sms.peer_can_send"
     case callNotify = "call.notify"
     case callRingtone = "call.ringtone"
     case callQuickReplies = "call.quick_replies"
@@ -99,6 +100,18 @@ public final class AppSettings: @unchecked Sendable {
     public var relayEnabled: Bool {
         get { bool(.relayEnabled) }
         set { set(newValue, .relayEnabled) }
+    }
+
+    /// `sms.peer_can_send` (iOS, internal): the app's copy of each pair's latest `features.sms.can_send`, which the
+    /// extension reads for the "Message" action of a missed call (CALL-04 API 4); no entry → no "Message".
+    public func peerCanSend(pairId: String) -> Bool? {
+        (defaults.dictionary(forKey: SettingsKey.smsPeerCanSend.rawValue) as? [String: Bool])?[pairId]
+    }
+
+    public func setPeerCanSend(_ canSend: Bool?, pairId: String) {
+        var map = (defaults.dictionary(forKey: SettingsKey.smsPeerCanSend.rawValue) as? [String: Bool]) ?? [:]
+        map[pairId] = canSend
+        defaults.set(map, forKey: SettingsKey.smsPeerCanSend.rawValue)
     }
 
     /// `feature.call` (SET-02 field 10).

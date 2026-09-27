@@ -120,6 +120,19 @@ struct LocalCapabilityTests {
         #expect(settings.callRingtone && settings.quickReplies == nil)
     }
 
+    @Test("sms.peer_can_send keeps each pair's copy for the extension; Delete All removes it")
+    func peerCanSend() {
+        let settings = AppSettings(defaults: freshDefaults())
+        #expect(settings.peerCanSend(pairId: "a") == nil)
+        settings.setPeerCanSend(true, pairId: "a")
+        settings.setPeerCanSend(false, pairId: "b")
+        #expect(settings.peerCanSend(pairId: "a") == true && settings.peerCanSend(pairId: "b") == false)
+        settings.setPeerCanSend(nil, pairId: "a")
+        #expect(settings.peerCanSend(pairId: "a") == nil)
+        settings.removeAll()
+        #expect(settings.peerCanSend(pairId: "b") == nil)
+    }
+
     @Test("Quick replies keep at most 6 templates of 160 characters")
     func quickReplies() {
         let settings = AppSettings(defaults: freshDefaults())
