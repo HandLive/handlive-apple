@@ -37,13 +37,14 @@ public final class IOSSetupFlow: ObservableObject {
         step = .notifications
     }
 
-    /// Steps 7–8: ask once; a refusal shows the guide (E3).
+    /// Steps 7–8: ask once; a refusal shows the guide (E3). The Time Sensitive setting is read too (field 8).
     public func continueFromNotifications() async {
         checking = true
         defer { checking = false }
         var permission = await model.notifications.permission()
         if permission == .notDetermined { permission = await model.notifications.requestPermission() }
         model.notificationPermission = permission
+        model.timeSensitive = await model.notifications.timeSensitive()
         step = permission == .denied ? .notificationsDenied : .localNetwork
     }
 

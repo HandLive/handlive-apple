@@ -60,6 +60,11 @@ struct IOSSetupView: View {
             guide(L10n.Setup.localNetworkDeniedIos)
         case .limits:
             primer(symbol: "iphone", title: L10n.Setup.iosLimitsTitle, body: L10n.Setup.iosLimits) // SET-03 field 11
+            if flow.model.timeSensitive == .disabled { // field 8
+                Label(L10n.Setup.timeSensitiveOff, systemImage: "moon")
+                    .font(.body)
+                    .foregroundStyle(HLColorToken.textOrange.color)
+            }
         }
     }
 

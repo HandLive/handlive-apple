@@ -224,12 +224,14 @@ struct IOSSetupFlowTests {
 
         let denied = StubIOSNotifications()
         denied.answer = .denied
+        denied.timeSensitiveSetting = .disabled // field 8: "Focus may silence call notifications"
         let refusing = makeIOSModel(notifications: denied)
         refusing.launch()
         let guides = IOSSetupFlow(model: refusing, probeLocalNetwork: { .localNetworkDenied })
         guides.start()
         await guides.continueFromNotifications()
         #expect(guides.step == .notificationsDenied && refusing.notificationPermission == .denied)
+        #expect(refusing.timeSensitive == .disabled && model.timeSensitive == .enabled)
         guides.afterNotificationsGuide()
         await guides.continueFromLocalNetwork()
         #expect(guides.step == .localNetworkDenied)
