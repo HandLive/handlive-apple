@@ -74,8 +74,7 @@ public final class UserNotificationCalls: CallNotifying {
         posted.removeAll()
         let center = UNUserNotificationCenter.current()
         center.getDeliveredNotifications { delivered in
-            let identifiers = delivered.filter { CallNotificationInfo($0.request.content.userInfo) != nil }
-                .map(\.request.identifier)
+            let identifiers = CallNotificationFilter.callIdentifiers(in: delivered.map(Self.item))
             if !identifiers.isEmpty { center.removeDeliveredNotifications(withIdentifiers: identifiers) }
         }
     }
