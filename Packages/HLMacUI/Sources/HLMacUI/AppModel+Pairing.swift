@@ -65,6 +65,7 @@ extension AppModel: PairingHost {
         pairedDevice = record
         updateClipboardPolling()
         pairChangedForMessages()
+        calls.setPair(record)
         let phone = activePhone()
         Task { await manager?.setPhone(phone) }
     }

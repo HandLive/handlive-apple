@@ -70,16 +70,17 @@ final class StubAlerts: ClipboardAlerting {
 @MainActor
 func makeModel(secrets: any SecretStore = InMemorySecretStore(), pasteboard: StubPasteboard = StubPasteboard(),
                alerts: StubAlerts = StubAlerts(), sms: StubSmsNotifier = StubSmsNotifier(),
-               relay: ScriptedRelayAPI? = nil) -> AppModel {
+               calls: CallStubs = CallStubs(), relay: ScriptedRelayAPI? = nil) -> AppModel {
     let suite = "app.handlive.tests.\(UUID().uuidString)"
     let defaults = UserDefaults(suiteName: suite)!
     let folder = FileManager.default.temporaryDirectory.appendingPathComponent("handlive-tests-\(UUID().uuidString)")
-    return AppModel(settings: AppSettings(defaults: defaults), secrets: secrets,
+    let settings = AppSettings(defaults: defaults)
+    return AppModel(settings: settings, secrets: secrets,
                     device: LocalDevice(appVersion: "1.0.0 (1)", osVersion: "15.6", model: "Mac15,3", name: "Mac",
                                         platform: .macos),
                     pairStoreURL: folder.appendingPathComponent("paired-devices.bin"),
                     smsDatabaseURL: folder.appendingPathComponent("handlive.sqlite"),
-                    pasteboard: pasteboard, alerts: alerts, smsNotifier: sms,
+                    pasteboard: pasteboard, alerts: alerts, smsNotifier: sms, calls: calls.make(settings: settings),
                     makeRelay: { _ in relay.map { RelayServices(api: $0, sockets: ClosedRelaySockets()) } },
                     makeManager: { capability, _ in
                         ConnectionManager(localCapability: capability, discovery: SilentDiscovery(), network: SilentNetwork())

@@ -45,6 +45,8 @@ public final class AppModel: ObservableObject {
     @Published public internal(set) var unreadThreads = 0
     /// The Messages screens; `nil` until the keys load, or when the database cannot be opened (SMS-01 E7).
     @Published public internal(set) var messages: MessagesModel?
+    /// Calls (CALL-01…04): the panel, the notifications, the call log and the Calls settings.
+    public let calls: MacCalls
     /// Result of a relay action in Settings (SET-02 field 30) or a relay problem (CONN-03 field 4).
     @Published public internal(set) var relayNotice: String?
 
@@ -67,6 +69,8 @@ public final class AppModel: ObservableObject {
     let makeRelay: @MainActor (RelayIdentity) -> RelayServices?
     var relay: RelayServices?
     var smsEngine: SmsEngine?
+    /// `handlive.sqlite`, shared by SMS and the call log; `nil` when it cannot be opened.
+    var database: SmsDatabase?
     /// Hourly check of the outbox: a message waiting more than 24 h becomes "Not sent" (SMS-04 E1).
     var outboxExpiry: Task<Void, Never>?
     let smsNotifier: any SmsNotifying
@@ -86,7 +90,7 @@ public final class AppModel: ObservableObject {
                 smsDatabaseURL: URL = SmsDatabase.defaultURL(
                     bundleIdentifier: Bundle.main.bundleIdentifier ?? "app.handlive.mac"),
                 pasteboard: (any ClipboardAccess)? = nil, alerts: (any ClipboardAlerting)? = nil,
-                smsNotifier: (any SmsNotifying)? = nil,
+                smsNotifier: (any SmsNotifying)? = nil, calls: MacCalls? = nil,
                 makeRelay: @escaping @MainActor (RelayIdentity) -> RelayServices? = { identity in
                     RelayConfiguration.fromBundle().map { RelayServices.live(configuration: $0, identity: identity) }
                 },
@@ -101,6 +105,7 @@ public final class AppModel: ObservableObject {
         self.pasteboard = pasteboard ?? MacPasteboard()
         self.alerts = alerts ?? UserNotificationAlerts()
         self.smsNotifier = smsNotifier ?? UserNotificationSms()
+        self.calls = calls ?? MacCalls(settings: settings)
         self.makeRelay = makeRelay
         self.makeManager = makeManager
         showInMenuBar = settings.showInMenuBar
@@ -144,6 +149,7 @@ public final class AppModel: ObservableObject {
             phase = .ready
             startClipboard(identity: keys)
             startMessages(identity: keys)
+            startCalls()
             startConnection()
             Task { await revokeTombstones() } // PAIR-03 E3: revocations that waited for a network
         } catch IdentityError.keysMissing {
@@ -223,6 +229,7 @@ public final class AppModel: ObservableObject {
     public func refreshSystemState() {
         pasteAccess = PasteAccess.current
         loginItemStatus = LoginItem.status
+        calls.refreshFocus()
     }
 
     /// Quit: `session/bye {shutdown}` first (CONN-02 step 8).

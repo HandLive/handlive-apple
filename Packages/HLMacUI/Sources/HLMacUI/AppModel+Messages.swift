@@ -14,6 +14,7 @@ extension AppModel {
     /// a database the Messages window has nothing to show and SMS stays off here (SMS-01 E7).
     func startMessages(identity: DeviceIdentityKeys) {
         guard let database = try? SmsDatabase(url: smsDatabaseURL, key: identity.databaseKey) else { return }
+        self.database = database
         let store = SmsStore(database: database)
         let engine = SmsEngine(store: store)
         engine.enabledHere = { [weak self] in self?.settings.smsEnabled ?? false }
