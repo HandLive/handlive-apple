@@ -135,7 +135,7 @@ struct CallNotificationTests {
         expectValid(pushed, "call-notification.schema.json#/$defs/missed")
     }
 
-    @Test("Categories: Mac Answer and Decline; iPhone Decline only, destructive, after unlocking; Message with a field")
+    @Test("Categories: Mac Answer and Decline; iPhone Decline only, destructive; Decline and Message after unlocking")
     func categories() throws {
         let mac = CallNotificationBuilder.macCategories()
         let incoming = try #require(mac.first { $0.identifier == "HL_CALL_INCOMING_MAC" })
@@ -150,6 +150,7 @@ struct CallNotificationTests {
         let missed = try #require(mobile.first { $0.identifier == "HL_CALL_MISSED" })
         let message = try #require(missed.actions.first as? UNTextInputNotificationAction)
         #expect(message.identifier == "HL_CALL_SMS" && message.title == L10n.Call.message)
+        #expect(message.options.contains(.authenticationRequired) && !message.options.contains(.foreground))
         #expect(message.textInputButtonTitle == L10n.Sms.send && missed.hiddenPreviewsBodyPlaceholder == L10n.Call.missedCall)
     }
 

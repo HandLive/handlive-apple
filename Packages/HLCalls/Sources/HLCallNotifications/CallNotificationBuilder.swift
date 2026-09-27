@@ -119,9 +119,10 @@ public enum CallNotificationBuilder {
                              icon: UNNotificationActionIcon(systemImageName: "phone.down.fill"))
     }
 
+    /// `HL_CALL_MISSED` with "Message", which runs only on an unlocked device: sending needs the pair's `PRK` (C3).
     private static func missedCategory() -> UNNotificationCategory {
         let message = UNTextInputNotificationAction(
-            identifier: CallNotificationKeys.messageAction, title: L10n.Call.message, options: [],
+            identifier: CallNotificationKeys.messageAction, title: L10n.Call.message, options: [.authenticationRequired],
             icon: UNNotificationActionIcon(systemImageName: "message"), textInputButtonTitle: L10n.Sms.send,
             textInputPlaceholder: L10n.Sms.composePlaceholder)
         return UNNotificationCategory(identifier: CallNotificationKeys.missedCategory, actions: [message],
