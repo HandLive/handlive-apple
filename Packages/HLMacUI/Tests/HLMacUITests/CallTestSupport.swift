@@ -135,6 +135,14 @@ enum MacCallSamples {
                       answeredAt: 1_727_150_405_000, controls: CallControls(end: true))
     }
 
+    /// A second call rings during the answered one: the context stays the first call, `waiting = true`, no controls
+    /// (CALL-01 API 1, E9).
+    static func waiting() -> CallStateData {
+        CallStateData(callId: callId, direction: .incoming, state: .ringing, waiting: true, number: "+84900000123",
+                      displayName: "Nguyễn Văn A", presentation: .allowed, waitingNumber: "+84900000789",
+                      startedAt: 1_727_150_400_123, answeredAt: 1_727_150_405_000, controls: .none)
+    }
+
     static func idleMissed(number: String? = nil) -> CallStateData {
         CallStateData(callId: callId, direction: .incoming, state: .idle, number: number, displayName: nil,
                       presentation: number == nil ? .unknown : .allowed, startedAt: 1_727_150_400_123,

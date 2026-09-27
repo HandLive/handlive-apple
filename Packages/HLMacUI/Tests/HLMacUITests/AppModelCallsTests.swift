@@ -67,6 +67,22 @@ struct AppModelCallsTests {
         #expect(!stubs.ringtone.isPlaying && stubs.presenter.isShown)
     }
 
+    @Test("A waiting call keeps the in-call panel: Call waiting, the waiting caller, no End, no ringing, no alert")
+    func waitingCall() throws {
+        let stubs = CallStubs()
+        let model = try ready(stubs)
+        model.calls.controller.apply(MacCallSamples.offhook(), envelopeTs: 100)
+        model.calls.controller.apply(MacCallSamples.waiting(), envelopeTs: 200)
+        let call = try #require(model.calls.panel.call)
+        #expect(call.phase == .waiting && stubs.presenter.isShown)
+        #expect(CallPanelView.title(call) == L10n.Call.statusWaiting)
+        #expect(call.waitingCaller == .number("+84900000789") && !CallPanelView.offersEnd(call))
+        #expect(!stubs.ringtone.isPlaying && stubs.notifier.incoming.isEmpty && model.calls.ringingCall == nil)
+        model.calls.controller.apply(MacCallSamples.offhook(), envelopeTs: 300) // the waiting call went away
+        let back = try #require(model.calls.panel.call)
+        #expect(CallPanelView.title(back) == L10n.Call.statusOnCall && CallPanelView.offersEnd(back))
+    }
+
     @Test("Ignore closes the panel and silences the Mac; the call stays in the menu and never rings again")
     func ignore() throws {
         let stubs = CallStubs()
