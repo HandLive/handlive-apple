@@ -4,7 +4,7 @@ import HLLocalization
 import SwiftUI
 
 /// Settings window (2-patterns/04-cai-dat.md, macOS): one pane per feature group, each a grouped `Form` — General,
-/// Devices, Clipboard and Messages so far; Calls and Camera join with their phases.
+/// Devices, Clipboard, Messages and Calls so far; Camera joins with its phase.
 public struct SettingsView: View {
     @ObservedObject var model: AppModel
 
@@ -22,6 +22,8 @@ public struct SettingsView: View {
                 .tabItem { Label(L10n.Settings.clipboard, systemImage: "doc.on.clipboard") }
             MessagesSettingsPane(model: model)
                 .tabItem { Label(L10n.Settings.messages, systemImage: "message") }
+            CallsSettingsPane(model: model, calls: model.calls)
+                .tabItem { Label(L10n.Settings.calls, systemImage: "phone") }
         }
         .frame(width: 520)
         .onAppear { model.refreshSystemState() }
