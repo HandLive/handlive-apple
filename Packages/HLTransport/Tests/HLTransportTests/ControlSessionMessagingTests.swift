@@ -39,6 +39,15 @@ struct ControlSessionMessagingTests {
         #expect(messages.count == 1)
     }
 
+    @Test("A call_event/state from the phone reaches the app with its envelope ts")
+    func callEvent() async throws {
+        let connected = try await SessionHarness.connect()
+        let sent = try await connected.phone.send(.callEvent, op: "state", data: ClipText(text: "x"))
+        let event = await connected.events.first { if case .message = $0 { return true } else { return false } }
+        guard case .message(let incoming)? = event else { Issue.record("no message"); return }
+        #expect(incoming.type == .callEvent && incoming.op == "state" && incoming.ts == sent.ts)
+    }
+
     @Test("Binary clipboard/chunk plaintext arrives as a binary body")
     func binaryChunk() async throws {
         let connected = try await SessionHarness.connect()
@@ -62,10 +71,10 @@ struct ControlSessionMessagingTests {
     @Test("Unhandled request → UNSUPPORTED_TYPE; unhandled event → ignored (0.5.1 rule 3)")
     func unsupported() async throws {
         let connected = try await SessionHarness.connect()
-        let request = try await connected.phone.send(.callEvent, op: "action", data: ClipText(text: "x"))
+        let request = try await connected.phone.send(.camera, op: "start", data: ClipText(text: "x"))
         let ack = try await connected.phone.receiveAck()
         #expect(ack.re == request.id && ack.error?.code == .unsupportedType)
-        try await connected.phone.send(.callEvent, op: "state", data: ClipText(text: "x"))
+        try await connected.phone.send(.camera, op: "state", data: ClipText(text: "x"))
         try await Task.sleep(for: .milliseconds(50))
         #expect(await connected.events.events.isEmpty)
     }
