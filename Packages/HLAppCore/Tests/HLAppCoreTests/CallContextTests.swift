@@ -176,4 +176,27 @@ struct CallContextTests {
         controller.receive(IncomingEnvelope(id: HLUUID.v7(), type: .callEvent, ts: 5, body: .json(state)))
         #expect(controller.call?.envelopeTs == 5)
     }
+
+    @Test("In the background the call is forgotten until the phone reports it again; ended calls stay dropped")
+    func forgetCall() {
+        let controller = CallController.connectedForTest()
+        controller.apply(CallSamples.ringing(), envelopeTs: 100)
+        controller.apply(CallSamples.idle(reason: .missed), envelopeTs: 200)
+        controller.apply(CallSamples.ringing(CallSamples.otherCallId), envelopeTs: 300)
+        controller.forgetCall()
+        #expect(controller.call == nil)
+        controller.apply(CallSamples.ringing(), envelopeTs: 150) // a late version of the ended call
+        #expect(controller.call == nil)
+        controller.apply(CallSamples.ringing(CallSamples.otherCallId), envelopeTs: 400)
+        #expect(controller.call?.callId == CallSamples.otherCallId)
+    }
+
+    @Test("Call permissions: the call log and answering always, phone state and contacts while calls are on")
+    func callPermissions() {
+        #expect(CallPermissions.isCall("android.permission.READ_CALL_LOG", callsOnPhone: false))
+        #expect(CallPermissions.isCall("ANSWER_PHONE_CALLS", callsOnPhone: false))
+        #expect(!CallPermissions.isCall("READ_PHONE_STATE", callsOnPhone: false))
+        #expect(CallPermissions.isCall("READ_CONTACTS", callsOnPhone: true))
+        #expect(!CallPermissions.isCall("CAMERA", callsOnPhone: true))
+    }
 }

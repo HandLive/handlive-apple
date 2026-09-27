@@ -16,6 +16,12 @@ extension CallController {
         call = current
     }
 
+    /// iPhone and iPad went to the background, where pushes take over: the call is no longer shown until the phone
+    /// reports it again (CALL-01 E8); the ended calls stay remembered.
+    public func forgetCall() {
+        clear()
+    }
+
     /// The problem line was read or the panel changed: it goes away.
     public func clearProblem() {
         guard var current = call, current.problem != nil else { return }

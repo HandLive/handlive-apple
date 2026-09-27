@@ -48,4 +48,11 @@ public enum CallPermissions {
     public static func missing(_ name: String, in permissions: [String]) -> Bool {
         permissions.contains { matches($0, name) }
     }
+
+    /// PAIR-02 field 9: the missing permissions whose row opens the call permission instructions — `READ_CALL_LOG` and
+    /// `ANSWER_PHONE_CALLS`, and `READ_PHONE_STATE` and `READ_CONTACTS` while calls are on on the phone.
+    public static func isCall(_ permission: String, callsOnPhone: Bool) -> Bool {
+        if matches(permission, callLog) || matches(permission, answer) { return true }
+        return callsOnPhone && (matches(permission, phoneState) || matches(permission, contacts))
+    }
 }

@@ -179,10 +179,7 @@ struct MissingPermissionsSection: View {
     /// PAIR-02 field 9: `READ_CALL_LOG` and `ANSWER_PHONE_CALLS`, and `READ_PHONE_STATE` and `READ_CONTACTS` while calls
     /// are on on the phone, open the call permission instructions.
     static func isCall(_ permission: String, callsOnPhone: Bool) -> Bool {
-        if CallPermissions.matches(permission, CallPermissions.callLog)
-            || CallPermissions.matches(permission, CallPermissions.answer) { return true }
-        return callsOnPhone && (CallPermissions.matches(permission, CallPermissions.phoneState)
-            || CallPermissions.matches(permission, CallPermissions.contacts))
+        CallPermissions.isCall(permission, callsOnPhone: callsOnPhone)
     }
 
     /// A permission of a later feature (camera…), neither SMS, contacts nor calls.
