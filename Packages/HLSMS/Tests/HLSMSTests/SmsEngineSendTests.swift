@@ -59,6 +59,9 @@ struct SmsEngineSendTests {
         #expect(try await store.outboxEntry(localId: known)?.threadId == 42)
         let unknown = try await engine.send(text: "I'm in a meeting", toNumber: "+84900000999", subId: nil)
         #expect(try await store.outboxEntry(localId: unknown)?.threadId == nil)
+        let peer = FakeSmsPeer(Self.handler { FakeSmsPeer.success($0, SmsSendAckData(accepted: true, parts: 1)) })
+        engine.connected(peer: peer, capability: SmsFixtures.capability)
+        #expect(await engine.quickReply(text: "Ok", toNumber: "+84900000123", subId: 1, deadline: .seconds(2)))
     }
 
     @Test("No ack: resent with the same envelope id after each retry delay, then kept pending (step 5, E1)")

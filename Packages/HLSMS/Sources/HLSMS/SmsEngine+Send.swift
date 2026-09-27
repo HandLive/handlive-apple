@@ -83,6 +83,17 @@ extension SmsEngine {
                            deadline: Duration) async -> Bool {
         guard let localId = try? await send(text: text, to: address, threadId: threadId, subId: subId) else { return false }
         await markRead(threadId: threadId) // SMS-04 API 5 logic 5
+        return await accepted(localId: localId, within: deadline)
+    }
+
+    /// The "Message" action of a missed call on iPhone/iPad (CALL-04 API 4): queue for the number, then wait up to
+    /// `deadline` for the phone to accept; `false` leaves the message `pending`.
+    public func quickReply(text: String, toNumber address: String, subId: Int32?, deadline: Duration) async -> Bool {
+        guard let localId = try? await send(text: text, toNumber: address, subId: subId) else { return false }
+        return await accepted(localId: localId, within: deadline)
+    }
+
+    private func accepted(localId: String, within deadline: Duration) async -> Bool {
         let end = ContinuousClock.now.advanced(by: deadline)
         while ContinuousClock.now < end {
             if let entry = try? await store.outboxEntry(localId: localId), entry.state != .pending { return true }
