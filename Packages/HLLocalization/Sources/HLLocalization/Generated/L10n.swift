@@ -5,6 +5,16 @@
 /// spells UI text out: `Text(L10n.Status.connecting)`, `L10n.Pairing.pairedWith(deviceName: name)`.
 public enum L10n {
     public enum A11y {
+        /// Call ended
+        public static var callEnded: String { L10nLookup.string("a11y.call_ended") }
+        /// Incoming call from {caller}
+        public static func callIncomingFrom(caller: String) -> String {
+            L10nLookup.format("a11y.call_incoming_from", caller)
+        }
+        /// one: {count} missed call | other: {count} missed calls
+        public static func missedCalls(count: Int) -> String {
+            L10nLookup.format("a11y.missed_calls", count)
+        }
         /// {sender}, {time}
         public static func smsBubbleReceived(sender: String, time: String) -> String {
             L10nLookup.format("a11y.sms_bubble_received", sender, time)
@@ -17,6 +27,132 @@ public enum L10n {
         public static func unreadConversations(count: Int) -> String {
             L10nLookup.format("a11y.unread_conversations", count)
         }
+    }
+    public enum Call {
+        /// Answer
+        public static var answer: String { L10nLookup.string("call.answer") }
+        /// Answer on Mac
+        public static var answerOnMac: String { L10nLookup.string("call.answer_on_mac") }
+        /// Answer on Phone
+        public static var answerOnPhone: String { L10nLookup.string("call.answer_on_phone") }
+        /// Answer the call
+        public static var answerTooltip: String { L10nLookup.string("call.answer_tooltip") }
+        /// Answering…
+        public static var answering: String { L10nLookup.string("call.answering") }
+        /// Audio: Mac
+        public static var audioOnMac: String { L10nLookup.string("call.audio_on_mac") }
+        /// Audio: Phone
+        public static var audioOnPhone: String { L10nLookup.string("call.audio_on_phone") }
+        /// Allow HandLive to read the call log on the phone to see call history
+        public static var callLogPermissionHint: String { L10nLookup.string("call.call_log_permission_hint") }
+        /// Allow HandLive to read the call log on the phone to show caller numbers
+        public static var callerIdPermissionHint: String { L10nLookup.string("call.caller_id_permission_hint") }
+        /// Lost connection to the phone
+        public static var connectionLost: String { L10nLookup.string("call.connection_lost") }
+        /// Custom Message…
+        public static var customMessageEllipsis: String { L10nLookup.string("call.custom_message_ellipsis") }
+        /// Decline
+        public static var decline: String { L10nLookup.string("call.decline") }
+        /// Couldn't decline the call. It's still ringing on the phone.
+        public static var declineFailed: String { L10nLookup.string("call.decline_failed") }
+        /// Decline the call
+        public static var declineTooltip: String { L10nLookup.string("call.decline_tooltip") }
+        /// Decline with Message…
+        public static var declineWithMessageEllipsis: String { L10nLookup.string("call.decline_with_message_ellipsis") }
+        /// Declining…
+        public static var declining: String { L10nLookup.string("call.declining") }
+        /// Calls from your phone appear here after the first sync.
+        public static var emptyBody: String { L10nLookup.string("call.empty_body") }
+        /// No Calls Yet
+        public static var emptyTitle: String { L10nLookup.string("call.empty_title") }
+        /// End
+        public static var end: String { L10nLookup.string("call.end") }
+        /// End & Answer
+        public static var endAndAnswer: String { L10nLookup.string("call.end_and_answer") }
+        /// End the call
+        public static var endTooltip: String { L10nLookup.string("call.end_tooltip") }
+        /// Hold
+        public static var hold: String { L10nLookup.string("call.hold") }
+        /// Hold & Answer
+        public static var holdAndAnswer: String { L10nLookup.string("call.hold_and_answer") }
+        /// Ignore
+        public static var ignore: String { L10nLookup.string("call.ignore") }
+        /// Incoming call
+        public static var incomingBody: String { L10nLookup.string("call.incoming_body") }
+        /// Incoming call · {sim_label}
+        public static func incomingBodySim(simLabel: String) -> String {
+            L10nLookup.format("call.incoming_body_sim", simLabel)
+        }
+        /// Incoming call at {time}
+        public static func incomingLate(time: String) -> String {
+            L10nLookup.format("call.incoming_late", time)
+        }
+        /// Incoming Call
+        public static var incomingTitle: String { L10nLookup.string("call.incoming_title") }
+        /// Keypad
+        public static var keypad: String { L10nLookup.string("call.keypad") }
+        /// Message
+        public static var message: String { L10nLookup.string("call.message") }
+        /// Missed call · {time}
+        public static func missedBody(time: String) -> String {
+            L10nLookup.format("call.missed_body", time)
+        }
+        /// Missed call · {time} · {sim_label}
+        public static func missedBodySim(time: String, simLabel: String) -> String {
+            L10nLookup.format("call.missed_body_sim", time, simLabel)
+        }
+        /// Missed call
+        public static var missedCall: String { L10nLookup.string("call.missed_call") }
+        /// Mute
+        public static var mute: String { L10nLookup.string("call.mute") }
+        /// Mute the microphone on the Mac
+        public static var muteTooltip: String { L10nLookup.string("call.mute_tooltip") }
+        /// No Caller ID
+        public static var noCallerId: String { L10nLookup.string("call.no_caller_id") }
+        /// Outgoing Call
+        public static var outgoingCall: String { L10nLookup.string("call.outgoing_call") }
+        /// On your phone, open HandLive and go to Settings › Permissions & Background. Tap Grant Permission under Calls, or Open Settings if the permission was denied, and allow Phone, Call logs, and Contacts.
+        public static var permissionInstructionsBody: String { L10nLookup.string("call.permission_instructions_body") }
+        /// Grant Call Permission on Your Phone
+        public static var permissionInstructionsTitle: String { L10nLookup.string("call.permission_instructions_title") }
+        /// I'll call you back later
+        public static var quickReplyCallBack: String { L10nLookup.string("call.quick_reply_call_back") }
+        /// I'm in a meeting
+        public static var quickReplyInMeeting: String { L10nLookup.string("call.quick_reply_in_meeting") }
+        /// Decline Waiting Call
+        public static var rejectWaiting: String { L10nLookup.string("call.reject_waiting") }
+        /// Resume
+        public static var resume: String { L10nLookup.string("call.resume") }
+        /// Call ended · {duration}
+        public static func statusEnded(duration: String) -> String {
+            L10nLookup.format("call.status_ended", duration)
+        }
+        /// On call
+        public static var statusOnCall: String { L10nLookup.string("call.status_on_call") }
+        /// On hold
+        public static var statusOnHold: String { L10nLookup.string("call.status_on_hold") }
+        /// Call waiting
+        public static var statusWaiting: String { L10nLookup.string("call.status_waiting") }
+        /// Calls
+        public static var title: String { L10nLookup.string("call.title") }
+        /// Blocked call
+        public static var typeBlocked: String { L10nLookup.string("call.type_blocked") }
+        /// Incoming call
+        public static var typeIncoming: String { L10nLookup.string("call.type_incoming") }
+        /// Missed call
+        public static var typeMissed: String { L10nLookup.string("call.type_missed") }
+        /// Outgoing call
+        public static var typeOutgoing: String { L10nLookup.string("call.type_outgoing") }
+        /// Declined call
+        public static var typeRejected: String { L10nLookup.string("call.type_rejected") }
+        /// Voicemail
+        public static var typeVoicemail: String { L10nLookup.string("call.type_voicemail") }
+        /// Unknown Caller
+        public static var unknownCaller: String { L10nLookup.string("call.unknown_caller") }
+        /// Handle it on the phone or connect via Bluetooth
+        public static var waitingHandleOnPhone: String { L10nLookup.string("call.waiting_handle_on_phone") }
+        /// Call Waiting
+        public static var waitingTitle: String { L10nLookup.string("call.waiting_title") }
     }
     public enum Clipboard {
         /// Auto-send is off on the phone — use the Send Clipboard button on the phone
@@ -119,6 +255,24 @@ public enum L10n {
         public static var viewInstructionsEllipsis: String { L10nLookup.string("common.view_instructions_ellipsis") }
     }
     public enum Error {
+        /// The call was answered on the phone
+        public static var callActionNotAllowed: String { L10nLookup.string("error.call_action_not_allowed") }
+        /// The phone hasn't allowed HandLive to answer calls
+        public static var callAnswerPermission: String { L10nLookup.string("error.call_answer_permission") }
+        /// Couldn't switch the audio to the Mac
+        public static var callAudioSwitchFailed: String { L10nLookup.string("error.call_audio_switch_failed") }
+        /// Couldn't send the command to the phone
+        public static var callCommandNotSent: String { L10nLookup.string("error.call_command_not_sent") }
+        /// End this call on the phone
+        public static var callEndOnPhone: String { L10nLookup.string("error.call_end_on_phone") }
+        /// The phone couldn't perform this action
+        public static var callHfpCommandFailed: String { L10nLookup.string("error.call_hfp_command_failed") }
+        /// Connect to the phone via Bluetooth to hold, use the keypad, or mute
+        public static var callHfpRequired: String { L10nLookup.string("error.call_hfp_required") }
+        /// The call was answered, so the message wasn't sent
+        public static var callMessageNotSent: String { L10nLookup.string("error.call_message_not_sent") }
+        /// The call has ended
+        public static var callNotFound: String { L10nLookup.string("error.call_not_found") }
         /// Content is too large to send (up to 1 MB of text, 10 MB for images)
         public static var clipContentTooLarge: String { L10nLookup.string("error.clip_content_too_large") }
         /// Not enough storage to receive the image
@@ -309,6 +463,14 @@ public enum L10n {
         public static var autoClearFooter: String { L10nLookup.string("settings.auto_clear_footer") }
         /// Block Sensitive Content
         public static var blockSensitive: String { L10nLookup.string("settings.block_sensitive") }
+        /// Last synced: {time}
+        public static func callLogLastSync(time: String) -> String {
+            L10nLookup.format("settings.call_log_last_sync", time)
+        }
+        /// Call Notifications
+        public static var callNotify: String { L10nLookup.string("settings.call_notify") }
+        /// Ring on Mac
+        public static var callRingtone: String { L10nLookup.string("settings.call_ringtone") }
         /// Calls
         public static var calls: String { L10nLookup.string("settings.calls") }
         /// Camera
@@ -329,6 +491,8 @@ public enum L10n {
         public static var deleteAllDataWarning: String { L10nLookup.string("settings.delete_all_data_warning") }
         /// Couldn't connect to the server. Delete from this device anyway?
         public static var deleteAllOfflineConfirm: String { L10nLookup.string("settings.delete_all_offline_confirm") }
+        /// To ring, allow HandLive to read your Focus status in System Settings › Privacy & Security › Focus.
+        public static var focusPermissionHint: String { L10nLookup.string("settings.focus_permission_hint") }
         /// General
         public static var general: String { L10nLookup.string("settings.general") }
         /// Internet Connection
@@ -349,6 +513,14 @@ public enum L10n {
         public static var permissions: String { L10nLookup.string("settings.permissions") }
         /// Phone
         public static var phone: String { L10nLookup.string("settings.phone") }
+        /// Quick Replies
+        public static var quickReplies: String { L10nLookup.string("settings.quick_replies") }
+        /// Up to 6 replies of 160 characters. Choose one when you decline a call on this Mac.
+        public static var quickRepliesFooter: String { L10nLookup.string("settings.quick_replies_footer") }
+        /// Add Quick Reply
+        public static var quickReplyAdd: String { L10nLookup.string("settings.quick_reply_add") }
+        /// Remove Quick Reply
+        public static var quickReplyRemove: String { L10nLookup.string("settings.quick_reply_remove") }
         /// Remove Device from Server
         public static var removeFromServer: String { L10nLookup.string("settings.remove_from_server") }
         /// Remove from Server

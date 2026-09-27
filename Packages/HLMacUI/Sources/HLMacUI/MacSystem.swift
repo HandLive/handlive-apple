@@ -52,7 +52,7 @@ public enum PasteAccess: Equatable, Sendable {
 
 /// Pages of System Settings the guides open (SET-03 field 13).
 public enum SystemSettingsPane {
-    case privacyAndSecurity, localNetwork, notifications, loginItems
+    case privacyAndSecurity, localNetwork, notifications, loginItems, focus
 
     public func open() {
         if self == .loginItems { return LoginItem.openSystemSettings() }
@@ -60,6 +60,7 @@ public enum SystemSettingsPane {
         case .privacyAndSecurity: "x-apple.systempreferences:com.apple.preference.security"
         case .localNetwork: "x-apple.systempreferences:com.apple.preference.security?Privacy_LocalNetwork"
         case .notifications: "x-apple.systempreferences:com.apple.Notifications-Settings.extension"
+        case .focus: "x-apple.systempreferences:com.apple.preference.security?Privacy_Focus"
         case .loginItems: ""
         }
         if let url = URL(string: address) { NSWorkspace.shared.open(url) }

@@ -85,6 +85,8 @@ final class OutgoingClip {
     let createdAt: Date
     let manual: Bool
     var acknowledged = false
+    /// When the phone answered `applied`: echoes of this clip are ignored for `CLIP_LOOP_WINDOW` from then (QC4).
+    var appliedAt: Date?
     /// Sent again after a reconnection: a conflict for it is not shown (CLIP-01 API 6 logic 3).
     var replayed = false
 

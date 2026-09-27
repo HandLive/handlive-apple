@@ -31,6 +31,17 @@ extension SmsEngine {
         return compact
     }
 
+    /// A message to `address` in its existing one-to-one conversation, if there is one: the quick reply of "Decline with
+    /// Message…" (CALL-02 API 5) and the "Message" action of a missed call (CALL-04 API 4).
+    @discardableResult
+    public func send(text: String, toNumber address: String, subId: Int32?) async throws -> String {
+        guard let pairId else { throw SmsComposeError.notPaired }
+        let threadId = try? await store.database.pool.read { db in
+            try SmsStore.thread(db, pairId: pairId, address: address)?.threadId
+        }
+        return try await send(text: text, to: address, threadId: threadId ?? nil, subId: subId)
+    }
+
     /// Steps 2–5: validate, queue as `pending` (the placeholder bubble), then send when a session exists; otherwise ask
     /// for a wake-up and wait (E1). Returns the `local_id`.
     @discardableResult
@@ -72,6 +83,17 @@ extension SmsEngine {
                            deadline: Duration) async -> Bool {
         guard let localId = try? await send(text: text, to: address, threadId: threadId, subId: subId) else { return false }
         await markRead(threadId: threadId) // SMS-04 API 5 logic 5
+        return await accepted(localId: localId, within: deadline)
+    }
+
+    /// The "Message" action of a missed call on iPhone/iPad (CALL-04 API 4): queue for the number, then wait up to
+    /// `deadline` for the phone to accept; `false` leaves the message `pending`.
+    public func quickReply(text: String, toNumber address: String, subId: Int32?, deadline: Duration) async -> Bool {
+        guard let localId = try? await send(text: text, toNumber: address, subId: subId) else { return false }
+        return await accepted(localId: localId, within: deadline)
+    }
+
+    private func accepted(localId: String, within deadline: Duration) async -> Bool {
         let end = ContinuousClock.now.advanced(by: deadline)
         while ContinuousClock.now < end {
             if let entry = try? await store.outboxEntry(localId: localId), entry.state != .pending { return true }

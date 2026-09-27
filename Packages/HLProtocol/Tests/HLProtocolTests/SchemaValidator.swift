@@ -2,13 +2,14 @@ import Foundation
 
 /// Bộ kiểm JSON Schema draft 2020-12 rút gọn — chỉ đúng các từ khóa `shared/schemas/` đang dùng:
 /// `$ref` (tương đối giữa file + JSON pointer), `type`, `enum`, `const`, `required`, `properties`,
-/// `additionalProperties`, `items`, `uniqueItems`, `minimum`, `maximum`, `minLength`, `pattern`,
-/// `allOf`, `anyOf`, `not`, `if`/`then`/`else`. Từ khóa lạ → báo lỗi để không bỏ sót ràng buộc.
+/// `additionalProperties`, `maxProperties`, `items`, `maxItems`, `uniqueItems`, `minimum`, `maximum`, `minLength`,
+/// `pattern`, `allOf`, `anyOf`, `oneOf`, `not`, `if`/`then`/`else`. Từ khóa lạ → báo lỗi để không bỏ sót ràng buộc.
 struct SchemaValidator {
     private static let annotations: Set<String> = ["$schema", "$id", "$defs", "title", "description"]
     private static let supported: Set<String> = [
-        "$ref", "type", "enum", "const", "required", "properties", "additionalProperties", "items",
-        "uniqueItems", "minimum", "maximum", "minLength", "pattern", "allOf", "anyOf", "not", "if", "then", "else"
+        "$ref", "type", "enum", "const", "required", "properties", "additionalProperties", "maxProperties", "items",
+        "maxItems", "uniqueItems", "minimum", "maximum", "minLength", "pattern", "allOf", "anyOf", "oneOf", "not", "if",
+        "then", "else"
     ]
 
     private let documents: [String: Any]
@@ -88,6 +89,9 @@ struct SchemaValidator {
             }
         }
         if let object = value as? [String: Any] {
+            if let max = schema["maxProperties"] as? Int, object.count > max {
+                errors.append("\(path): nhiều hơn maxProperties")
+            }
             for key in schema["required"] as? [String] ?? [] where object[key] == nil {
                 errors.append("\(path): thiếu \(key)")
             }
@@ -101,6 +105,9 @@ struct SchemaValidator {
             }
         }
         if let array = value as? [Any] {
+            if let max = schema["maxItems"] as? Int, array.count > max {
+                errors.append("\(path): nhiều hơn maxItems")
+            }
             if let items = schema["items"] {
                 for (index, item) in array.enumerated() {
                     check(item, items, base: base, path: "\(path)[\(index)]", errors: &errors)
@@ -120,6 +127,9 @@ struct SchemaValidator {
         if let anyOf = schema["anyOf"] as? [Any],
            !anyOf.contains(where: { passes(value, $0, base: base) }) {
             errors.append("\(path): không khớp anyOf")
+        }
+        if let oneOf = schema["oneOf"] as? [Any], oneOf.filter({ passes(value, $0, base: base) }).count != 1 {
+            errors.append("\(path): không khớp đúng một nhánh oneOf")
         }
         if let negated = schema["not"], passes(value, negated, base: base) {
             errors.append("\(path): khớp not")

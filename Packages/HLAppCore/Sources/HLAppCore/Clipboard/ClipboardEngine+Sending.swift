@@ -179,6 +179,7 @@ extension ClipboardEngine {
         if ack.ok {
             // `ignored`/`cancelled` follows a `clipboard/cancel`, which already decided about replaying.
             if !(result?.status == .ignored && result?.reason == .cancelled) { clip.acknowledged = true }
+            if result == nil || result?.status == .applied { clip.appliedAt = now() }
             if clip.manual, result?.status == .applied { onNotice(.sent(deviceName: phone.name)) }
             return
         }

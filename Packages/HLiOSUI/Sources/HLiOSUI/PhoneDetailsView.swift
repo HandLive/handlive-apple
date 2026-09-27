@@ -7,8 +7,9 @@ import HLSMSUI
 import SwiftUI
 
 /// The phone's details (PAIR-02, DeviceRow README): its status, the features in use with the reason one isn't (field
-/// 8), the permissions missing on the phone (field 9 — a missing SMS permission opens the SMS-01 field 7 alert), the
-/// Security Code (field 10) and "Unpair" in the last group (field 12, PAIR-03).
+/// 8), the permissions missing on the phone (field 9 — a missing SMS permission opens the SMS-01 field 7 alert, a
+/// missing call permission the call permission instructions), the Security Code (field 10) and "Unpair" in the last
+/// group (field 12, PAIR-03).
 struct PhoneDetailsView: View {
     @ObservedObject var model: IOSAppModel
     let device: PairedDeviceRecord
@@ -17,6 +18,7 @@ struct PhoneDetailsView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var confirmingUnpair = false
     @State private var showingSmsInstructions = false
+    @State private var showingCallInstructions = false
 
     var body: some View {
         GroupedList {
@@ -29,6 +31,7 @@ struct PhoneDetailsView: View {
             GroupedSection {
                 feature(L10n.Settings.clipboard, reason: model.clipboardFeatureReason)
                 feature(L10n.Settings.smsMessages, reason: model.smsFeatureReason)
+                feature(L10n.Settings.calls, reason: model.callsFeatureReason)
             }
             missingPermissions
             GroupedSection {
@@ -50,6 +53,11 @@ struct PhoneDetailsView: View {
             Text(L10n.Pairing.unpairConfirmMessage(deviceName: model.device.name))
         }
         .smsPermissionInstructions(isPresented: $showingSmsInstructions)
+        .alert(L10n.Call.permissionInstructionsTitle, isPresented: $showingCallInstructions) {
+            Button(L10n.Common.ok) {}
+        } message: {
+            Text(L10n.Call.permissionInstructionsBody)
+        }
         .onAppear { model.refreshPairOnRelay() }
     }
 
@@ -80,14 +88,32 @@ struct PhoneDetailsView: View {
                     .accessibilityHint(Text(L10n.Common.viewInstructions))
                 }
                 if SmsPermissions.contactsMissing(in: permissions) { reason(L10n.Sms.contactsPermissionHint) }
-                if permissions.contains(where: Self.hasOwnPhase) { reason(L10n.Pairing.reasonMissingPermission) }
+                if permissions.contains(where: { CallPermissions.isCall($0, callsOnPhone: callsOnPhone) }) {
+                    Button { showingCallInstructions = true } label: {
+                        LabeledContent {
+                            Image(systemName: "info.circle").accessibilityHidden(true)
+                        } label: {
+                            reason(L10n.Pairing.reasonMissingPermission)
+                        }
+                    }
+                    .accessibilityHint(Text(L10n.Common.viewInstructions))
+                }
+                if permissions.contains(where: { Self.hasOwnPhase($0, callsOnPhone: callsOnPhone) }) {
+                    reason(L10n.Pairing.reasonMissingPermission)
+                }
             }
         }
     }
 
-    /// A permission of a later feature (calls, camera…), neither SMS nor contacts.
-    static func hasOwnPhase(_ permission: String) -> Bool {
+    /// Calls are on on the phone: its missing phone-state and contacts permissions count as call permissions too.
+    private var callsOnPhone: Bool {
+        device.peerCapability?.features.call?.enabled == true
+    }
+
+    /// A permission of a later feature (camera…), neither SMS, contacts nor calls.
+    static func hasOwnPhase(_ permission: String, callsOnPhone: Bool = false) -> Bool {
         !SmsPermissions.isSms(permission) && !SmsPermissions.matches(permission, SmsPermissions.contacts)
+            && !CallPermissions.isCall(permission, callsOnPhone: callsOnPhone)
     }
 
     private func reason(_ text: String) -> some View {

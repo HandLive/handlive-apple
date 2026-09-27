@@ -49,6 +49,21 @@ struct SmsEngineSendTests {
                                           body: "Ok, 3h mình có mặt", subId: 1))
     }
 
+    @Test("A reply to a caller goes into the existing conversation with the number, or a new one (CALL-02 API 5)")
+    func sendToNumber() async throws {
+        let harness = try engine()
+        let (engine, store) = (harness.engine, harness.store)
+        try await store.applyNew(SmsNewData(message: SmsFixtures.message(1, thread: 42, ts: 10),
+                                            thread: SmsFixtures.thread(42, lastTs: 10)), pairId: pairId)
+        let known = try await engine.send(text: "I'm in a meeting", toNumber: "+84900000123", subId: 1)
+        #expect(try await store.outboxEntry(localId: known)?.threadId == 42)
+        let unknown = try await engine.send(text: "I'm in a meeting", toNumber: "+84900000999", subId: nil)
+        #expect(try await store.outboxEntry(localId: unknown)?.threadId == nil)
+        let peer = FakeSmsPeer(Self.handler { FakeSmsPeer.success($0, SmsSendAckData(accepted: true, parts: 1)) })
+        engine.connected(peer: peer, capability: SmsFixtures.capability)
+        #expect(await engine.quickReply(text: "Ok", toNumber: "+84900000123", subId: 1, deadline: .seconds(2)))
+    }
+
     @Test("No ack: resent with the same envelope id after each retry delay, then kept pending (step 5, E1)")
     func retriesWithSameId() async throws {
         let harness = try engine()

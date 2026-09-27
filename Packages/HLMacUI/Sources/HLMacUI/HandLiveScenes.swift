@@ -14,7 +14,12 @@ public struct HandLiveScenes: Scene {
     }
 
     public var body: some Scene {
-        MenuBarExtra(isInserted: Binding(get: { model.showInMenuBar }, set: { model.setShowInMenuBar($0) })) {
+        // The status item reports its visibility through KVO whenever SwiftUI updates it; writing an unchanged value
+        // back would publish, update the menu bar extras and report again, in an endless loop on the main thread.
+        MenuBarExtra(isInserted: Binding(get: { model.showInMenuBar }, set: { inserted in
+            guard inserted != model.showInMenuBar else { return }
+            model.setShowInMenuBar(inserted)
+        })) {
             MenuBarMenu(model: model, actions: actions)
         } label: {
             MenuBarIcon(model: model)

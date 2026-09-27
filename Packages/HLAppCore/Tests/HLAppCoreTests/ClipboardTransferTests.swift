@@ -126,6 +126,52 @@ struct ClipboardTransferTests {
         #expect(harness.peer.pushes.count == 1)
     }
 
+    @Test("An image file copied in Finder goes out as that image; a document or a missing file does not")
+    func copiedFiles() async throws {
+        let harness = ClipboardHarness()
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("handlive-copied-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        func copyFile(_ name: String, contents: Data?) throws {
+            let url = folder.appendingPathComponent(name)
+            if let contents { try contents.write(to: url) }
+            harness.pasteboard.copy([(PasteboardTypeID.fileURL, Data(url.absoluteString.utf8)),
+                                     (PasteboardTypeID.text, Data(name.utf8))])
+            harness.engine.poll()
+        }
+        let image = try Self.png(side: 64)
+        try copyFile("Screenshot.png", contents: image)
+        #expect(await harness.until { harness.peer.pushes.count == 1 })
+        let push = try #require(harness.peer.pushes.first)
+        #expect(push.kind == .image && push.mime == ClipMime.png && push.width == 64 && push.height == 64)
+        #expect(push.transfer?.sha256 == Base64Coding.encodeB64u(HMACSHA256.sha256(image)))
+        try copyFile("Notes.txt", contents: Data("notes".utf8))
+        try? await Task.sleep(for: .milliseconds(100))
+        #expect(harness.peer.pushes.count == 1 && harness.notices.isEmpty)
+        harness.engine.sendClipboardNow()
+        #expect(harness.notices == [.emptyOrNotText]) // a document is not sent, nor its name
+        try copyFile("Gone.png", contents: nil)
+        try? await Task.sleep(for: .milliseconds(100))
+        harness.engine.sendClipboardNow()
+        #expect(await harness.until { harness.notices == [.emptyOrNotText, .imageUnreadable] })
+        #expect(harness.peer.pushes.count == 1)
+    }
+
+    @Test("An image file over 10 MiB is not read: 'Image is too large'")
+    func copiedFileTooLarge() async throws {
+        let harness = ClipboardHarness()
+        let file = FileManager.default.temporaryDirectory.appendingPathComponent("handlive-large-\(UUID().uuidString).png")
+        #expect(FileManager.default.createFile(atPath: file.path, contents: nil))
+        defer { try? FileManager.default.removeItem(at: file) }
+        let handle = try FileHandle(forWritingTo: file)
+        try handle.truncate(atOffset: UInt64(ClipboardConstants.maxImageBytes + 1)) // sparse: nothing is written
+        try handle.close()
+        harness.pasteboard.copy([(PasteboardTypeID.fileURL, Data(file.absoluteString.utf8))])
+        harness.engine.poll()
+        #expect(await harness.until { harness.notices == [.imageTooLarge] })
+        #expect(harness.peer.pushes.isEmpty)
+    }
+
     @Test("CLIP_CHECKSUM_MISMATCH: resent once with a new transfer_id and the same clip_id; twice → 'Couldn't send the image'")
     func resendOnce() async throws {
         let harness = ClipboardHarness()

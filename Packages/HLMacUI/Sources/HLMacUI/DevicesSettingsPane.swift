@@ -103,8 +103,10 @@ struct DeviceDetailView: View {
                 Section { // field 8: the features in use, each with its reason when it isn't
                     featureRow(L10n.Settings.clipboard, reason: model.clipboardUnavailableReason)
                     featureRow(L10n.Settings.smsMessages, reason: model.smsFeatureReason)
+                    featureRow(L10n.Settings.calls, reason: model.callsFeatureReason)
                 }
-                MissingPermissionsSection(permissions: device.peerCapability?.permissionsMissing ?? [])
+                MissingPermissionsSection(permissions: device.peerCapability?.permissionsMissing ?? [],
+                                          callsOnPhone: device.peerCapability?.features.call?.enabled == true)
                 Section {
                     LabeledContent(L10n.Pairing.securityCode) {
                         Text(verbatim: device.securityCode)
@@ -147,20 +149,43 @@ extension DeviceDetailView {
 /// phases.
 struct MissingPermissionsSection: View {
     let permissions: [String]
+    /// Calls are on on the phone: its missing phone-state and contacts permissions count as call permissions too.
+    var callsOnPhone = false
+    @State private var showingCallInstructions = false
 
     var body: some View {
         if !permissions.isEmpty {
             Section {
                 if SmsPermissions.smsMissing(in: permissions) { SmsPhoneProblemRow(.missingPermission) }
                 if SmsPermissions.contactsMissing(in: permissions) { reason(L10n.Sms.contactsPermissionHint) }
-                if permissions.contains(where: Self.hasOwnPhase) { reason(L10n.Pairing.reasonMissingPermission) }
+                if permissions.contains(where: { Self.isCall($0, callsOnPhone: callsOnPhone) }) {
+                    VStack(alignment: .leading, spacing: HLSpacing.space8) {
+                        reason(L10n.Pairing.reasonMissingPermission)
+                        Button(L10n.Common.viewInstructionsEllipsis) { showingCallInstructions = true }
+                    }
+                }
+                if permissions.contains(where: { Self.hasOwnPhase($0, callsOnPhone: callsOnPhone) }) {
+                    reason(L10n.Pairing.reasonMissingPermission)
+                }
+            }
+            .alert(L10n.Call.permissionInstructionsTitle, isPresented: $showingCallInstructions) {
+                Button(L10n.Common.ok) {}.keyboardShortcut(.defaultAction)
+            } message: {
+                Text(L10n.Call.permissionInstructionsBody)
             }
         }
     }
 
-    /// A permission of a later feature (calls, camera…), neither SMS nor contacts.
-    static func hasOwnPhase(_ permission: String) -> Bool {
+    /// PAIR-02 field 9: `READ_CALL_LOG` and `ANSWER_PHONE_CALLS`, and `READ_PHONE_STATE` and `READ_CONTACTS` while calls
+    /// are on on the phone, open the call permission instructions.
+    static func isCall(_ permission: String, callsOnPhone: Bool) -> Bool {
+        CallPermissions.isCall(permission, callsOnPhone: callsOnPhone)
+    }
+
+    /// A permission of a later feature (camera…), neither SMS, contacts nor calls.
+    static func hasOwnPhase(_ permission: String, callsOnPhone: Bool = false) -> Bool {
         !SmsPermissions.isSms(permission) && !SmsPermissions.matches(permission, SmsPermissions.contacts)
+            && !isCall(permission, callsOnPhone: callsOnPhone)
     }
 
     private func reason(_ text: String) -> some View {

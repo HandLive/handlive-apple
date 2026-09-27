@@ -114,6 +114,8 @@ struct SmsEngineSyncTests {
         engine.connected(peer: FakeSmsPeer { Self.page($0, SmsSyncAckData(threads: [], messages: [], cursor: "c",
                                                                           hasMore: false, unread: [])) },
                          capability: SmsFixtures.capability)
+        // The sync's last page reconciles the unread state; on a slow runner it could land after the new messages.
+        #expect(await log.wait { $0 == .syncStatus(.done) } != nil)
         let new = SmsNewData(message: SmsFixtures.message(7, thread: 3, ts: 70), thread: SmsFixtures.thread(3, lastTs: 70,
                                                                                                           unread: 1))
         engine.receive(Self.envelope(.new, new))

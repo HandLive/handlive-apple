@@ -9,7 +9,10 @@ import HLTransport
 extension AppModel {
     /// Connection manager events (CONN-01 step 10, CONN-02, PAIR-03 flow B).
     func handle(_ event: LinkEvent) async {
-        defer { messagesLinkEvent(event) }
+        defer {
+            messagesLinkEvent(event)
+            calls.linkEvent(event)
+        }
         switch event {
         case .status(let status):
             link = status
@@ -83,6 +86,8 @@ extension AppModel {
         clipboard?.phoneDisconnected()
         updateClipboardPolling()
         forgetMessages(pairId: record.pairId)
+        calls.forget(pairId: record.pairId)
+        calls.setPair(nil)
     }
 }
 

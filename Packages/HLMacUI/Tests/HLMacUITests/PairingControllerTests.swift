@@ -181,7 +181,12 @@ struct PairingControllerTests {
         #expect(await eventually { search.all.count == 2 })
         #expect(pairing.qrURI != firstURI && pairing.notice == nil)
         search.all.last?.progress(.verifying)
-        try await Task.sleep(for: .milliseconds(900))
+        #expect(await eventually { pairing.progress == .verifying })
+        // The ticker checks every 250 ms: wait for the countdown to run down to 0:00, then a few more ticks, however
+        // slow the machine is (a new code starts at 0 until the first tick).
+        #expect(await eventually { pairing.secondsLeft == 1 })
+        #expect(await eventually { pairing.secondsLeft == 0 })
+        try await Task.sleep(for: .milliseconds(600))
         #expect(search.all.count == 2 && pairing.secondsLeft == 0)
         pairing.stop()
     }

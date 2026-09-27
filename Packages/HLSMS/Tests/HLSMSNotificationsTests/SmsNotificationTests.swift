@@ -41,24 +41,31 @@ struct SmsNotificationTests {
         #expect(group.categoryIdentifier == "HL_SMS_GROUP" && group.title == "090 000 0123, 090 000 0456")
     }
 
-    @Test("Categories: Reply with a text field and Mark as Read; groups only Mark as Read")
+    @Test("Categories: Reply with a text field, only once unlocked, and Mark as Read; groups only Mark as Read")
     func categories() throws {
         let categories = SmsNotificationBuilder.categories()
         let single = try #require(categories.first { $0.identifier == "HL_SMS" })
         #expect(single.actions.map(\.identifier) == ["HL_SMS_REPLY", "HL_SMS_MARK_READ"])
         #expect(single.actions.first is UNTextInputNotificationAction)
+        #expect(single.actions.first?.options.contains(.authenticationRequired) == true)
         #expect(!single.actions.contains { $0.options.contains(.foreground) })
         let group = try #require(categories.first { $0.identifier == "HL_SMS_GROUP" })
         #expect(group.actions.map(\.identifier) == ["HL_SMS_MARK_READ"])
     }
 
-    @Test("Removal by userInfo: one conversation, up to read_up_to_ts; generic ones after a sync")
+    @Test("Removal by userInfo: one conversation, up to read_up_to_ts; generic SMS ones after a sync, never calls")
     func removal() {
+        func push(_ type: MessageType) -> [AnyHashable: Any] {
+            let envelope = Envelope(type: type, plainPayload: Data("{}".utf8))
+            return ["p": Self.pairId, "hl": Base64Coding.encodeB64(envelope.wireData())]
+        }
         let delivered = [
             DeliveredNotification(identifier: "a", userInfo: ["pair_id": Self.pairId, "thread_id": 42, "ts": 100]),
             DeliveredNotification(identifier: "b", userInfo: ["pair_id": Self.pairId, "thread_id": 42, "ts": 200]),
             DeliveredNotification(identifier: "c", userInfo: ["pair_id": Self.pairId, "thread_id": 7, "ts": 100]),
-            DeliveredNotification(identifier: "d", userInfo: ["p": Self.pairId, "hl": "x"]),
+            DeliveredNotification(identifier: "d", userInfo: push(.sms)),
+            DeliveredNotification(identifier: "e", userInfo: push(.callEvent)),
+            DeliveredNotification(identifier: "f", userInfo: ["p": Self.pairId, "hl": "x"]),
         ]
         #expect(SmsNotificationFilter.identifiers(in: delivered, pairId: Self.pairId, threadId: 42, upToTs: 150) == ["a"])
         #expect(SmsNotificationFilter.identifiers(in: delivered, pairId: Self.pairId, threadId: 42, upToTs: nil) == ["a", "b"])

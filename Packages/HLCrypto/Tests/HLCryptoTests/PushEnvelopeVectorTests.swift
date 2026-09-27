@@ -3,8 +3,9 @@ import HLProtocol
 import Testing
 @testable import HLCrypto
 
-/// `shared/test-vectors/push-envelope.json` (S2.3): `K_push` of each pair and the envelopes an iPhone/iPad receives in
-/// `hl`, decrypted as the Notification Service Extension does (CONN-04 step 9b); every invalid vector is refused.
+/// `shared/test-vectors/push-envelope.json`: `K_push` of each pair and the envelopes an iPhone/iPad receives in `hl` (new
+/// SMS, incoming and missed calls), decrypted as the Notification Service Extension does (CONN-04 step 9b); every
+/// invalid vector is refused.
 @Suite("push-envelope.json")
 struct PushEnvelopeVectorTests {
     let file: VectorFile
@@ -27,9 +28,9 @@ struct PushEnvelopeVectorTests {
         }
     }
 
-    @Test("The APNs payload's p and hl open to the plaintext with the pair's K_push, the SMS text cut ones too")
+    @Test("The APNs payload's p and hl open to the plaintext with the pair's K_push: SMS, the text cut ones and calls")
     func envelopes() throws {
-        #expect(file.vectors.filter { $0["kind"] as? String == "envelope" }.count == 8)
+        #expect(file.vectors.filter { $0["kind"] as? String == "envelope" }.count == 12)
         for vector in file.vectors where vector["kind"] as? String == "envelope" {
             let payload = try #require(try JSONSerialization.jsonObject(with: Data(try vector.string("apns_payload").utf8))
                 as? [String: Any])
@@ -47,7 +48,7 @@ struct PushEnvelopeVectorTests {
 
     @Test("Wrong key, changed tag or header, a stale envelope and base64url are all refused")
     func invalid() throws {
-        #expect(file.invalidVectors.count == 9)
+        #expect(file.invalidVectors.count == 12)
         for vector in file.invalidVectors {
             let userInfo: [AnyHashable: Any] = ["p": try vector.string("pair_id"), "hl": try vector.string("env_b64")]
             let reason = vector["reason"] as? String

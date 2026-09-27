@@ -94,6 +94,7 @@ extension AppModel {
         smsEngine?.setPair(nil)
         smsEngine = nil
         messages?.close()
+        calls.stop()
     }
 
     /// SET-02 API 7 in its order: the keys first (`SecItemDelete`), then the database and the pair store, settings,
@@ -106,6 +107,7 @@ extension AppModel {
             try? SmsDatabase.removeFiles(at: smsDatabaseURL)
         }
         messages = nil
+        database = nil
         try? FileManager.default.removeItem(at: pairStoreURL)
         settings.removeAll()
         if settings.defaults === UserDefaults.standard, let domain = Bundle.main.bundleIdentifier {
@@ -136,6 +138,7 @@ extension AppModel {
         smsEnabled = settings.smsEnabled
         smsNotify = settings.smsNotify
         smsPreview = settings.smsPreview
+        calls.reloadSettings()
         launch()
         applyActivationPolicy()
         didEraseAllData()

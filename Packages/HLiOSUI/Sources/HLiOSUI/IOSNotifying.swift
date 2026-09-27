@@ -25,6 +25,8 @@ public protocol IOSNotifying: AnyObject {
     func permission() async -> NotificationPermission
     /// SET-03 step 7: `requestAuthorization([.alert, .sound, .badge])` once; afterwards only the state is read.
     func requestPermission() async -> NotificationPermission
+    /// SET-03 field 8: Time Sensitive notifications turned off let a Focus silence incoming calls.
+    func timeSensitive() async -> TimeSensitiveSetting
 }
 
 #if os(iOS)
@@ -80,6 +82,10 @@ public final class UserNotificationsIOS: IOSNotifying {
 
     public func requestPermission() async -> NotificationPermission {
         await NotificationPermission.request()
+    }
+
+    public func timeSensitive() async -> TimeSensitiveSetting {
+        await TimeSensitiveSetting.current()
     }
 
     public func setBadge(_ count: Int) {

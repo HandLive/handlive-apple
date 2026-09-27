@@ -1,5 +1,6 @@
 #if os(iOS)
 import HLAppCore
+import HLCalls
 import HLDesignSystem
 import HLLocalization
 import HLSMSUI
@@ -7,7 +8,7 @@ import SwiftUI
 import UIKit
 
 /// The Settings tab (2-patterns/04-cai-dat.md, iOS; SET-02): `GroupedList` in the order Phone · Clipboard · Messages ·
-/// Internet Connection · Permissions · Data; reasons in `text-orange` under a row that can't work yet.
+/// Calls · Internet Connection · Permissions · Data; reasons in `text-orange` under a row that can't work yet.
 struct SettingsTabView: View {
     @ObservedObject var model: IOSAppModel
     let pair: () -> Void
@@ -19,6 +20,7 @@ struct SettingsTabView: View {
                 phoneSection
                 clipboardSection
                 if let messages = model.messages { MessagesSettingsSection(model: model, messages: messages) }
+                CallsSettingsSection(model: model, calls: model.calls)
                 GroupedSection {
                     Toggle(isOn: Binding(get: { model.relayEnabled }, set: { model.setRelayEnabled($0) })) {
                         GroupedRowLabel(L10n.Settings.internetConnection, systemImage: "globe", feature: .internet,
@@ -86,8 +88,7 @@ struct SettingsTabView: View {
                     Text(model.notificationPermission == .denied ? L10n.Common.off : L10n.Common.on)
                 } label: {
                     GroupedRowLabel(L10n.Settings.notifications, systemImage: "bell.badge", feature: .notifications,
-                                    unavailableReason: model.notificationPermission == .denied
-                                        ? L10n.Setup.notificationsDeniedIos : nil)
+                                    unavailableReason: notificationsReason)
                 }
             }
             .foregroundStyle(Color.primary)
@@ -102,6 +103,50 @@ struct SettingsTabView: View {
         }
     }
 
+    /// Notifications off (SET-03 field 7), or on with Time Sensitive off, where a Focus may silence calls (field 8).
+    private var notificationsReason: String? {
+        if model.notificationPermission == .denied { return L10n.Setup.notificationsDeniedIos }
+        return model.timeSensitive == .disabled ? L10n.Setup.timeSensitiveOff : nil
+    }
+}
+
+/// Calls (SET-02 fields 10–11, CALL-04 fields 11–12): the Calls switch with the reason calls can't work with the phone,
+/// Call Notifications, when the call log last synced and the call log permission hint. iPhone and iPad have no ringing
+/// and no quick replies (Mac only).
+struct CallsSettingsSection: View {
+    @ObservedObject var model: IOSAppModel
+    @ObservedObject var calls: IOSCalls
+
+    var body: some View {
+        GroupedSection(L10n.Settings.calls) {
+            Toggle(isOn: Binding(get: { calls.callsEnabled }, set: { calls.setCallsEnabled($0) })) {
+                GroupedRowLabel(L10n.Settings.calls, systemImage: "phone", feature: .calls,
+                                unavailableReason: model.callsPhoneProblem)
+            }
+            Toggle(L10n.Settings.callNotify, isOn: Binding(get: { calls.callNotify }, set: { calls.setCallNotify($0) }))
+                .disabled(!calls.callsEnabled)
+            if let list = calls.list { CallLogSyncRows(list: list) }
+        }
+    }
+}
+
+/// "Last synced: 5 minutes ago" (CALL-04 field 11) and the call log permission hint (field 12).
+struct CallLogSyncRows: View {
+    @ObservedObject var list: CallsModel
+
+    var body: some View {
+        if let time = list.lastSyncAt {
+            Text(L10n.Settings.callLogLastSync(time: RelativeDateTimeFormatter().localizedString(
+                for: Date(timeIntervalSince1970: TimeInterval(time) / 1000), relativeTo: Date())))
+                .font(.footnote)
+                .foregroundStyle(Color.secondary)
+        }
+        if list.status == .permissionMissing {
+            Label(L10n.Call.callLogPermissionHint, systemImage: "info.circle")
+                .font(.footnote)
+                .foregroundStyle(HLColorToken.textOrange.color)
+        }
+    }
 }
 
 /// Messages (SET-02 fields 7–9 and 25; SMS-01 fields 4–6 and 8): the switches, "Resync All SMS" with its

@@ -30,9 +30,10 @@ struct MessagesSplitView: View {
 
     var body: some View {
         NavigationSplitView {
-            ThreadListView(model: messages)
+            // The filter is the list's first row, not a `safeAreaInset`: an inset above a `.searchable` list sits
+            // under the navigation bar, hides the large title and collides with the search field on iOS 26+.
+            ThreadListView(model: messages) { filter }
                 .listStyle(.plain)
-                .safeAreaInset(edge: .top) { filter }
                 .searchable(text: $messages.searchText)
                 .navigationTitle(L10n.Sms.title)
                 .toolbar {
@@ -75,7 +76,7 @@ struct MessagesSplitView: View {
         }
     }
 
-    /// "All / Unread" above the list (SMS-03, iPhone and iPad).
+    /// "All / Unread" at the top of the list, under the search field (SMS-03, iPhone and iPad).
     private var filter: some View {
         Picker(selection: $messages.unreadOnly) {
             Text(L10n.Sms.filterAll).tag(false)
@@ -85,9 +86,9 @@ struct MessagesSplitView: View {
         }
         .pickerStyle(.segmented)
         .labelsHidden()
-        .padding(.horizontal, HLSpacing.space16)
-        .padding(.vertical, HLSpacing.space8)
-        .background(.bar)
+        .listRowSeparator(.hidden)
+        .listRowInsets(EdgeInsets(top: HLSpacing.space8, leading: HLSpacing.space16,
+                                  bottom: HLSpacing.space8, trailing: HLSpacing.space16))
     }
 }
 #endif

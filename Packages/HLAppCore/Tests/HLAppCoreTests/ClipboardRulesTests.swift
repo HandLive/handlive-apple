@@ -54,7 +54,7 @@ struct ClipboardRulesTests {
         #expect(ConflictPolicy.decide(originTs: 97_000, originDeviceId: "a", local: old, now: now) == .keepLocal)
     }
 
-    @Test("CLIP-02 API 1: kind from the first text or image type; file URLs skip the item; own writes are marked")
+    @Test("CLIP-02 API 1: kind from the first text or image type; an image file or a skipped item; own writes are marked")
     func reader() {
         let pasteboard = FakePasteboard()
         #expect(LocalClipReader.read(pasteboard) == .unsupported)
@@ -62,6 +62,16 @@ struct ClipboardRulesTests {
         #expect(LocalClipReader.read(pasteboard) == .text("x", sensitiveType: false))
         pasteboard.copy([(PasteboardTypeID.fileURL, Data("file:///a".utf8)), (PasteboardTypeID.text, Data("a".utf8))])
         #expect(LocalClipReader.read(pasteboard) == .unsupported)
+        // A file copied in Finder: an image file is the copied image, any other file is skipped with its name.
+        pasteboard.copy([(PasteboardTypeID.fileURL, Data("file:///Users/lan/Desktop/Shot.png".utf8)),
+                         (PasteboardTypeID.text, Data("Shot.png".utf8))])
+        #expect(LocalClipReader.read(pasteboard) == .imageFile(URL(fileURLWithPath: "/Users/lan/Desktop/Shot.png"),
+                                                               typeIdentifier: PasteboardTypeID.png, sensitiveType: false))
+        pasteboard.copy([(PasteboardTypeID.fileURL, Data("file:///Users/lan/Notes.txt".utf8)),
+                         (PasteboardTypeID.text, Data("Notes.txt".utf8))])
+        #expect(LocalClipReader.read(pasteboard) == .unsupported)
+        pasteboard.copy(text: "")
+        #expect(LocalClipReader.read(pasteboard) == .unsupported) // an empty text is nothing copied
         pasteboard.copy([(PasteboardTypeID.tiff, Data([1])), (PasteboardTypeID.png, Data([2])),
                          (PasteboardTypeID.text, Data("name.png".utf8))])
         #expect(LocalClipReader.read(pasteboard) == .image(Data([2]), typeIdentifier: PasteboardTypeID.png,

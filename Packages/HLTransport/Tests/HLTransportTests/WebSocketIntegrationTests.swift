@@ -49,6 +49,23 @@ struct WebSocketIntegrationTests {
         }
     }
 
+    @Test("A connection outlives its connect timeout: the timer only ends an attempt still in progress")
+    func connectionOutlivesTimeout() async throws {
+        guard let server = try TLSTestServer.start() else { return }
+        defer { server.stop() }
+        let timeout = Duration.seconds(2)
+        let connection = try await WebSocketConnector().connect(
+            to: .host("127.0.0.1", port: server.port), path: "/v1/ctl", policy: .pinned(server.certificateSHA256),
+            timeout: timeout)
+        let serverChannel = try #require(await server.accept())
+        try await Task.sleep(for: timeout + .seconds(1)) // the connect timer has fired by now
+        try await connection.channel.send(.text("still open"))
+        #expect(try await serverChannel.receive() == .text("still open"))
+        try await serverChannel.send(.text("still heard"))
+        #expect(try await connection.channel.receive() == .text("still heard"))
+        await connection.channel.close(code: .normal)
+    }
+
     @Test("A whole control session over TLS: handshake, request and ack, phone closes 4409")
     func controlSession() async throws {
         guard let server = try TLSTestServer.start() else { return }

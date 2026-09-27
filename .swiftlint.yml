@@ -2,8 +2,10 @@
 included:
   - macOS
   - Packages
+  - Tools
 excluded:
   - Packages/*/.build
+  - Tools/*/.build
   - Packages/*/Sources/*/Generated
   - "*.xcodeproj"
 # Dấu phẩy cuối trong literal: để tùy từng package (Swift 6.1+ cho phép rộng rãi).

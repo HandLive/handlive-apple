@@ -1,5 +1,6 @@
 import Foundation
 import HLAppCore
+import HLCallNotifications
 import HLLocalization
 import HLSMSNotifications
 import UserNotifications
@@ -12,6 +13,8 @@ public protocol ClipboardAlerting: AnyObject {
     var onSendAgain: () -> Void { get set }
     /// A response to an SMS notification (the center has one delegate, this one).
     var onSmsResponse: (SmsNotificationResponse) -> Void { get set }
+    /// A response to a call notification (Answer, Decline, Message, a click).
+    var onCallResponse: (CallNotificationResponse) -> Void { get set }
     func post(_ alert: ClipboardAlert)
 }
 
@@ -27,12 +30,14 @@ public final class UserNotificationAlerts: NSObject, ClipboardAlerting, UNUserNo
     public var onSendAnyway: () -> Void = {}
     public var onSendAgain: () -> Void = {}
     public var onSmsResponse: (SmsNotificationResponse) -> Void = { _ in }
+    public var onCallResponse: (CallNotificationResponse) -> Void = { _ in }
 
     /// Registers the categories and becomes the delegate; call at launch, before any notification arrives.
     public func register() {
         let center = UNUserNotificationCenter.current()
         center.delegate = self
-        center.setNotificationCategories(SmsNotificationBuilder.categories().union([
+        center.setNotificationCategories(SmsNotificationBuilder.categories().union(CallNotificationBuilder.macCategories())
+            .union([
             UNNotificationCategory(identifier: Self.sensitiveCategory,
                                    actions: [UNNotificationAction(identifier: Self.sendAnywayAction,
                                                                   title: L10n.Clipboard.sendAnyway)],
@@ -68,20 +73,25 @@ public final class UserNotificationAlerts: NSObject, ClipboardAlerting, UNUserNo
     nonisolated public func userNotificationCenter(_ center: UNUserNotificationCenter,
                                                    didReceive response: UNNotificationResponse) async {
         let action = response.actionIdentifier
-        let sms = SmsNotificationResponse(actionIdentifier: action, userInfo: response.notification.request.content.userInfo,
-                                          userText: (response as? UNTextInputNotificationResponse)?.userText)
+        let userInfo = response.notification.request.content.userInfo
+        let userText = (response as? UNTextInputNotificationResponse)?.userText
+        let sms = SmsNotificationResponse(actionIdentifier: action, userInfo: userInfo, userText: userText)
+        let call = CallNotificationResponse(actionIdentifier: action, userInfo: userInfo, userText: userText)
         await MainActor.run {
             switch action {
             case Self.sendAnywayAction: onSendAnyway()
             case Self.sendAgainAction: onSendAgain()
-            default: if let sms { onSmsResponse(sms) }
+            default:
+                if let call { onCallResponse(call) } else if let sms { onSmsResponse(sms) }
             }
         }
     }
 
+    /// A passive call notification stays in Notification Center without a banner even while HandLive is active: the
+    /// panel is the call's one visible layer (CALL-01 API 7 logic 1).
     nonisolated public func userNotificationCenter(_ center: UNUserNotificationCenter,
                                                    willPresent notification: UNNotification) async
         -> UNNotificationPresentationOptions {
-        [.banner, .list]
+        notification.request.content.interruptionLevel == .passive ? [.list] : [.banner, .list, .sound]
     }
 }

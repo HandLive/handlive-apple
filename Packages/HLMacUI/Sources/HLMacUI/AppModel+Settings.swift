@@ -5,9 +5,10 @@ import HLTransport
 
 extension AppModel {
     /// "Show HandLive in Menu Bar" (SET-02 field 31): off → Dock icon and the app's own menu bar become the way in.
+    /// Publishes only a change, so the menu bar extra's binding cannot feed itself.
     public func setShowInMenuBar(_ show: Bool) {
         settings.showInMenuBar = show
-        showInMenuBar = show
+        if showInMenuBar != show { showInMenuBar = show }
         applyActivationPolicy()
     }
 

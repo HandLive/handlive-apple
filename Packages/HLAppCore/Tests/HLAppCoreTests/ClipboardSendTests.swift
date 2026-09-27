@@ -68,6 +68,7 @@ struct ClipboardSendTests {
         #expect(harness.alerts == [.sensitiveBlocked] && harness.peer.pushes.isEmpty)
         harness.engine.sendAnyway()
         #expect(await harness.until { harness.peer.pushes.count == 1 })
+        #expect(await harness.until { harness.engine.latestLocal?.appliedAt != nil }) // before the clock moves
         #expect(harness.peer.pushes[0].sensitive)
         harness.pasteboard.copy(text: "pw", extraTypes: ["org.nspasteboard.ConcealedType"])
         harness.engine.poll()
@@ -114,6 +115,55 @@ struct ClipboardSendTests {
         harness.engine.poll()
         try? await Task.sleep(for: .milliseconds(50))
         #expect(harness.peer.pushes.isEmpty)
+    }
+
+    @Test("QC4: the clip just sent, written back by another clipboard tool, is not sent again for 5 s after the ack")
+    func echoOfSentClip() async {
+        let harness = ClipboardHarness()
+        harness.pasteboard.copy(text: "https://example.com/echo")
+        harness.engine.poll()
+        #expect(await harness.until { harness.peer.pushes.count == 1 })
+        #expect(await harness.until { harness.engine.latestLocal?.appliedAt != nil })
+        // An emulator's clipboard sharing writes the same text back: a new change without HandLive's mark.
+        harness.advance(4)
+        harness.pasteboard.copy(text: "https://example.com/echo")
+        harness.engine.poll()
+        try? await Task.sleep(for: .milliseconds(50))
+        #expect(harness.peer.pushes.count == 1)
+        // "Send Clipboard to Phone" still sends it; 5 s after the phone applied it, a copy of the same text is new.
+        harness.engine.sendClipboardNow()
+        #expect(await harness.until { harness.peer.pushes.count == 2 })
+        #expect(await harness.until { harness.engine.latestLocal?.appliedAt != nil })
+        harness.advance(6)
+        harness.pasteboard.copy(text: "https://example.com/echo")
+        harness.engine.poll()
+        #expect(await harness.until { harness.peer.pushes.count == 3 })
+    }
+
+    @Test("QC4: an echo that overtakes a slow phone's ack is not sent again while the clip is unacknowledged")
+    func echoBeforeAck() async {
+        let harness = ClipboardHarness()
+        harness.peer.answer(.timeout)
+        harness.pasteboard.copy(text: "slow phone")
+        harness.engine.poll()
+        #expect(await harness.until { harness.peer.pushes.count == 1 })
+        harness.advance(20)
+        harness.pasteboard.copy(text: "slow phone")
+        harness.engine.poll()
+        try? await Task.sleep(for: .milliseconds(50))
+        #expect(harness.peer.pushes.count == 1)
+    }
+
+    @Test("An empty text is nothing copied: not sent; the menu item says the clipboard is empty")
+    func emptyText() async {
+        let harness = ClipboardHarness()
+        // An emulator's clipboard sharing writes an empty text once the phone holds an image.
+        harness.pasteboard.copy(text: "")
+        harness.engine.poll()
+        try? await Task.sleep(for: .milliseconds(50))
+        #expect(harness.peer.pushes.isEmpty && harness.notices.isEmpty)
+        harness.engine.sendClipboardNow()
+        #expect(harness.notices == [.emptyOrNotText] && harness.peer.pushes.isEmpty)
     }
 
     @Test("Acks: INTERNAL → 'Couldn't update the clipboard on the phone'; FEATURE_DISABLED suspends until an update")

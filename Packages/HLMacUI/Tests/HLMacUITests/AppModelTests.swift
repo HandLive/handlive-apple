@@ -1,3 +1,4 @@
+import Combine
 import Foundation
 import HLAppCore
 import HLCrypto
@@ -43,6 +44,19 @@ struct AppModelTests {
         #expect(!model.sendImages)
         #expect(!model.canSendClipboard)
         #expect(model.clipboardUnavailableReason == nil) // no phone yet
+    }
+
+    @Test("Show in Menu Bar publishes only a change, so the menu bar extra's binding cannot loop")
+    func menuBarVisibility() {
+        let model = makeModel()
+        model.launch()
+        var changes = 0
+        let watcher = model.objectWillChange.sink { changes += 1 }
+        model.setShowInMenuBar(model.showInMenuBar)
+        #expect(changes == 0)
+        model.setShowInMenuBar(!model.showInMenuBar)
+        #expect(changes == 1 && !model.showInMenuBar && !model.settings.showInMenuBar)
+        watcher.cancel()
     }
 
     @Test("Link status → StatusIndicator state (0.11, PAIR-02 field 4)")

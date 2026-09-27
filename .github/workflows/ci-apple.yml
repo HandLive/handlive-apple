@@ -114,16 +114,23 @@ jobs:
       - name: xcodebuild test (every package)
         run: |
           set -euo pipefail
-          for pkg in HLProtocol HLCrypto HLTransport HLDesignSystem HLLocalization HLAppCore HLSMS HLSMSUI HLMacUI HLiOSUI; do
+          for pkg in HLProtocol HLCrypto HLTransport HLDesignSystem HLLocalization HLAppCore HLSMS HLSMSUI HLCalls HLMacUI HLiOSUI; do
             echo "::group::xcodebuild test $pkg"
-            # A package with several products (HLSMS: HLSMS + HLSMSNotifications) runs its tests in "<name>-Package".
-            scheme="$pkg"; [ "$pkg" = HLSMS ] && scheme="HLSMS-Package"
+            # A package with several products (HLSMS: HLSMS + HLSMSNotifications; HLCalls: HLCalls, HLCallNotifications,
+            # HLCallsUI) runs its tests in "<name>-Package".
+            scheme="$pkg"; case "$pkg" in HLSMS|HLCalls) scheme="$pkg-Package" ;; esac
             (cd "apple/Packages/$pkg" && xcodebuild test \
               -scheme "$scheme" \
               -destination 'platform=macOS' \
               -derivedDataPath "$DERIVED_DATA/$pkg")
             echo "::endgroup::"
           done
+
+      # The headless dev client (apple/Tools/HandLiveDevClient) is not part of the apps: built only, so it keeps
+      # compiling against the packages.
+      - name: swift build dev client
+        working-directory: apple/Tools/HandLiveDevClient
+        run: swift build
 
       - name: Cài XcodeGen + SwiftLint
         run: brew install xcodegen swiftlint

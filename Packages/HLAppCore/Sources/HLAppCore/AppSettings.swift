@@ -16,8 +16,10 @@ public enum SettingsKey: String, CaseIterable, Sendable {
     case clipSeenChangeCount = "clip.seen_change_count"
     case smsNotify = "sms.notify"
     case smsPreview = "sms.preview"
+    case smsPeerCanSend = "sms.peer_can_send"
     case callNotify = "call.notify"
     case callRingtone = "call.ringtone"
+    case callQuickReplies = "call.quick_replies"
     case callAudioAllowOpusFallback = "call_audio.allow_opus_fallback"
     case callAudioPhoneBluetoothAddress = "call_audio.phone_bt_address"
     case cameraDefaultCamera = "cam.default_camera"
@@ -99,6 +101,51 @@ public final class AppSettings: @unchecked Sendable {
         get { bool(.relayEnabled) }
         set { set(newValue, .relayEnabled) }
     }
+
+    /// `sms.peer_can_send` (iOS, internal): the app's copy of each pair's latest `features.sms.can_send`, which the
+    /// extension reads for the "Message" action of a missed call (CALL-04 API 4); no entry → no "Message".
+    public func peerCanSend(pairId: String) -> Bool? {
+        (defaults.dictionary(forKey: SettingsKey.smsPeerCanSend.rawValue) as? [String: Bool])?[pairId]
+    }
+
+    public func setPeerCanSend(_ canSend: Bool?, pairId: String) {
+        var map = (defaults.dictionary(forKey: SettingsKey.smsPeerCanSend.rawValue) as? [String: Bool]) ?? [:]
+        map[pairId] = canSend
+        defaults.set(map, forKey: SettingsKey.smsPeerCanSend.rawValue)
+    }
+
+    /// `feature.call` (SET-02 field 10).
+    public var callsEnabled: Bool {
+        get { bool(.featureCall) }
+        set { set(newValue, .featureCall) }
+    }
+
+    /// `call.notify` (field 11): iOS advertises it in its capability; the Mac only decides locally.
+    public var callNotify: Bool {
+        get { bool(.callNotify) }
+        set { set(newValue, .callNotify) }
+    }
+
+    /// `call.ringtone` (field 12, Mac).
+    public var callRingtone: Bool {
+        get { bool(.callRingtone) }
+        set { set(newValue, .callRingtone) }
+    }
+
+    /// `call.quick_replies` (CALL-02 field 8, Mac): at most 6 templates of 160 characters. `nil` until the first use,
+    /// when the two defaults are written in the language of that moment and become user data (0.12.4).
+    public var quickReplies: [String]? {
+        get { defaults.stringArray(forKey: SettingsKey.callQuickReplies.rawValue) }
+        set {
+            let replies = newValue.map { Array($0.map { String($0.prefix(Self.quickReplyMaxCharacters)) }
+                .prefix(Self.quickRepliesMax)) }
+            defaults.set(replies, forKey: SettingsKey.callQuickReplies.rawValue)
+        }
+    }
+
+    /// At most 6 quick replies of 160 characters each (0.9.5).
+    public static let quickRepliesMax = 6
+    public static let quickReplyMaxCharacters = 160
 
     public var showInMenuBar: Bool {
         get { bool(.menuBarExtra) }

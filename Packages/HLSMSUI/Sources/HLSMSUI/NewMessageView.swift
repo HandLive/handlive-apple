@@ -40,7 +40,10 @@ public struct NewMessageView: View {
         VStack(alignment: .leading, spacing: HLSpacing.space4) {
             HStack(spacing: HLSpacing.space8) {
                 Text(L10n.Sms.recipientLabel).foregroundStyle(Color.secondary).accessibilityHidden(true)
-                TextField(text: $model.recipient, prompt: nil) { Text(L10n.Sms.recipientLabel) }
+                // SMS-04 field 1: "To:" is shown once, by the text before the field. An empty prompt keeps the
+                // field's label from being drawn again as its placeholder (a `nil` prompt falls back to the label);
+                // VoiceOver still reads the label.
+                TextField(text: $model.recipient, prompt: Text(verbatim: "")) { Text(L10n.Sms.recipientLabel) }
                     .labelsHidden()
                     .textFieldStyle(.plain)
                     .focused($recipientFocused)

@@ -1,5 +1,6 @@
 import Foundation
 import HLAppCore
+import HLCalls
 import HLCrypto
 import HLDesignSystem
 import HLProtocol
@@ -8,7 +9,7 @@ import HLSMSUI
 import HLTransport
 
 /// State and intents of the iPhone and iPad app: keys, the paired phone, the connection while the app is in the
-/// foreground, the clipboard card, the Messages screens, settings and the push token. Views observe it; the app
+/// foreground, the clipboard card, the Messages screens, calls, settings and the push token. Views observe it; the app
 /// delegate and the scene phase forward system events to it.
 @MainActor
 public final class IOSAppModel: ObservableObject {
@@ -48,8 +49,12 @@ public final class IOSAppModel: ObservableObject {
     /// Result of a relay action in Settings (SET-02 field 30) or a relay account event (CONN-03 E3).
     @Published public internal(set) var relayNotice: String?
     @Published public internal(set) var notificationPermission = NotificationPermission.notDetermined
-    /// The tab shown; a tap on an SMS notification switches to Messages.
+    /// Time Sensitive notifications for the app (SET-03 field 8): off, a Focus may silence incoming calls.
+    @Published public internal(set) var timeSensitive = TimeSensitiveSetting.enabled
+    /// The tab shown; a tap on an SMS notification switches to Messages, on a missed call to Calls.
     @Published public var selectedTab = IOSTab.clipboard
+    /// Calls: the banner, the call log and the Calls tab (CALL-01…04).
+    public let calls: IOSCalls
 
     let settings: AppSettings
     let secrets: any SecretStore
@@ -81,12 +86,16 @@ public final class IOSAppModel: ObservableObject {
     var inForeground = true
     /// How long a quick reply waits for the phone before "Not sent yet" (SMS-04 API 5: about 20 s).
     var quickReplyDeadline: Duration = .seconds(20)
+    /// `CALL_REJECT_BG_TIMEOUT`: "Decline" from a notification, the background connection included (CALL-02 E8).
+    var callRejectDeadline: Duration = .seconds(15)
+    /// A "Decline" from a notification waits for the phone: a relay without the phone wakes it (CALL-02 API 6).
+    var callActionPending = false
     /// "Delete All HandLive Data" finished: the app starts over at setup (SET-02 A6).
     public var didEraseAllData: () -> Void = {}
 
     public init(settings: AppSettings, secrets: any SecretStore, device: LocalDevice, pairStoreURL: URL,
                 smsDatabaseURL: URL, pasteboard: any ClipboardAccess, notifications: any IOSNotifying,
-                pushProvider: RelayPushTokenRequest.Provider, pushTopic: String,
+                callNotifications: any IOSCallNotifying, pushProvider: RelayPushTokenRequest.Provider, pushTopic: String,
                 makeRelay: @escaping @MainActor (RelayIdentity) -> RelayServices?,
                 makeManager: @escaping @MainActor (CapabilityData, RelayServices?) -> ConnectionManager = {
                     ConnectionManager(localCapability: $0, relay: $1)
@@ -102,6 +111,7 @@ public final class IOSAppModel: ObservableObject {
         self.pushTopic = pushTopic
         self.makeRelay = makeRelay
         self.makeManager = makeManager
+        calls = IOSCalls(settings: settings, notifier: callNotifications)
         clipboardEnabled = settings.clipboardEnabled
         sendImages = settings.sendImages
         autoClearSeconds = settings.autoClearSeconds
@@ -140,6 +150,7 @@ public final class IOSAppModel: ObservableObject {
             phase = .ready
             startClipboard(identity: keys)
             startMessages(identity: keys)
+            startCalls()
             startConnection(identity: keys)
             Task { await revokeTombstones() } // PAIR-03 E3: revocations that waited for a network
         } catch IdentityError.keysMissing {
@@ -198,14 +209,17 @@ public final class IOSAppModel: ObservableObject {
 
     // MARK: - Scene phase (CONN-02 E3, CLIP-04 step 2)
 
-    /// The scene became active: reconnect, look at the clipboard's `changeCount`, re-read the notification state.
+    /// The scene became active: reconnect, look at the clipboard's `changeCount`, remove stale incoming-call
+    /// notifications, re-read the notification state.
     public func sceneBecameActive() {
         inForeground = true
         clipboard?.localChangeSeen()
         messages?.setActive(true)
+        calls.becameActive()
         Task {
             await manager?.systemDidWake()
             notificationPermission = await notifications.permission()
+            timeSensitive = await notifications.timeSensitive()
         }
     }
 
@@ -214,6 +228,7 @@ public final class IOSAppModel: ObservableObject {
     public func sceneEnteredBackground() {
         inForeground = false
         messages?.setActive(false)
+        calls.enteredBackground()
         Task { await manager?.systemWillSleep() }
     }
 
