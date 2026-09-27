@@ -110,34 +110,3 @@ public final class OnboardingFlow: ObservableObject {
         step = .paired(deviceName: name)
     }
 }
-
-/// SET-03 API 5: browse `_handlive._tcp` so macOS shows the local network prompt. A phone in the results means
-/// allowed, `PolicyDenied` means denied; with neither after `settle`, the answer is taken as allowed and a later
-/// denial still shows up as a connection issue (CONN-01 E8).
-public enum LocalNetworkProbe {
-    @Sendable public static func run() async -> DiscoveryState {
-        await probe(settle: .seconds(8))
-    }
-
-    static func probe(settle: Duration) async -> DiscoveryState {
-        await withTaskGroup(of: DiscoveryState?.self) { group in
-            group.addTask {
-                for await event in BonjourDiscovery().events() {
-                    switch event {
-                    case .state(.localNetworkDenied): return .localNetworkDenied
-                    case .results(let phones) where !phones.isEmpty: return .ready
-                    default: continue
-                    }
-                }
-                return nil
-            }
-            group.addTask {
-                try? await Task.sleep(for: settle)
-                return nil
-            }
-            let first = await group.next() ?? nil
-            group.cancelAll() // ends the browse (the stream stops the browser when iteration ends)
-            return first ?? .ready
-        }
-    }
-}

@@ -10,6 +10,7 @@ extension ClipboardEngine {
     /// again when it is less than 120 s old (QC7).
     public func phoneConnected(peer: any ClipboardPeer, deviceId: String, name: String, feature: ClipboardFeature?) {
         phone = Phone(peer: peer, deviceId: deviceId, name: name, feature: feature)
+        sessionStartedAt = now()
         guard let clip = latestLocal, !clip.acknowledged,
               now().timeIntervalSince(clip.createdAt) <= ClipboardConstants.staleAfter,
               let phone, accepts(clip.content, phone: phone),
@@ -64,7 +65,7 @@ extension ClipboardEngine {
                                 sensitive: sensitive, originTs: Self.milliseconds(createdAt), createdAt: createdAt,
                                 manual: manual)
         BenchLog.event("clip_read", ["clip": clip.clipId, "kind": content.kind.rawValue,
-                                     "bytes": String(content.bytes.count), "source": "mac"])
+                                     "bytes": String(content.bytes.count), "source": platform == .ios ? "ios" : "mac"])
         cancelOutgoingTransfer(reason: .superseded)
         latestLocal = clip
         guard let phone else {
@@ -93,7 +94,14 @@ extension ClipboardEngine {
         defer { if sending?.clipId == clip.clipId { sending = nil } }
         var resent = false
         while true {
-            guard let ack = try? await push(clip, to: phone) else { return }
+            guard let ack = try? await push(clip, to: phone) else {
+                // The iPhone and iPad say so and never replay: the user pastes again (CLIP-04 E9).
+                if platform == .ios, !Task.isCancelled {
+                    clip.acknowledged = true
+                    onNotice(.sendFailed)
+                }
+                return
+            }
             if !ack.ok, ack.error?.code == .clipChecksumMismatch, !resent {
                 resent = true
                 continue
@@ -158,7 +166,8 @@ extension ClipboardEngine {
         }
         return ClipboardPushData(clipId: clip.clipId, kind: clip.content.kind, mime: clip.content.mime, text: text,
                                  transfer: transfer, width: width, height: height, sensitive: clip.sensitive,
-                                 originTs: clip.originTs, source: .mac, originDeviceId: deviceId)
+                                 originTs: clip.originTs, source: platform == .ios ? .ios : .mac,
+                                 originDeviceId: deviceId)
     }
 
     /// CLIP-01 API 5 logic 2–4: `applied`/`ignored` acknowledge the clip; errors are told only for manual sends,

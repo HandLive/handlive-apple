@@ -13,6 +13,7 @@ public enum SettingsKey: String, CaseIterable, Sendable {
     case clipSendImages = "clip.send_images"
     case clipBlockSensitive = "clip.block_sensitive"
     case clipAutoClearSeconds = "clip.auto_clear_s"
+    case clipSeenChangeCount = "clip.seen_change_count"
     case smsNotify = "sms.notify"
     case smsPreview = "sms.preview"
     case callNotify = "call.notify"
@@ -53,6 +54,11 @@ public final class AppSettings: @unchecked Sendable {
         defaults.register(defaults: Self.registeredDefaults)
     }
 
+    /// "Delete All HandLive Data" (SET-02 API 7): every key of 0.9.5 goes; the registered defaults apply again.
+    public func removeAll() {
+        for key in SettingsKey.allCases { defaults.removeObject(forKey: key.rawValue) }
+    }
+
     public func bool(_ key: SettingsKey) -> Bool { defaults.bool(forKey: key.rawValue) }
     public func set(_ value: Bool, _ key: SettingsKey) { defaults.set(value, forKey: key.rawValue) }
 
@@ -69,6 +75,24 @@ public final class AppSettings: @unchecked Sendable {
     public var blockSensitive: Bool {
         get { bool(.clipBlockSensitive) }
         set { set(newValue, .clipBlockSensitive) }
+    }
+
+    /// `feature.sms` (SET-02 field 7).
+    public var smsEnabled: Bool {
+        get { bool(.featureSms) }
+        set { set(newValue, .featureSms) }
+    }
+
+    /// `sms.notify` (field 8): iOS advertises it in its capability; the Mac only decides locally.
+    public var smsNotify: Bool {
+        get { bool(.smsNotify) }
+        set { set(newValue, .smsNotify) }
+    }
+
+    /// `sms.preview` (field 9): the extension reads it from the App Group suite.
+    public var smsPreview: Bool {
+        get { bool(.smsPreview) }
+        set { set(newValue, .smsPreview) }
     }
 
     public var relayEnabled: Bool {
@@ -91,6 +115,13 @@ public final class AppSettings: @unchecked Sendable {
             let value = Self.autoClearChoices.contains(newValue) ? newValue : 60
             defaults.set(value, forKey: SettingsKey.clipAutoClearSeconds.rawValue)
         }
+    }
+
+    /// `clip.seen_change_count` (iOS): the `UIPasteboard.changeCount` already seen, so sending is only suggested for
+    /// new content (CLIP-04 step 2).
+    public var seenChangeCount: Int {
+        get { defaults.integer(forKey: SettingsKey.clipSeenChangeCount.rawValue) }
+        set { defaults.set(newValue, forKey: SettingsKey.clipSeenChangeCount.rawValue) }
     }
 
     /// `setup.started_at` / `setup.completed_at` as Unix milliseconds (0.9.5 `timestamp`).

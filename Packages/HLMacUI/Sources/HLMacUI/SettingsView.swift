@@ -3,9 +3,8 @@ import HLDesignSystem
 import HLLocalization
 import SwiftUI
 
-/// Settings window (2-patterns/04-cai-dat.md, macOS): one pane per feature group, each a grouped `Form`. Phase 1
-/// ships the panes of the features it has — General, Devices, Clipboard; Messages, Calls and Camera join with
-/// their phases.
+/// Settings window (2-patterns/04-cai-dat.md, macOS): one pane per feature group, each a grouped `Form` — General,
+/// Devices, Clipboard and Messages so far; Calls and Camera join with their phases.
 public struct SettingsView: View {
     @ObservedObject var model: AppModel
 
@@ -21,13 +20,15 @@ public struct SettingsView: View {
                 .tabItem { Label(L10n.Pairing.devices, systemImage: "candybarphone") }
             ClipboardSettingsPane(model: model)
                 .tabItem { Label(L10n.Settings.clipboard, systemImage: "doc.on.clipboard") }
+            MessagesSettingsPane(model: model)
+                .tabItem { Label(L10n.Settings.messages, systemImage: "message") }
         }
         .frame(width: 520)
         .onAppear { model.refreshSystemState() }
     }
 }
 
-/// General: menu bar icon, login item, Internet connection (SET-02 fields 21, 22, 31).
+/// General: menu bar icon, login item, the internet connection and the data actions (SET-02 fields 21, 22, 26–31).
 struct GeneralSettingsPane: View {
     @ObservedObject var model: AppModel
 
@@ -48,11 +49,7 @@ struct GeneralSettingsPane: View {
                     GuidanceRow(text: L10n.Setup.loginItemApprovalMac, pane: .loginItems)
                 }
             }
-            Section {
-                Toggle(L10n.Settings.internetConnection, isOn: Binding(get: { model.relayEnabled },
-                                                                      set: { model.setRelayEnabled($0) }))
-                    .toggleStyle(.switch).controlSize(.mini)
-            }
+            ServerSettingsSections(model: model)
         }
         .formStyle(.grouped)
     }

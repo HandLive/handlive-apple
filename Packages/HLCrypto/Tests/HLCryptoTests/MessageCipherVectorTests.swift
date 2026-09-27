@@ -85,5 +85,13 @@ struct SecretStoreTests {
         #expect(query[kSecAttrAccessible as String] as? String
                 == kSecAttrAccessibleWhenUnlockedThisDeviceOnly as String)
         #expect(query[kSecValueData as String] as? Data == Data([9]))
+        #expect(query[kSecAttrAccessGroup as String] == nil)
+    }
+
+    @Test("iOS shares its keys with the Notification Service Extension through the App Group access group")
+    func sharedAccessGroup() {
+        let query = KeychainSecretStore(accessGroup: "group.app.handlive").baseQuery(account: "pair")
+        #expect(query[kSecAttrAccessGroup as String] as? String == "group.app.handlive")
+        #expect(query[kSecAttrService as String] as? String == "app.handlive.keys")
     }
 }

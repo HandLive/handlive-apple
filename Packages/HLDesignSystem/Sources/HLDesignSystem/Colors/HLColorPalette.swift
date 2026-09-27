@@ -1,5 +1,5 @@
 import SwiftUI
-#if canImport(AppKit)
+#if os(macOS)
 import AppKit
 #elseif canImport(UIKit)
 import UIKit
@@ -54,7 +54,7 @@ extension HLColorToken {
     /// bằng Xcode); nếu không có (dựng bằng Command Line Tools) thì dùng giá trị sinh từ cùng tokens.json.
     public var color: Color {
         if let systemColor { return systemColor }
-        #if canImport(AppKit)
+        #if os(macOS)
         if let named = NSColor(named: rawValue, bundle: .module) { return Color(nsColor: named) }
         let palette = self.palette
         return Color(nsColor: NSColor(name: NSColor.Name(rawValue)) { appearance in
@@ -85,7 +85,7 @@ extension Color {
 }
 
 private extension HLRGBA {
-    #if canImport(AppKit)
+    #if os(macOS)
     var platformColor: NSColor {
         NSColor(srgbRed: CGFloat(red) / 255, green: CGFloat(green) / 255, blue: CGFloat(blue) / 255,
                 alpha: CGFloat(alpha) / 255)

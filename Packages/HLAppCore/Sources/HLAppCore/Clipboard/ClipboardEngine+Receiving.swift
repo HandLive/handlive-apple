@@ -75,6 +75,10 @@ extension ClipboardEngine {
     /// QC8, then the write (CLIP-01 API 7, CLIP-03 API 7), the QC4 trace, CLIP-05 and the `ack`.
     func apply(_ content: ClipContent, push: ClipboardPushData, requestId: String) {
         noticeUnseenLocalChange()
+        if keepsUnsentLocalContent() {
+            ledger.record(push.clipId, .ignored, now: now())
+            return reply(requestId, .ignored(push.clipId, .conflict))
+        }
         switch ConflictPolicy.decide(originTs: push.originTs, originDeviceId: push.originDeviceId,
                                      local: unacknowledgedLocalChange(), now: now()) {
         case .keepLocalAndReport:
@@ -100,6 +104,10 @@ extension ClipboardEngine {
         let writtenAt = now()
         ownWrite = OwnWrite(changeCount: count, clipId: push.clipId, writtenAt: writtenAt)
         lastSeenChangeCount = count
+        if platform == .ios {
+            settings.seenChangeCount = count
+            setUnsentLocalContent(false) // what was copied here is gone from the clipboard now
+        }
         received = (content.sha256, writtenAt)
         // The phone's clip won: an older local clip is not replayed over it.
         latestLocal = nil
@@ -107,6 +115,10 @@ extension ClipboardEngine {
         ledger.record(push.clipId, .applied, now: writtenAt)
         scheduleAutoClear()
         reply(requestId, .applied(push.clipId))
+        let clip = ReceivedClip(clipId: push.clipId, content: content, sensitive: push.sensitive,
+                                deviceName: phone?.name ?? "", receivedAt: writtenAt)
+        lastReceived = clip
+        onReceived(clip)
     }
 
     /// A change `poll` has not seen yet is a local change right now: poll first so QC8 (a) protects it.
@@ -119,6 +131,7 @@ extension ClipboardEngine {
         if let clip = latestLocal, !clip.acknowledged {
             return LocalChange(detectedAt: clip.createdAt, originTs: clip.originTs, originDeviceId: deviceId)
         }
+        guard platform == .mac else { return nil } // iOS copies count only through E2 (never read, maybe never sent)
         return detectedLocalChange.map {
             LocalChange(detectedAt: $0, originTs: Self.milliseconds($0), originDeviceId: deviceId)
         }

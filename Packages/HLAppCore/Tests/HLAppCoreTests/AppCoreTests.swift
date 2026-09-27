@@ -37,6 +37,16 @@ struct AppSettingsTests {
         settings.setupCompletedAt = nil
         #expect(settings.setupCompletedAt == nil)
     }
+
+    @Test("Delete All removes every key; the 0.9.5 defaults apply again")
+    func removeAll() {
+        let settings = AppSettings(defaults: freshDefaults())
+        settings.relayEnabled = false
+        settings.smsPreview = false
+        settings.setupCompletedAt = 1_727_151_000_123
+        settings.removeAll()
+        #expect(settings.relayEnabled && settings.smsPreview && settings.setupCompletedAt == nil)
+    }
 }
 
 @Suite("Identity keys (SET-03 API 1)")
@@ -76,12 +86,24 @@ struct LocalCapabilityTests {
         #expect(capability.features.clipboard?.mimes == ["text/plain", "image/png", "image/jpeg"])
         #expect(capability.features.clipboard?.autoSend == true)
         #expect(capability.features.relay?.enabled == true)
-        #expect(capability.features.sms == nil && capability.features.camera == nil)
+        #expect(capability.features.sms == SmsFeature(enabled: true) && capability.features.camera == nil)
         settings.sendImages = false
         settings.clipboardEnabled = false
+        settings.smsEnabled = false
         capability = device.capability(settings: settings)
         #expect(capability.features.clipboard?.mimes == ["text/plain"])
         #expect(capability.features.clipboard?.enabled == false)
+        #expect(capability.features.sms?.enabled == false && capability.features.sms?.notify == nil)
+    }
+
+    @Test("iPhone and iPad add sms.notify, which tells the phone whether to push new messages (SET-02 field 8)")
+    func mobileNotify() {
+        let settings = AppSettings(defaults: freshDefaults())
+        let phone = LocalDevice(appVersion: "1.0.0 (100)", osVersion: "18.6", model: "iPhone16,1", name: "iPhone",
+                                platform: .ios)
+        #expect(phone.capability(settings: settings).features.sms == SmsFeature(enabled: true, notify: true))
+        settings.smsNotify = false
+        #expect(phone.capability(settings: settings).features.sms?.notify == false)
     }
 
     @Test("The device name sent at pairing is cut to 64 characters")

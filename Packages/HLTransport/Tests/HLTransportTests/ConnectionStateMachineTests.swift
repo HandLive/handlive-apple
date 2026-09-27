@@ -50,6 +50,22 @@ struct ConnectionStateMachineTests {
         Edge(from: .idle(.needsRepair), event: .unpaired, to: .idle(.notPaired)),
     ]
 
+    /// Edges the relay needs beyond the diagram: the phone leaves the relay (CONN-03 E8) and comes home while the Mac
+    /// waits for it on the relay.
+    static let relayEdges: [Edge] = [
+        Edge(from: .connected(.relay), event: .peerOffline, to: .waitingPeer),
+        Edge(from: .handshaking(.relay), event: .peerOffline, to: .waitingPeer),
+        Edge(from: .waitingPeer, event: .lanAvailable, to: .discovering),
+    ]
+
+    @Test("Relay edges of CONN-03 E8 and the return to the LAN", arguments: relayEdges)
+    func relayEdge(_ edge: Edge) {
+        var machine = ConnectionStateMachine(state: edge.from)
+        let changed = machine.handle(edge.event)
+        #expect(changed)
+        #expect(machine.state == edge.to)
+    }
+
     @Test("Every edge of the diagram", arguments: diagramEdges)
     func diagramEdge(_ edge: Edge) {
         var machine = ConnectionStateMachine(state: edge.from)
@@ -74,6 +90,7 @@ struct ConnectionStateMachineTests {
             (.idle(.needsRepair), .networkLost),
             (.idle(.noNetwork), .networkLost),
             (.connected(.lan), .lanAvailable),
+            (.connected(.lan), .peerOffline),
             (.waitingPeer, .connectionLost),
             (.backoff, .peerOnline),
             (.discovering, .tlsPinMismatch),

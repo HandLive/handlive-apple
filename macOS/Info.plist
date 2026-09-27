@@ -12,5 +12,9 @@
 	<string>HandLive looks for your Android phone on your Wi-Fi network to connect to it directly, not over the internet.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>HandLive uses the microphone so you can talk during calls transferred from your phone.</string>
+	<key>NSUserActivityTypes</key>
+	<array>
+		<string>INSendMessageIntent</string>
+	</array>
 </dict>
 </plist>

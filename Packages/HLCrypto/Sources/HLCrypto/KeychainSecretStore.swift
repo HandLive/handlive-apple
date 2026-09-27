@@ -6,8 +6,13 @@ import Security
 /// (cần ứng dụng đã ký có keychain access group; tiến trình test không ký sẽ nhận lỗi -34018).
 public struct KeychainSecretStore: SecretStore {
     public static let service = "app.handlive.keys"
+    /// iOS/iPadOS: the App Group `group.app.handlive`, which doubles as the keychain access group the app shares with
+    /// its Notification Service Extension (SET-03 API 1, CONN-04 step 9b); `nil` keeps the app's default group (Mac).
+    public let accessGroup: String?
 
-    public init() {}
+    public init(accessGroup: String? = nil) {
+        self.accessGroup = accessGroup
+    }
 
     func baseQuery(account: String) -> [String: Any] {
         var query: [String: Any] = [
@@ -15,6 +20,7 @@ public struct KeychainSecretStore: SecretStore {
             kSecAttrService as String: Self.service,
             kSecAttrAccount as String: account
         ]
+        if let accessGroup { query[kSecAttrAccessGroup as String] = accessGroup }
         #if os(macOS)
         query[kSecUseDataProtectionKeychain as String] = true
         #endif
@@ -46,6 +52,7 @@ public struct KeychainSecretStore: SecretStore {
 
     public func deleteAll() throws {
         var query: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: Self.service]
+        if let accessGroup { query[kSecAttrAccessGroup as String] = accessGroup }
         #if os(macOS)
         query[kSecUseDataProtectionKeychain as String] = true
         #endif

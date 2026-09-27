@@ -71,7 +71,7 @@ struct PairingControllerTests {
 
     func controller(lifetime: Duration = .seconds(120), paired: @escaping @MainActor (String) -> Void = { _ in })
         -> PairingController {
-        PairingController(model: model, search: search, lifetime: lifetime, onPaired: paired)
+        PairingController(host: model, search: search, lifetime: lifetime, onPaired: paired)
     }
 
     static func result(name: String = "Pixel của Lan") -> PairingResult {
@@ -83,13 +83,30 @@ struct PairingControllerTests {
                       signaturePeer: Data(repeating: 0x03, count: 64), prk: Data(repeating: 0x99, count: 32))
     }
 
+    @Test("Step 2 with the relay on: a relay that can't be reached leaves the QR code without rv, on the LAN only")
+    func rendezvousUnavailable() async throws {
+        let relayModel = makeModel(relay: ScriptedRelayAPI())
+        relayModel.launch()
+        let search = ScriptedSearch()
+        let pairing = PairingController(host: relayModel, search: search) { _ in }
+        pairing.start()
+        #expect(await eventually { search.all.count == 1 })
+        #expect(!pairing.qrURI.isEmpty && !pairing.qrURI.contains("&rv="))
+        guard case .qr(_, let rendezvous) = try #require(search.all.first).credential else {
+            Issue.record("expected a QR credential")
+            return
+        }
+        #expect(rendezvous == nil)
+        pairing.stop()
+    }
+
     @Test("Step 2: a QR code carrying this Mac's key and the search's secret, 120 s on the countdown")
     func showsQRCode() async throws {
         let pairing = controller()
         pairing.start()
         #expect(await eventually { search.all.count == 1 })
         let identity = try #require(model.pairingIdentity())
-        guard case .qr(let secret) = try #require(search.all.first).credential else {
+        guard case .qr(let secret, _) = try #require(search.all.first).credential else {
             Issue.record("expected a QR credential")
             return
         }
@@ -171,7 +188,7 @@ struct PairingControllerTests {
 
     @Test("Without keys the sheet shows the keys error instead of a code")
     func withoutKeys() {
-        let pairing = PairingController(model: makeModel(), search: search) { _ in }
+        let pairing = PairingController(host: makeModel(), search: search) { _ in }
         pairing.start()
         #expect(pairing.notice == .keysMissing && pairing.qrURI.isEmpty && search.all.isEmpty)
     }

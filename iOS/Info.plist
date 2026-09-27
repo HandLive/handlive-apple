@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_handlive._tcp</string>
+	</array>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>HandLive looks for your Android phone on your Wi-Fi network to connect to it directly, not over the internet.</string>
+	<key>NSUserActivityTypes</key>
+	<array>
+		<string>INSendMessageIntent</string>
+	</array>
+</dict>
+</plist>

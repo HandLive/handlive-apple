@@ -50,7 +50,7 @@ jobs:
   build-test:
     name: xcodebuild test + swiftlint + build app
     runs-on: macos-15
-    timeout-minutes: 45
+    timeout-minutes: 90
     env:
       DERIVED_DATA: ${{ github.workspace }}/.ci-derived-data
     steps:
@@ -102,18 +102,24 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.DERIVED_DATA }}
-          key: apple-dd-${{ runner.os }}-${{ hashFiles('apple/Packages/*/Package.swift', 'apple/project.yml') }}
+          key: apple-dd-${{ runner.os }}-${{ hashFiles('apple/Packages/*/Package.swift', 'apple/ThirdParty/*/Package.swift', 'apple/project.yml') }}
           restore-keys: apple-dd-${{ runner.os }}-
+
+      # SQLCipher's XCFramework as a local binary target: xcodebuild hangs downloading the remote one on this runner.
+      - name: Fetch SQLCipher (checksum-verified)
+        run: apple/ThirdParty/SQLCipher/fetch.sh
 
       # Chạy xcodebuild trong thư mục package (không cần .xcodeproj): scheme tự sinh của package
       # một product cùng tên có luôn test target.
       - name: xcodebuild test (every package)
         run: |
           set -euo pipefail
-          for pkg in HLProtocol HLCrypto HLTransport HLDesignSystem HLLocalization HLAppCore HLMacUI; do
+          for pkg in HLProtocol HLCrypto HLTransport HLDesignSystem HLLocalization HLAppCore HLSMS HLSMSUI HLMacUI HLiOSUI; do
             echo "::group::xcodebuild test $pkg"
+            # A package with several products (HLSMS: HLSMS + HLSMSNotifications) runs its tests in "<name>-Package".
+            scheme="$pkg"; [ "$pkg" = HLSMS ] && scheme="HLSMS-Package"
             (cd "apple/Packages/$pkg" && xcodebuild test \
-              -scheme "$pkg" \
+              -scheme "$scheme" \
               -destination 'platform=macOS' \
               -derivedDataPath "$DERIVED_DATA/$pkg")
             echo "::endgroup::"
@@ -139,4 +145,14 @@ jobs:
             -scheme HandLive \
             -destination 'generic/platform=macOS' \
             -derivedDataPath "$DERIVED_DATA/app" \
+            CODE_SIGNING_ALLOWED=NO
+
+      # The iPhone/iPad app with its Notification Service Extension, for the simulator, unsigned.
+      - name: Build app iOS + Notification Service Extension (simulator, unsigned)
+        run: |
+          xcodebuild build \
+            -project apple/HandLive.xcodeproj \
+            -scheme HandLiveiOS \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath "$DERIVED_DATA/app-ios" \
             CODE_SIGNING_ALLOWED=NO

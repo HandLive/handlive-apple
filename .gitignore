@@ -15,3 +15,10 @@ Packages/*/Package.resolved
 *.mobileprovision
 .env
 .env.*
+
+# Fetched by the GRDB package, never committed
+ThirdParty/*/Package.resolved
+
+# SQLCipher's prebuilt XCFramework, fetched and checksum-verified by ThirdParty/SQLCipher/fetch.sh
+ThirdParty/SQLCipher/SQLCipher.xcframework/
+ThirdParty/SQLCipher/.fetched-version

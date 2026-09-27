@@ -1,7 +1,6 @@
 import AppKit
 import Foundation
 import ServiceManagement
-import UserNotifications
 
 /// "Open at login" through `SMAppService.mainApp` (SET-03 API 3, SET-02 field 22); the real state is always read
 /// from `status`, never kept in a setting.
@@ -106,26 +105,6 @@ public enum ApplicationLocation: Equatable, Sendable {
     }
 }
 
-/// Notification permission (SET-03 API 4): asked once; afterwards only read.
-public enum NotificationPermission: Equatable, Sendable {
-    case notDetermined, allowed, denied
-
-    public static func current() async -> NotificationPermission {
-        let settings = await UNUserNotificationCenter.current().notificationSettings()
-        switch settings.authorizationStatus {
-        case .notDetermined: return .notDetermined
-        case .denied: return .denied
-        default: return .allowed
-        }
-    }
-
-    /// `requestAuthorization([.alert, .sound, .badge])`; no provisional, no critical alerts.
-    public static func request() async -> NotificationPermission {
-        _ = try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge])
-        return await current()
-    }
-}
-
 /// Hardware facts `pair/hello` carries (PAIR-01 API 2 `model`).
 public enum MacHardware {
     /// Model identifier such as `Mac15,3` (`hw.model`).
@@ -135,17 +114,5 @@ public enum MacHardware {
         var bytes = [CChar](repeating: 0, count: size)
         guard sysctlbyname("hw.model", &bytes, &size, nil, 0) == 0 else { return nil }
         return String(bytes: bytes.prefix { $0 != 0 }.map { UInt8(bitPattern: $0) }, encoding: .utf8)
-    }
-}
-
-/// SET-03 field 1: the privacy page behind "HandLive and Your Privacy" (Onboarding README), in the app's display
-/// language; the same pages as the Android app.
-public enum PrivacyPage {
-    static let english = URL(string: "https://github.com/HandLive/handlive/blob/main/docs/privacy.md")
-    static let vietnamese = URL(string: "https://github.com/HandLive/handlive/blob/main/docs/privacy.vi.md")
-
-    /// The Vietnamese page when the app shows Vietnamese, the English page otherwise.
-    public static func url(displayLanguage: String? = Bundle.main.preferredLocalizations.first) -> URL? {
-        displayLanguage?.hasPrefix("vi") == true ? vietnamese : english
     }
 }

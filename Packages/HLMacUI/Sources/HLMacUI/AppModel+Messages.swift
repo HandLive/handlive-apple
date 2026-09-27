@@ -1,0 +1,168 @@
+import AppKit
+import Foundation
+import HLAppCore
+import HLDesignSystem
+import HLLocalization
+import HLProtocol
+import HLSMS
+import HLSMSNotifications
+import HLSMSUI
+import HLTransport
+
+extension AppModel {
+    /// SMS on the Mac (SMS-01…05): the database keyed with `db_key` (0.6.1), the engine and the Messages screens. Without
+    /// a database the Messages window has nothing to show and SMS stays off here (SMS-01 E7).
+    func startMessages(identity: DeviceIdentityKeys) {
+        guard let database = try? SmsDatabase(url: smsDatabaseURL, key: identity.databaseKey) else { return }
+        let store = SmsStore(database: database)
+        let engine = SmsEngine(store: store)
+        engine.enabledHere = { [weak self] in self?.settings.smsEnabled ?? false }
+        engine.notifyEnabled = { [weak self] in self?.settings.smsNotify ?? false }
+        engine.onEvent = { [weak self] event in self?.handleSmsEvent(event) }
+        alerts.onSmsResponse = { [weak self] response in self?.handleSmsNotification(response) }
+        smsEngine = engine
+        messages = MessagesModel(engine: engine, store: store)
+        pairChangedForMessages()
+        outboxExpiry?.cancel()
+        outboxExpiry = Task {
+            while !Task.isCancelled {
+                try? await store.expireOutbox(now: HLUUID.currentTimeMs())
+                try? await Task.sleep(for: .seconds(3600))
+            }
+        }
+    }
+
+    /// The engine and the screens follow the active pair.
+    func pairChangedForMessages() {
+        let record = pairedDevice
+        smsEngine?.setPair(record?.pairId, phoneDeviceId: record?.peerDeviceId, capability: record?.peerCapability)
+        messages?.setPair(record?.pairId)
+        messages?.phoneName = record?.peerName ?? ""
+    }
+
+    /// SMS part of the connection events (CONN-01 step 10, CONN-02 step 10).
+    func messagesLinkEvent(_ event: LinkEvent) {
+        switch event {
+        case .connected(let session, let details):
+            smsEngine?.connected(peer: SessionSmsPeer(session: session), capability: details.peerCapability)
+        case .capabilityUpdated(let capability): smsEngine?.capabilityUpdated(capability)
+        case .disconnected: smsEngine?.disconnected()
+        case .message(let envelope) where envelope.type == .sms: smsEngine?.receive(envelope)
+        default: break
+        }
+    }
+
+    func handleSmsEvent(_ event: SmsEvent) {
+        messages?.apply(event)
+        switch event {
+        case .notify(let incoming): smsNotifier.post(incoming, showPreview: settings.smsPreview)
+        case .removeNotifications(let pairId, let threadId, let upToTs):
+            smsNotifier.remove(pairId: pairId, threadId: threadId, upToTs: upToTs)
+        case .badge(let count): unreadThreads = count
+        case .needsPhone: Task { await manager?.wakePhone(reason: .smsSend) } // CONN-04 step 5a
+        case .syncStatus, .history, .removeGenericNotifications: break
+        }
+    }
+
+    /// Reply (the Mac always runs, so as SMS-04 steps 2–12), Mark as Read (A2), or open the conversation.
+    func handleSmsNotification(_ response: SmsNotificationResponse) {
+        guard let engine = smsEngine else { return }
+        switch response {
+        case .reply(let info, let text):
+            guard let address = info.address else { return }
+            Task {
+                _ = try? await engine.send(text: text, to: address, threadId: info.threadId, subId: info.subId)
+                await engine.markAsRead(threadId: info.threadId)
+            }
+        case .markRead(let info): Task { await engine.markAsRead(threadId: info.threadId) }
+        case .open(let info): showMessages(threadId: info.threadId)
+        }
+    }
+
+    /// Why SMS does not work with the phone while it is on here (2-patterns/04-cai-dat.md, PAIR-02 field 8), or `nil`.
+    public var smsPhoneProblem: SmsPhoneProblem? {
+        guard smsEnabled, let device = pairedDevice else { return nil }
+        return SmsPhoneProblem.of(device.peerCapability, phoneName: device.peerName)
+    }
+
+    /// "Resync All SMS…" needs a session to the phone and SMS active (SET-02 field 25).
+    public var canResyncSms: Bool {
+        guard case .connected = link.status else { return false }
+        return smsEngine?.isActive == true
+    }
+
+    /// PAIR-02 field 8: why SMS is not in use with the phone — off on this Mac, off on the phone, or a missing
+    /// permission there — or `nil` when it is.
+    public var smsFeatureReason: String? {
+        guard pairedDevice != nil else { return nil }
+        guard smsEnabled else { return L10n.Pairing.reasonOffOnDevice(deviceName: device.name) }
+        return smsPhoneProblem?.text
+    }
+
+    /// SMS-01 field 8: names can't be shown because the phone may not read contacts.
+    public var phoneMissesContactsPermission: Bool {
+        SmsPermissions.contactsMissing(in: pairedDevice?.peerCapability?.permissionsMissing ?? [])
+    }
+
+    /// "New Message" can be opened: a paired phone and the SMS database.
+    public var canComposeMessage: Bool {
+        pairedDevice != nil && messages != nil
+    }
+
+    /// VoiceOver label of the menu bar icon: the connection status, then "3 unread conversations" when there are some
+    /// (SMS-02 field 6).
+    public var menuBarAccessibilityLabel: String {
+        let status = connectionStatus.accessibilityText(deviceName: pairedDevice?.peerName)
+        guard unreadThreads > 0 else { return status }
+        return [status, L10n.A11y.unreadConversations(count: unreadThreads)].joined(separator: ", ")
+    }
+
+    /// The menu bar icon's count of unread conversations: "2", above 99 "99+" (MenuBarMenu README).
+    public var unreadBadgeText: String? {
+        guard unreadThreads > 0 else { return nil }
+        return unreadThreads > 99 ? "99+" : String(unreadThreads)
+    }
+
+    /// Opens the Messages window, on a conversation when given.
+    public func showMessages(threadId: Int64? = nil) {
+        if let threadId { messages?.selection = threadId }
+        openMessagesWindow()
+    }
+
+    /// The Messages window opened or closed: the Dock icon and the app menu bar follow (SET-03 step 6).
+    public func messagesWindowVisibilityChanged(_ open: Bool) {
+        messagesWindowOpen = open
+        applyActivationPolicy()
+    }
+
+    /// SET-02 fields 7–9.
+    public func setSmsEnabled(_ enabled: Bool) {
+        settings.smsEnabled = enabled
+        smsEnabled = enabled
+        scheduleCapabilityUpdate()
+    }
+
+    public func setSmsNotify(_ enabled: Bool) {
+        settings.smsNotify = enabled
+        smsNotify = enabled
+    }
+
+    public func setSmsPreview(_ enabled: Bool) {
+        settings.smsPreview = enabled
+        smsPreview = enabled
+    }
+
+    /// "Resync All SMS" after its confirmation (SMS-01 A1–A2).
+    public func resyncAllSms() async {
+        await smsEngine?.resyncAll()
+    }
+
+    /// PAIR-03 step 7 and SET-02 A4: the pair's synced SMS and its notifications go with it.
+    func forgetMessages(pairId: String) {
+        guard let messages else { return }
+        let store = messages.store
+        Task { try? await store.deletePair(pairId) }
+        smsNotifier.removeAll()
+        pairChangedForMessages()
+    }
+}

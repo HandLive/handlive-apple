@@ -7,7 +7,7 @@ import HLProtocol
 public actor ControlSession {
     /// Everything the session reports; finishes after `.ended`.
     public nonisolated let events: AsyncStream<SessionEvent>
-    /// Route the channel took (Phase 1: always the LAN).
+    /// Route the channel took: the LAN, or the relay (CONN-03) with an end-to-end `ping/ping` every 30 s.
     public nonisolated let route: ConnectionRoute
     /// Capability of the phone: from its `capability/hello`, replaced by each `capability/update`.
     public internal(set) var peerCapability: CapabilityData?
@@ -20,8 +20,12 @@ public actor ControlSession {
     var pendingAcks: [String: PendingAck] = [:]
     var recentIDs: RecentEnvelopeIDs
     var ending: SessionEnd?
+    /// `session/bye` already went out (relayed sessions always say it before they end, CONN-02 API 4).
+    var byeSent = false
     var loops: [Task<Void, Never>] = []
     var outgoingRekey: OutgoingRekey?
+    /// Round trip of the last end-to-end `ping/ping` over the relay (diagnostics, CONN-02 API 2).
+    public internal(set) var endToEndRoundTrip: Duration?
 
     init(channel: any MessageChannel, pair: PairContext, route: ConnectionRoute, configuration: SessionConfiguration) {
         self.channel = channel
@@ -50,10 +54,11 @@ public actor ControlSession {
         try await transmit(try seal(type, plaintext: try encode(op: op, data: data)))
     }
 
-    /// Sends a request and returns the handle of its `ack`; the caller decides when to start waiting.
-    public func sendRequest<Body: Encodable & Sendable>(_ type: MessageType, op: String,
-                                                        data: Body) async throws -> PendingAck {
-        let envelope = try seal(type, plaintext: try encode(op: op, data: data))
+    /// Sends a request and returns the handle of its `ack`; the caller decides when to start waiting. A retry passes
+    /// the envelope `id` of the first try, so the phone answers it from its de-duplication window (SMS-04 step 5).
+    public func sendRequest<Body: Encodable & Sendable>(_ type: MessageType, op: String, data: Body,
+                                                        id: String = HLUUID.v7()) async throws -> PendingAck {
+        let envelope = try seal(type, plaintext: try encode(op: op, data: data), id: id)
         pendingAcks = pendingAcks.filter { !$0.value.isResolved } // drop requests that timed out
         let pending = PendingAck(requestId: envelope.id)
         pendingAcks[envelope.id] = pending
@@ -94,10 +99,25 @@ public actor ControlSession {
     /// CONN-02 step 8, PAIR-03 API 2), then close 1000.
     public func close(bye reason: SessionByeData.Reason?) async {
         guard ending == nil else { return }
-        if let reason, cipher != nil {
-            try? await send(.session, op: SessionOp.bye.rawValue, data: SessionByeData(reason: reason))
-        }
+        if let reason { await sendBye(reason) }
         await end(.local(.normal), closing: .normal)
+    }
+
+    /// `session/bye` once, while the keys still work.
+    func sendBye(_ reason: SessionByeData.Reason) async {
+        guard !byeSent, cipher != nil else { return }
+        byeSent = true
+        try? await send(.session, op: SessionOp.bye.rawValue, data: SessionByeData(reason: reason))
+    }
+
+    /// The `session/bye` a relayed session sends when it ends for `reason`: no close code reaches the phone through the
+    /// relay, so every end from this side says `shutdown` (idle, failed rekey, 4400, a lost E2E ping, relay off…);
+    /// nothing is said when the phone ended it or the channel is already gone (CONN-02 API 4, CONN-03 API 6 logic 7).
+    static func relayBye(for reason: SessionEnd) -> SessionByeData.Reason? {
+        switch reason {
+        case .peerClosed, .peerBye: nil
+        case .pongTimeout, .decryptFailed, .rekeyFailed, .local: .shutdown
+        }
     }
 
     /// Pings at once with a short deadline; a dead link ends the session. Used after the default network changes,
@@ -118,9 +138,9 @@ public actor ControlSession {
         return plaintext
     }
 
-    func seal(_ type: MessageType, plaintext: Data) throws -> Envelope {
+    func seal(_ type: MessageType, plaintext: Data, id: String = HLUUID.v7()) throws -> Envelope {
         guard ending == nil, cipher != nil else { throw SessionError.ended }
-        guard let envelope = try? cipher?.seal(type: type, plaintext: plaintext) else { throw SessionError.encoding }
+        guard let envelope = try? cipher?.seal(type: type, plaintext: plaintext, id: id) else { throw SessionError.encoding }
         return envelope
     }
 
@@ -136,6 +156,10 @@ public actor ControlSession {
     /// Ends the session once: fails pending requests, stops the loops, closes the channel when asked, reports why.
     func end(_ reason: SessionEnd, closing code: CloseCode?) async {
         guard ending == nil else { return }
+        if route == .relay, let bye = Self.relayBye(for: reason), !byeSent {
+            await sendBye(bye) // before `ending`: sealing stops once the session is over
+            guard ending == nil else { return }
+        }
         ending = reason
         for pending in pendingAcks.values { pending.resolve(.failure(SessionError.ended)) }
         pendingAcks.removeAll()
@@ -150,6 +174,7 @@ public actor ControlSession {
     private func startLoops() {
         loops.append(Task { await self.receiveLoop() })
         loops.append(Task { await self.keepAliveLoop() })
+        if route == .relay { loops.append(Task { await self.endToEndPingLoop() }) }
     }
 
     /// WebSocket ping every `WS_PING_INTERVAL` with an 8-byte counter; no pong within `PONG_TIMEOUT` → lost.

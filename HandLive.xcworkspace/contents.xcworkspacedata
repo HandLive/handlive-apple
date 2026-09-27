@@ -23,6 +23,15 @@
       location = "group:Packages/HLAppCore">
    </FileRef>
    <FileRef
+      location = "group:Packages/HLSMS">
+   </FileRef>
+   <FileRef
+      location = "group:Packages/HLSMSUI">
+   </FileRef>
+   <FileRef
       location = "group:Packages/HLMacUI">
+   </FileRef>
+   <FileRef
+      location = "group:Packages/HLiOSUI">
    </FileRef>
 </Workspace>

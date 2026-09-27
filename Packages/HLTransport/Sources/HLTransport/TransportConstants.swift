@@ -14,6 +14,10 @@ public enum TransportConstants {
     /// `WS_PING_INTERVAL` / `PONG_TIMEOUT`.
     public static let pingInterval: Duration = .seconds(15)
     public static let pongTimeout: Duration = .seconds(10)
+    /// Over the relay, an end-to-end `ping/ping` every 30 s besides the WebSocket ping (0.10, CONN-02 step 1).
+    public static let relayPingInterval: Duration = .seconds(30)
+    /// `wss://{RELAY_HOST}/v1/relay` and the relay REST base (0.4.3).
+    public static let relayPath = "/v1/relay"
     /// `REKEY_AFTER`: 24 h or 10 000 envelopes in one direction.
     public static let rekeyAfterEnvelopes = 10_000
     public static let rekeyAfterAge: Duration = .seconds(24 * 3600)

@@ -15,6 +15,13 @@ TABLE = "Localizable"
 APP_INFOPLIST_XCSTRINGS = "../../macOS/HandLive/Resources/InfoPlist.xcstrings"
 APP_INFO_PLIST = "../../macOS/Info.plist"
 APP_PLATFORM = "macos"
+# The iPhone and iPad app target: its purpose strings, and the `push.*` loc-keys APNs alerts name (CONN-04 API 4),
+# which iOS looks up in the app's own Localizable table even when the Notification Service Extension changes nothing.
+IOS_INFOPLIST_XCSTRINGS = "../../iOS/HandLive/Resources/InfoPlist.xcstrings"
+IOS_INFO_PLIST = "../../iOS/Info.plist"
+IOS_LOCALIZABLE_XCSTRINGS = "../../iOS/HandLive/Resources/Localizable.xcstrings"
+IOS_PLATFORM = "ios"
+PUSH_PREFIX = "push."
 
 
 def _dump_xcstrings(strings: dict) -> str:
@@ -87,12 +94,18 @@ def render_info_plist(entries: list[Entry], current: bytes | None) -> str:
     return _plist(document)
 
 
-def render_apple_resources(entries: list[Entry], info_plist: bytes | None) -> dict[str, str]:
+def render_apple_resources(entries: list[Entry], info_plist: bytes | None,
+                           ios_info_plist: bytes | None = None) -> dict[str, str]:
     apple = [entry for entry in entries if entry.is_apple]
     app_plist = [entry for entry in entries if entry.plist_key and APP_PLATFORM in entry.platforms]
+    ios_plist = [entry for entry in entries if entry.plist_key and IOS_PLATFORM in entry.platforms]
+    push = [entry for entry in entries if entry.key.startswith(PUSH_PREFIX) and IOS_PLATFORM in entry.platforms]
     return {
         LOCALIZABLE_XCSTRINGS: render_localizable_xcstrings(apple),
         **render_fallback(apple),
         APP_INFOPLIST_XCSTRINGS: render_infoplist_xcstrings(app_plist),
         APP_INFO_PLIST: render_info_plist(app_plist, info_plist),
+        IOS_INFOPLIST_XCSTRINGS: render_infoplist_xcstrings(ios_plist),
+        IOS_INFO_PLIST: render_info_plist(ios_plist, ios_info_plist),
+        IOS_LOCALIZABLE_XCSTRINGS: render_localizable_xcstrings(push),
     }

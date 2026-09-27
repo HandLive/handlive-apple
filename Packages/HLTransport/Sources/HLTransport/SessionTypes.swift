@@ -7,14 +7,15 @@ public struct SessionConfiguration: Sendable {
     public var requestTimeout = TransportConstants.requestTimeout
     public var pingInterval = TransportConstants.pingInterval
     public var pongTimeout = TransportConstants.pongTimeout
+    public var relayPingInterval = TransportConstants.relayPingInterval
     public var rekeyAfterEnvelopes = TransportConstants.rekeyAfterEnvelopes
     public var rekeyAfterAge = TransportConstants.rekeyAfterAge
     public var rekeyOldKeyGrace = TransportConstants.rekeyOldKeyGrace
     public var dedupWindow = TransportConstants.dedupWindow
     public var dedupCapacity = TransportConstants.dedupCapacity
-    /// Types whose messages the app handles (`.clipboard` in Phase 1); a request of any other type is
-    /// answered `UNSUPPORTED_TYPE` (0.5.1 rule 3).
-    public var handledTypes: Set<MessageType> = [.clipboard]
+    /// Types whose messages the app handles (clipboard, SMS); a request of any other type is answered
+    /// `UNSUPPORTED_TYPE` (0.5.1 rule 3).
+    public var handledTypes: Set<MessageType> = [.clipboard, .sms]
 
     public init() {}
 }

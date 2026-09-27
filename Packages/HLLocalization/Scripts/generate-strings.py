@@ -11,6 +11,9 @@ Writes, relative to apple/:
     Packages/HLLocalization/Sources/HLLocalization/Generated/L10n.swift              (type-safe accessors)
     macOS/HandLive/Resources/InfoPlist.xcstrings                                     (purpose strings, en + vi)
     macOS/Info.plist                                                                 (purpose strings, en; other keys kept)
+    iOS/HandLive/Resources/InfoPlist.xcstrings                                       (purpose strings, en + vi)
+    iOS/Info.plist                                                                   (purpose strings, en; other keys kept)
+    iOS/HandLive/Resources/Localizable.xcstrings                                     (push.* loc-keys of APNs alerts)
 """
 from __future__ import annotations
 
@@ -23,7 +26,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPT_DIR))
 sys.dont_write_bytecode = True  # keep __pycache__ out of the repository
 
-from strings_apple_resources import APP_INFO_PLIST, FALLBACK_DIR, render_apple_resources  # noqa: E402
+from strings_apple_resources import APP_INFO_PLIST, FALLBACK_DIR, IOS_INFO_PLIST, render_apple_resources  # noqa: E402
 from strings_catalog import load_catalog  # noqa: E402
 from strings_swift_accessors import render_swift_accessors  # noqa: E402
 
@@ -35,9 +38,12 @@ OWNED_DIRS = (FALLBACK_DIR, "Sources/HLLocalization/Generated")  # wholly owned:
 
 def render_all(catalog: Path) -> dict[str, str]:
     entries = load_catalog(catalog)
-    info_plist = PACKAGE_DIR / APP_INFO_PLIST
-    current = info_plist.read_bytes() if info_plist.exists() else None
-    return {**render_apple_resources(entries, current), **render_swift_accessors(entries)}
+    current = {}
+    for name in (APP_INFO_PLIST, IOS_INFO_PLIST):
+        plist = PACKAGE_DIR / name
+        current[name] = plist.read_bytes() if plist.exists() else None
+    resources = render_apple_resources(entries, current[APP_INFO_PLIST], current[IOS_INFO_PLIST])
+    return {**resources, **render_swift_accessors(entries)}
 
 
 def owned_files() -> set[str]:

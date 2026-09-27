@@ -23,6 +23,10 @@ public enum ClipboardNotice: Equatable, Sendable {
     case imageNoSpace
     /// macOS asks or refuses paste access: automatic sending is off (C10, CLIP-02 E2), once per launch.
     case pasteAccessNeeded
+    /// iPhone/iPad: no `ack` within 10 s; not replayed (CLIP-04 E9).
+    case sendFailed
+    /// iPhone/iPad: the pasted content is not text, a URL or a supported image (CLIP-04 E3).
+    case unsupportedContent
 }
 
 /// System notifications with a button (QC3, CLIP-01 API 6); a new one replaces the old one of the same kind.
@@ -50,6 +54,25 @@ public struct ClipboardProgress: Equatable, Sendable {
         self.transferId = transferId
         self.deviceName = deviceName
         self.fraction = fraction
+    }
+}
+
+/// The latest clip written from the phone: the card of the Clipboard tab on iPhone and iPad (PasteCard, CLIP-04 field
+/// 10). Only the most recent one is kept, in memory.
+public struct ReceivedClip: Equatable, Sendable {
+    public let clipId: String
+    public let content: ClipContent
+    /// Shown as "Sensitive content hidden".
+    public let sensitive: Bool
+    public let deviceName: String
+    public let receivedAt: Date
+
+    public init(clipId: String, content: ClipContent, sensitive: Bool, deviceName: String, receivedAt: Date) {
+        self.clipId = clipId
+        self.content = content
+        self.sensitive = sensitive
+        self.deviceName = deviceName
+        self.receivedAt = receivedAt
     }
 }
 

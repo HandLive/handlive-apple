@@ -22,8 +22,9 @@ public protocol PairingSearching: Sendable {
              progress: @escaping @Sendable (PairingProgress) -> Void) async throws -> PairingResult
 }
 
-/// Finds the phone's pairing window on the LAN and runs the exchange (PAIR-01 steps 7–11, A2–A5): an instance whose
-/// TXT `pr` matches this QR code, or any instance with `pm = 1` for a PIN. Dropped connections, `PAIRING_CLOSED`
+/// Finds the phone's pairing window on the LAN, or meets it in the relay rendezvous of the QR code, and runs the
+/// exchange (PAIR-01 steps 7–11, A2–A5): an instance whose TXT `pr` matches this QR code, or any instance with `pm = 1`
+/// for a PIN; the rendezvous only when no window is visible on the LAN. Dropped connections, `PAIRING_CLOSED`
 /// and connection errors are retried while the window stays visible; a pair, `AUTH_FAILED` and a wrong PIN end the
 /// search. Cancel the calling task to stop it (a new code, Cancel).
 public struct PairingSearch: PairingSearching {
@@ -53,6 +54,8 @@ public struct PairingSearch: PairingSearching {
             notify.finish()
         }
         defer { watcher.cancel() }
+        let rendezvousWatcher = Self.watchRendezvous(credential, board: board, notify: notify)
+        defer { rendezvousWatcher?.cancel() }
         let reporter = ProgressReporter(progress)
         var exchange = PairingExchange(identity: identity, credential: credential, offerTimeout: offerTimeout)
         exchange.pinParameters = pinParameters
@@ -61,6 +64,10 @@ public struct PairingSearch: PairingSearching {
         while true {
             try Task.checkCancellation()
             guard let (phone, seenSince) = board.candidate() else {
+                if let result = try await Self.pairThroughRendezvous(credential, board: board, exchange: exchange,
+                                                                      reporter: reporter) {
+                    return result
+                }
                 reporter.report(board.denied ? .localNetworkDenied : .waitingForPhone)
                 guard await iterator.next() != nil else { throw CancellationError() }
                 continue
@@ -85,6 +92,37 @@ public struct PairingSearch: PairingSearching {
         }
     }
 
+    /// The exchange inside `rv_msg` once the phone joined, only while the LAN shows no window: the LAN wins (step 7).
+    /// `nil` when the rendezvous is not ready or failed in a way the LAN may still recover from.
+    static func pairThroughRendezvous(_ credential: PairingCredential, board: PhoneBoard, exchange: PairingExchange,
+                                      reporter: ProgressReporter) async throws -> PairingResult? {
+        guard board.rendezvousReady, case .qr(_, let rendezvous?) = credential else { return nil }
+        reporter.report(.verifying)
+        board.reached()
+        do {
+            return try await exchange.run(over: rendezvous.channel, certificateSHA256: nil)
+        } catch let failure as PairingFailure where !isRetryable(failure) {
+            throw failure
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch {
+            board.rendezvousSpent() // one exchange per rendezvous
+            return nil
+        }
+    }
+
+    /// Waits for the phone in the rendezvous of the QR code, if it has one (PAIR-01 step 7, relay path).
+    static func watchRendezvous(_ credential: PairingCredential, board: PhoneBoard,
+                                notify: AsyncStream<Void>.Continuation) -> Task<Void, Never>? {
+        guard case .qr(_, let rendezvous?) = credential else { return nil }
+        return Task {
+            if await rendezvous.waitForPhone() {
+                board.markRendezvousReady()
+                notify.yield()
+            }
+        }
+    }
+
     static func isRetryable(_ failure: PairingFailure) -> Bool {
         switch failure {
         case .pairingClosed, .disconnected, .rejected: true
@@ -105,14 +143,15 @@ public struct PairingSearch: PairingSearching {
     }
 }
 
-/// Latest browse results and when each matching instance was first seen.
-private final class PhoneBoard: @unchecked Sendable {
+/// Latest browse results and when each matching instance was first seen; whether the relay rendezvous is ready.
+final class PhoneBoard: @unchecked Sendable {
     private let lock = NSLock()
     private let matches: @Sendable (DiscoveredPhone) -> Bool
     private var phones: [DiscoveredPhone] = []
     private var firstSeen: [String: ContinuousClock.Instant] = [:]
     private var isDenied = false
     private var reachedOnce = false
+    private var rendezvousState = 0 // 0 waiting, 1 phone joined, 2 used up
 
     init(matching: @escaping @Sendable (DiscoveredPhone) -> Bool) {
         matches = matching
@@ -145,6 +184,24 @@ private final class PhoneBoard: @unchecked Sendable {
         return isDenied
     }
 
+    var rendezvousReady: Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return rendezvousState == 1
+    }
+
+    func markRendezvousReady() {
+        lock.lock()
+        if rendezvousState == 0 { rendezvousState = 1 }
+        lock.unlock()
+    }
+
+    func rendezvousSpent() {
+        lock.lock()
+        rendezvousState = 2
+        lock.unlock()
+    }
+
     /// A connection reached the phone once, so the window is not unreachable (E3).
     func reached() {
         lock.lock()
@@ -160,7 +217,7 @@ private final class PhoneBoard: @unchecked Sendable {
 }
 
 /// Reports a progress value only when it changes.
-private final class ProgressReporter: @unchecked Sendable {
+final class ProgressReporter: @unchecked Sendable {
     private let lock = NSLock()
     private let sink: @Sendable (PairingProgress) -> Void
     private var last: PairingProgress?

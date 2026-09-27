@@ -23,7 +23,7 @@ struct HardcodedTextScanTests {
 
     static func sourceFiles() -> [URL] {
         let apple = WorkspaceFiles.appleRoot
-        var roots = [apple.appendingPathComponent("macOS")]
+        var roots = [apple.appendingPathComponent("macOS"), apple.appendingPathComponent("iOS")]
         let packages = (try? FileManager.default.contentsOfDirectory(
             at: apple.appendingPathComponent("Packages"), includingPropertiesForKeys: nil)) ?? []
         roots += packages.map { $0.appendingPathComponent("Sources") }
