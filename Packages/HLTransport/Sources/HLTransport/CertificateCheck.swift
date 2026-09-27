@@ -65,21 +65,23 @@ final class ResumeOnce<Value: Sendable>: @unchecked Sendable {
         lock.unlock()
     }
 
-    func resume(returning value: Value) { resume(with: .success(value)) }
-    func resume(throwing error: Error) { resume(with: .failure(error)) }
+    /// `true` when this call settled the continuation; a later call changes nothing and returns `false`.
+    @discardableResult func resume(returning value: Value) -> Bool { resume(with: .success(value)) }
+    @discardableResult func resume(throwing error: Error) -> Bool { resume(with: .failure(error)) }
 
-    private func resume(with result: Result<Value, Error>) {
+    private func resume(with result: Result<Value, Error>) -> Bool {
         lock.lock()
-        guard !done else { lock.unlock(); return }
+        guard !done else { lock.unlock(); return false }
         done = true
         guard let continuation else {
             pending = result
             lock.unlock()
-            return
+            return true
         }
         self.continuation = nil
         lock.unlock()
         continuation.resume(with: result)
+        return true
     }
 }
 

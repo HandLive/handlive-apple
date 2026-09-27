@@ -110,8 +110,8 @@ public struct WebSocketConnector: ChannelConnecting {
                 }
                 connection.start(queue: queue)
                 queue.asyncAfter(deadline: .now() + timeout.timeInterval) {
-                    once.resume(throwing: ConnectError.timedOut)
-                    connection.cancel()
+                    // Only an attempt still in progress times out; a ready connection now belongs to the caller.
+                    if once.resume(throwing: ConnectError.timedOut) { connection.cancel() }
                 }
             }
         } onCancel: {
@@ -152,8 +152,8 @@ public struct WebSocketConnector: ChannelConnecting {
                 }
                 connection.start(queue: queue)
                 queue.asyncAfter(deadline: .now() + timeout.timeInterval) {
-                    once.resume(throwing: ConnectError.timedOut)
-                    connection.cancel()
+                    // Only an attempt still in progress times out; a ready connection now belongs to the caller.
+                    if once.resume(throwing: ConnectError.timedOut) { connection.cancel() }
                 }
             }
         } onCancel: {

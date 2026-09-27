@@ -40,8 +40,8 @@ public struct RelaySocketConnector: RelaySocketOpening {
                 }
                 connection.start(queue: queue)
                 queue.asyncAfter(deadline: .now() + timeout.timeInterval) {
-                    once.resume(throwing: RelayTransportError.unreachable("timed out"))
-                    connection.cancel()
+                    // Only an attempt still in progress times out; a ready socket now belongs to the relay link.
+                    if once.resume(throwing: RelayTransportError.unreachable("timed out")) { connection.cancel() }
                 }
             }
         } onCancel: {
