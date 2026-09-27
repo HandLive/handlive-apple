@@ -22,8 +22,13 @@ public enum CallPushDecoder {
 
     /// `prk` returns the pair's `PRK`, or `nil` when the Keychain refuses (the device is locked, C3).
     public static func decode(userInfo: [AnyHashable: Any], nowMs: Int64, prk: (String) -> Data?) -> Decoded? {
-        guard let fields = PushAlertFields(userInfo: userInfo), fields.envelope.type == .callEvent,
-              let key = prk(fields.pairId),
+        guard let fields = PushAlertFields(userInfo: userInfo) else { return nil }
+        return decode(fields: fields, nowMs: nowMs, prk: prk)
+    }
+
+    /// The same from the push's plain fields, already read from `userInfo`.
+    public static func decode(fields: PushAlertFields, nowMs: Int64, prk: (String) -> Data?) -> Decoded? {
+        guard fields.envelope.type == .callEvent, let key = prk(fields.pairId),
               let plaintext = try? PushEnvelope.open(fields.envelope, prk: key, nowMs: nowMs),
               let payload = try? Payload.parse(plaintext),
               let content = content(of: payload, pairId: fields.pairId)
