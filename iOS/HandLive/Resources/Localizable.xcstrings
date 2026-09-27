@@ -2,7 +2,7 @@
   "sourceLanguage" : "en",
   "strings" : {
     "push.call_incoming" : {
-      "comment" : "APNs aps.alert.loc-key for reason call_incoming when the extension cannot decrypt (iPhone locked)",
+      "comment" : "APNs aps.alert.loc-key for reason call_incoming when the extension cannot decrypt (iPhone locked, CALL-01 E6); no title (the system shows the app name) and no Decline action",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -20,7 +20,7 @@
       }
     },
     "push.call_missed" : {
-      "comment" : "APNs aps.alert.loc-key for reason call_missed when the extension cannot decrypt",
+      "comment" : "APNs aps.alert.loc-key for reason call_missed when the extension cannot decrypt (iPhone locked, CALL-04 E9); no title and no Message action",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {

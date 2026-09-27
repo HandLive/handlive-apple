@@ -2,10 +2,102 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>a11y.call_ended</key>
+	<string>Call ended</string>
+	<key>a11y.call_incoming_from</key>
+	<string>Incoming call from %1$@</string>
 	<key>a11y.sms_bubble_received</key>
 	<string>%1$@, %2$@</string>
 	<key>a11y.sms_bubble_sent</key>
 	<string>You, %1$@, %2$@</string>
+	<key>call.answer</key>
+	<string>Answer</string>
+	<key>call.answer_on_mac</key>
+	<string>Answer on Mac</string>
+	<key>call.answer_on_phone</key>
+	<string>Answer on Phone</string>
+	<key>call.answering</key>
+	<string>Answering…</string>
+	<key>call.audio_on_mac</key>
+	<string>Audio: Mac</string>
+	<key>call.audio_on_phone</key>
+	<string>Audio: Phone</string>
+	<key>call.call_log_permission_hint</key>
+	<string>Allow HandLive to read the call log on the phone to see call history</string>
+	<key>call.caller_id_permission_hint</key>
+	<string>Allow HandLive to read the call log on the phone to show caller numbers</string>
+	<key>call.connection_lost</key>
+	<string>Lost connection to the phone</string>
+	<key>call.custom_message_ellipsis</key>
+	<string>Custom Message…</string>
+	<key>call.decline</key>
+	<string>Decline</string>
+	<key>call.decline_failed</key>
+	<string>Couldn't decline the call. It's still ringing on the phone.</string>
+	<key>call.decline_with_message_ellipsis</key>
+	<string>Decline with Message…</string>
+	<key>call.declining</key>
+	<string>Declining…</string>
+	<key>call.end</key>
+	<string>End</string>
+	<key>call.end_and_answer</key>
+	<string>End &amp; Answer</string>
+	<key>call.hold</key>
+	<string>Hold</string>
+	<key>call.hold_and_answer</key>
+	<string>Hold &amp; Answer</string>
+	<key>call.ignore</key>
+	<string>Ignore</string>
+	<key>call.incoming_body</key>
+	<string>Incoming call</string>
+	<key>call.incoming_body_sim</key>
+	<string>Incoming call · %1$@</string>
+	<key>call.incoming_late</key>
+	<string>Incoming call at %1$@</string>
+	<key>call.incoming_title</key>
+	<string>Incoming Call</string>
+	<key>call.keypad</key>
+	<string>Keypad</string>
+	<key>call.message</key>
+	<string>Message</string>
+	<key>call.missed_body</key>
+	<string>Missed call · %1$@</string>
+	<key>call.missed_body_sim</key>
+	<string>Missed call · %1$@ · %2$@</string>
+	<key>call.missed_call</key>
+	<string>Missed call</string>
+	<key>call.mute</key>
+	<string>Mute</string>
+	<key>call.mute_tooltip</key>
+	<string>Mute the microphone on the Mac</string>
+	<key>call.no_caller_id</key>
+	<string>No Caller ID</string>
+	<key>call.outgoing_call</key>
+	<string>Outgoing Call</string>
+	<key>call.quick_reply_call_back</key>
+	<string>I'll call you back later</string>
+	<key>call.quick_reply_in_meeting</key>
+	<string>I'm in a meeting</string>
+	<key>call.reject_waiting</key>
+	<string>Decline Waiting Call</string>
+	<key>call.resume</key>
+	<string>Resume</string>
+	<key>call.status_ended</key>
+	<string>Call ended · %1$@</string>
+	<key>call.status_on_call</key>
+	<string>On call</string>
+	<key>call.status_on_hold</key>
+	<string>On hold</string>
+	<key>call.status_waiting</key>
+	<string>Call waiting</string>
+	<key>call.title</key>
+	<string>Calls</string>
+	<key>call.unknown_caller</key>
+	<string>Unknown Caller</string>
+	<key>call.waiting_handle_on_phone</key>
+	<string>Handle it on the phone or connect via Bluetooth</string>
+	<key>call.waiting_title</key>
+	<string>Call Waiting</string>
 	<key>clipboard.auto_send_off_on_phone</key>
 	<string>Auto-send is off on the phone — use the Send Clipboard button on the phone</string>
 	<key>clipboard.conflict_body</key>
@@ -84,6 +176,24 @@
 	<string>View Instructions</string>
 	<key>common.view_instructions_ellipsis</key>
 	<string>View Instructions…</string>
+	<key>error.call_action_not_allowed</key>
+	<string>The call was answered on the phone</string>
+	<key>error.call_answer_permission</key>
+	<string>The phone hasn't allowed HandLive to answer calls</string>
+	<key>error.call_audio_switch_failed</key>
+	<string>Couldn't switch the audio to the Mac</string>
+	<key>error.call_command_not_sent</key>
+	<string>Couldn't send the command to the phone</string>
+	<key>error.call_end_on_phone</key>
+	<string>End this call on the phone</string>
+	<key>error.call_hfp_command_failed</key>
+	<string>The phone couldn't perform this action</string>
+	<key>error.call_hfp_required</key>
+	<string>Connect to the phone via Bluetooth to hold, use the keypad, or mute</string>
+	<key>error.call_message_not_sent</key>
+	<string>The call was answered, so the message wasn't sent</string>
+	<key>error.call_not_found</key>
+	<string>The call has ended</string>
 	<key>error.clip_content_too_large</key>
 	<string>Content is too large to send (up to 1 MB of text, 10 MB for images)</string>
 	<key>error.clip_image_no_space</key>
@@ -242,6 +352,12 @@
 	<string>Clears only content received from other devices, and only if you haven't copied anything new.</string>
 	<key>settings.block_sensitive</key>
 	<string>Block Sensitive Content</string>
+	<key>settings.call_log_last_sync</key>
+	<string>Last synced: %1$@</string>
+	<key>settings.call_notify</key>
+	<string>Call Notifications</string>
+	<key>settings.call_ringtone</key>
+	<string>Ring on Mac</string>
 	<key>settings.calls</key>
 	<string>Calls</string>
 	<key>settings.camera</key>
@@ -282,6 +398,8 @@
 	<string>Permissions</string>
 	<key>settings.phone</key>
 	<string>Phone</string>
+	<key>settings.quick_replies</key>
+	<string>Quick Replies</string>
 	<key>settings.remove_from_server</key>
 	<string>Remove Device from Server</string>
 	<key>settings.remove_from_server_confirm</key>

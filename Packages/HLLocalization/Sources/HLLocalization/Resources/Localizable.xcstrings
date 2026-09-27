@@ -1,6 +1,42 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "a11y.call_ended" : {
+      "comment" : "VoiceOver announcement, without moving focus, when the call shown in the Mac call panel ends; the panel shows call.status_ended for 2 s, then closes (CALL-03 postconditions; design system Accessibility)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Call ended"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuộc gọi đã kết thúc"
+          }
+        }
+      }
+    },
+    "a11y.call_incoming_from" : {
+      "comment" : "VoiceOver announcement when the Mac call panel or the iPhone/iPad in-app banner appears (CALL-01 special requirements, API 5 logic 5); {caller} = the contact name, else the number in national format, else call.no_caller_id or call.unknown_caller",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Incoming call from %1$@"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuộc gọi đến từ %1$@"
+          }
+        }
+      }
+    },
     "a11y.sms_bubble_received" : {
       "comment" : "VoiceOver label of a received message bubble (SMS-03 special requirements); {sender} = the conversation name, or the sender's number in national format in a group conversation; {time} formatted by the system; the message text is the accessibility value, read after the label",
       "extractionState" : "manual",
@@ -69,6 +105,798 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "call.answer" : {
+      "comment" : "Round Answer button of the Mac call panel (call-accept-fill, on the right, key Return; also its accessibility label), the HL_CALL_ANSWER action of the Mac incoming-call notification and the Answer item of the ringing call in the menu bar menu (also after Ignore); only when controls.answer = true (CALL-01 fields 6, 15, CALL-02 field 1)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Answer"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trả lời"
+          }
+        }
+      }
+    },
+    "call.answer_on_mac" : {
+      "comment" : "Mac call panel: takes the place of call.answer, next to call.answer_on_phone, when call audio is in effect (Take Calls on Mac accepted on both sides); answers with the audio on the Mac (CALL-01 field 6, CALL-02 field 2)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Answer on Mac"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nghe trên Mac"
+          }
+        }
+      }
+    },
+    "call.answer_on_phone" : {
+      "comment" : "Mac call panel: takes the place of call.answer, next to call.answer_on_mac, when call audio is in effect; answers with the audio staying on the phone (CALL-01 field 6, CALL-02 field 2)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Answer on Phone"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nghe trên điện thoại"
+          }
+        }
+      }
+    },
+    "call.answering" : {
+      "comment" : "In-progress label of the Mac call panel after Answer, until the ack or the next state arrives; the buttons stay locked (CALL-02 field 9)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Answering…"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang trả lời…"
+          }
+        }
+      }
+    },
+    "call.audio_on_mac" : {
+      "comment" : "In-call Mac call panel: the call audio plays on this Mac (audio_on = mac) (CALL-03 field 4)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audio: Mac"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Âm thanh: Mac"
+          }
+        }
+      }
+    },
+    "call.audio_on_phone" : {
+      "comment" : "In-call Mac call panel: the call audio plays on the phone (audio_on = phone) (CALL-03 field 4)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audio: Phone"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Âm thanh: Điện thoại"
+          }
+        }
+      }
+    },
+    "call.call_log_permission_hint" : {
+      "comment" : "Guidance in the call list (Mac Messages window › Calls, iPhone/iPad Calls tab) when the phone lacks READ_CALL_LOG; missed calls are still notified from the call state (CALL-04 field 12, E2)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow HandLive to read the call log on the phone to see call history"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cho phép HandLive đọc nhật ký cuộc gọi trên điện thoại để xem lịch sử cuộc gọi"
+          }
+        }
+      }
+    },
+    "call.caller_id_permission_hint" : {
+      "comment" : "Hint under call.unknown_caller in the Mac call panel and the iPhone/iPad banner when the phone's permissions_missing contains READ_CALL_LOG (CALL-01 field 12, E2)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow HandLive to read the call log on the phone to show caller numbers"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cho phép HandLive đọc nhật ký cuộc gọi trên điện thoại để hiện số gọi đến"
+          }
+        }
+      }
+    },
+    "call.connection_lost" : {
+      "comment" : "In-call Mac call panel when the session to the phone is lost mid-call; Bluetooth HFP actions keep working while connected; the state sent after reconnecting replaces it (CALL-03 E6)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lost connection to the phone"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mất kết nối với điện thoại"
+          }
+        }
+      }
+    },
+    "call.custom_message_ellipsis" : {
+      "comment" : "Last item of the Decline with Message… menu: opens a single-line field (placeholder sms.compose_placeholder, button sms.send), at most 160 characters; nothing is sent when it is empty after trimming whitespace (CALL-02 field 7)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Custom Message…"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tin khác…"
+          }
+        }
+      }
+    },
+    "call.decline" : {
+      "comment" : "Round Decline button of the Mac call panel (call-decline-fill, on the left, key ⌘⌫; also its accessibility label) and of the iPhone/iPad banner, the HL_CALL_REJECT action of the incoming-call notification (destructive; iOS asks to unlock first) and the Decline item of the ringing call in the Mac menu bar menu; only when controls.reject = true (CALL-01 fields 7, 15, API 6, CALL-02 fields 3, 4)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Decline"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Từ chối"
+          }
+        }
+      }
+    },
+    "call.decline_failed" : {
+      "comment" : "Body of the local notification (no title) the iPhone/iPad posts when Decline on the incoming-call notification could not reach the phone within 15 s (CALL-02 E8, field 11, step B3)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't decline the call. It's still ringing on the phone."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không gửi được lệnh từ chối. Cuộc gọi vẫn đổ chuông trên điện thoại."
+          }
+        }
+      }
+    },
+    "call.decline_with_message_ellipsis" : {
+      "comment" : "Text button of the ringing Mac call panel opening the quick-reply menu (the call.quick_replies templates, then call.custom_message_ellipsis); only when controls.reject = true, the number is known, SMS is in effect and the phone can send SMS (CALL-01 field 8, CALL-02 field 5)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Decline with Message…"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Từ chối kèm tin nhắn…"
+          }
+        }
+      }
+    },
+    "call.declining" : {
+      "comment" : "In-progress label of the Mac call panel and the iPhone/iPad banner after Decline or a quick reply, until the ack or the next state arrives; the buttons stay locked (CALL-02 field 9)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Declining…"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang từ chối…"
+          }
+        }
+      }
+    },
+    "call.end" : {
+      "comment" : "Red round End button of the in-call Mac call panel (phone.down.fill; also its accessibility label); shown when waiting = false and controls.end = true or the Mac has a Bluetooth HFP link (CALL-03 field 5)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "End"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kết thúc"
+          }
+        }
+      }
+    },
+    "call.end_and_answer" : {
+      "comment" : "Call-waiting button of the in-call Mac call panel, only with a Bluetooth HFP link: ends the active call and answers the waiting one (CALL-03 field 11)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "End & Answer"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kết thúc và nghe"
+          }
+        }
+      }
+    },
+    "call.hold" : {
+      "comment" : "Toggle button of the in-call Mac call panel (pause.fill; also its accessibility label, with a selected state), only when controls.hold = hfp and waiting = false; call.resume while the call is on hold (CALL-03 field 6)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hold"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Giữ máy"
+          }
+        }
+      }
+    },
+    "call.hold_and_answer" : {
+      "comment" : "Call-waiting button of the in-call Mac call panel, only with a Bluetooth HFP link: holds the active call and answers the waiting one (CALL-03 field 11)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hold & Answer"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Giữ và nghe"
+          }
+        }
+      }
+    },
+    "call.ignore" : {
+      "comment" : "Text button of the ringing Mac call panel (key Esc): closes the panel and silences the ringtone on the Mac only; the call keeps ringing on the phone and stays in the menu bar menu (CALL-01 field 9)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ignore"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bỏ qua"
+          }
+        }
+      }
+    },
+    "call.incoming_body" : {
+      "comment" : "Body of the incoming-call notification when no SIM label is known (Mac communication notification, iPhone/iPad notification rebuilt by the service extension), and hiddenPreviewsBodyPlaceholder of the HL_CALL_INCOMING and HL_CALL_INCOMING_MAC categories; with a SIM label: call.incoming_body_sim (CALL-01 fields 11, 15, API 6, API 7)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Incoming call"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuộc gọi đến"
+          }
+        }
+      }
+    },
+    "call.incoming_body_sim" : {
+      "comment" : "Body of the incoming-call notification when the phone has more than one SIM and the ringing SIM is known; {sim_label} = sim_label of call_event/state, the SIM name set on the phone (never translated); the design system's call panel shows the same line under the caller (CALL-01 fields 4, 11, 15, API 6, API 7)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Incoming call · %1$@"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuộc gọi đến · %1$@"
+          }
+        }
+      }
+    },
+    "call.incoming_late" : {
+      "comment" : "Body the iPhone/iPad notification service extension shows, without the Decline action, when the incoming-call push arrives more than 60 s after started_at (CALL-01 E7, API 6 logic 2); {time} = started_at formatted by the system (“2:05 PM”)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Incoming call at %1$@"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuộc gọi đến lúc %1$@"
+          }
+        }
+      }
+    },
+    "call.incoming_title" : {
+      "comment" : "Title of the ringing Mac call panel and of the iPhone/iPad in-app banner; call.waiting_title for a call waiting during another call (CALL-01 field 1)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Incoming Call"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuộc gọi đến"
+          }
+        }
+      }
+    },
+    "call.keypad" : {
+      "comment" : "Toggle button of the DTMF keypad in the in-call Mac call panel (circle.grid.3x3.fill; also its accessibility label), only when controls.dtmf = hfp (CALL-03 field 7; design system Accessibility)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keypad"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bàn phím số"
+          }
+        }
+      }
+    },
+    "call.message" : {
+      "comment" : "Title of the HL_CALL_SMS text-input action of a missed-call notification (button sms.send, placeholder sms.compose_placeholder), only when the number is known and the phone can send SMS (CALL-04 field 9, API 4)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Message"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nhắn tin"
+          }
+        }
+      }
+    },
+    "call.missed_body" : {
+      "comment" : "Body of a missed-call notification; {time} = the call's ts formatted by the system (“2:05 PM”); with a SIM label: call.missed_body_sim (CALL-04 field 8, API 4)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Missed call · %1$@"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuộc gọi nhỡ · %1$@"
+          }
+        }
+      }
+    },
+    "call.missed_body_sim" : {
+      "comment" : "Body of a missed-call notification when the phone has more than one SIM; {time} as in call.missed_body; {sim_label} = the label of the SIM with the call's sub_id in features.sms.sims (never translated) (CALL-04 fields 6, 8, API 4)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Missed call · %1$@ · %2$@"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuộc gọi nhỡ · %1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "call.missed_call" : {
+      "comment" : "hiddenPreviewsBodyPlaceholder of the HL_CALL_MISSED category (design system Notifications); the APNs text for a locked iPhone is push.call_missed (CALL-04 API 4)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Missed call"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuộc gọi nhỡ"
+          }
+        }
+      }
+    },
+    "call.mute" : {
+      "comment" : "Toggle button of the in-call Mac call panel (mic.slash.fill; also its accessibility label, with a selected state; tooltip call.mute_tooltip), only when controls.mute = hfp: mutes the Mac microphone (CALL-03 field 9)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mute"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tắt tiếng"
+          }
+        }
+      }
+    },
+    "call.mute_tooltip" : {
+      "comment" : "Tooltip of call.mute in the Mac call panel (design system CallPanel); at most 75 characters",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mute the microphone on the Mac"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tắt tiếng micro trên Mac"
+          }
+        }
+      }
+    },
+    "call.no_caller_id" : {
+      "comment" : "Shown instead of the caller's name and number when the caller withholds the number (presentation = restricted): Mac call panel, iPhone/iPad banner, notification titles; also the call log row and the missed-call notification title when number = null (CALL-01 field 3, CALL-04 fields 2, 8)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Caller ID"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Số ẩn"
+          }
+        }
+      }
+    },
+    "call.outgoing_call" : {
+      "comment" : "In-call Mac call panel: shown instead of the name or number of a call dialed on the phone, whose number is unknown until the call log has it (CALL-03 field 1, E8)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Outgoing Call"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuộc gọi đi"
+          }
+        }
+      }
+    },
+    "call.quick_reply_call_back" : {
+      "comment" : "First default template of call.quick_replies, written into the setting in the language active when the Mac creates the defaults; after that it is user data and never translated (CALL-02 field 6, 0.12.4); at most 160 characters",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I'll call you back later"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tôi sẽ gọi lại sau"
+          }
+        }
+      }
+    },
+    "call.quick_reply_in_meeting" : {
+      "comment" : "Second default template of call.quick_replies, written into the setting in the language active when the Mac creates the defaults; after that it is user data and never translated (CALL-02 field 6, 0.12.4); at most 160 characters",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I'm in a meeting"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tôi đang họp"
+          }
+        }
+      }
+    },
+    "call.reject_waiting" : {
+      "comment" : "Call-waiting button of the in-call Mac call panel, only with a Bluetooth HFP link: declines the waiting call (CALL-03 field 11)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Decline Waiting Call"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Từ chối cuộc gọi chờ"
+          }
+        }
+      }
+    },
+    "call.resume" : {
+      "comment" : "call.hold while the call is on hold: resumes it (CALL-03 field 6)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resume"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tiếp tục"
+          }
+        }
+      }
+    },
+    "call.status_ended" : {
+      "comment" : "Status of the Mac call panel for 2 s after the call ends, then the panel closes; {duration} = the call length as mm:ss formatted by the system (“02:05”) (CALL-03 field 3, API 4 logic 3)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Call ended · %1$@"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã kết thúc · %1$@"
+          }
+        }
+      }
+    },
+    "call.status_on_call" : {
+      "comment" : "Status of the in-call Mac call panel, next to the timer (CALL-03 field 3)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On call"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang gọi"
+          }
+        }
+      }
+    },
+    "call.status_on_hold" : {
+      "comment" : "Status of the in-call Mac call panel while the call is on hold, known only from the Bluetooth HFP indicators (CALL-03 field 3)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On hold"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang giữ máy"
+          }
+        }
+      }
+    },
+    "call.status_waiting" : {
+      "comment" : "Status of the in-call Mac call panel while a second call is waiting (waiting = true) (CALL-03 field 3, E7)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Call waiting"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Có cuộc gọi chờ"
+          }
+        }
+      }
+    },
+    "call.title" : {
+      "comment" : "The Calls item in the sidebar of the Mac Messages window and the Calls tab with its large title on iPhone and iPad: the call log and missed calls, with the badge of unseen missed calls (CALL-04 fields 1, 7)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Calls"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuộc gọi"
+          }
+        }
+      }
+    },
+    "call.unknown_caller" : {
+      "comment" : "Shown instead of the caller's number when it is unknown (presentation = unknown, for example READ_CALL_LOG missing on the phone, then with call.caller_id_permission_hint), and for a waiting caller without number and name (CALL-01 fields 3, 5, E2)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unknown Caller"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không rõ số"
+          }
+        }
+      }
+    },
+    "call.waiting_handle_on_phone" : {
+      "comment" : "Line under the waiting caller in the Mac call panel while the Mac has no Bluetooth HFP link to the phone (hfp_connected = false): over Wi-Fi a waiting call is information only (CALL-01 field 5, E9, CALL-03 E7)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Handle it on the phone or connect via Bluetooth"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Xử lý trên điện thoại hoặc nối Bluetooth"
+          }
+        }
+      }
+    },
+    "call.waiting_title" : {
+      "comment" : "Title of the Mac call panel and of the iPhone/iPad banner instead of call.incoming_title when a second call rings during a call (waiting = true) (CALL-01 field 1, E9)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Call Waiting"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuộc gọi chờ"
           }
         }
       }
@@ -771,6 +1599,168 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Xem hướng dẫn…"
+          }
+        }
+      }
+    },
+    "error.call_action_not_allowed" : {
+      "comment" : "Mac call panel, iPhone/iPad banner: Answer or Decline refused with CALL_ACTION_NOT_ALLOWED (already answered on the phone, another device was faster, a waiting call); End refused with reason system uses error.call_end_on_phone (CALL-02 E2, field 10)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The call was answered on the phone"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuộc gọi đã được nghe trên điện thoại"
+          }
+        }
+      }
+    },
+    "error.call_answer_permission" : {
+      "comment" : "Mac call panel, iPhone/iPad banner: PERMISSION_MISSING for android.permission.ANSWER_PHONE_CALLS; the Answer, Decline and End buttons hide until the phone grants it (CALL-02 E3, field 10)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The phone hasn't allowed HandLive to answer calls"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Điện thoại chưa cho phép HandLive trả lời cuộc gọi"
+          }
+        }
+      }
+    },
+    "error.call_audio_switch_failed" : {
+      "comment" : "Mac call panel after Answer on Mac when moving the audio fails (CALL_ROUTE_FAILED, CALL_BT_NOT_CONNECTED, SHIZUKU_NOT_RUNNING, CALL_AUDIO_CAPTURE_UNSUPPORTED); the call stays answered with the audio on the phone (CALL-02 E7, field 10)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't switch the audio to the Mac"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không chuyển được âm thanh sang Mac"
+          }
+        }
+      }
+    },
+    "error.call_command_not_sent" : {
+      "comment" : "Mac call panel, iPhone/iPad banner: no ack within REQUEST_TIMEOUT or the session was lost; the panel returns to its previous state and the command is never re-sent with a new id (CALL-02 E5, field 10; End: CALL-03 step 6)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't send the command to the phone"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không gửi được lệnh tới điện thoại"
+          }
+        }
+      }
+    },
+    "error.call_end_on_phone" : {
+      "comment" : "Mac call panel: End refused with CALL_ACTION_NOT_ALLOWED, reason system (for example an emergency call) (CALL-03 E9)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "End this call on the phone"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hãy kết thúc cuộc gọi này trên điện thoại"
+          }
+        }
+      }
+    },
+    "error.call_hfp_command_failed" : {
+      "comment" : "Mac call panel: a Bluetooth HFP command got ERROR or no answer within 2 s (for example no three-way calling); the state stays unchanged (CALL-03 E3)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The phone couldn't perform this action"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Điện thoại không thực hiện được thao tác này"
+          }
+        }
+      }
+    },
+    "error.call_hfp_required" : {
+      "comment" : "Line of the in-call Mac call panel in place of the hidden Hold, Keypad and Mute buttons while the Mac has no Bluetooth HFP link; also the text for CALL_HFP_REQUIRED (CALL-03 E2)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connect to the phone via Bluetooth to hold, use the keypad, or mute"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nối Bluetooth với điện thoại để giữ máy, bấm số, tắt tiếng"
+          }
+        }
+      }
+    },
+    "error.call_message_not_sent" : {
+      "comment" : "Mac call panel: Decline with Message… while the call was answered on the phone (state offhook); the quick reply is not sent (CALL-02 E9)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The call was answered, so the message wasn't sent"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuộc gọi đã được nghe, tin nhắn không được gửi"
+          }
+        }
+      }
+    },
+    "error.call_not_found" : {
+      "comment" : "Mac call panel, iPhone/iPad banner: CALL_NOT_FOUND, the call has ended or the call_id is stale (CALL-02 E1, field 10, CALL-03 E1)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The call has ended"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuộc gọi đã kết thúc"
           }
         }
       }
@@ -2036,7 +3026,7 @@
       }
     },
     "push.call_incoming" : {
-      "comment" : "APNs aps.alert.loc-key for reason call_incoming when the extension cannot decrypt (iPhone locked)",
+      "comment" : "APNs aps.alert.loc-key for reason call_incoming when the extension cannot decrypt (iPhone locked, CALL-01 E6); no title (the system shows the app name) and no Decline action",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -2054,7 +3044,7 @@
       }
     },
     "push.call_missed" : {
-      "comment" : "APNs aps.alert.loc-key for reason call_missed when the extension cannot decrypt",
+      "comment" : "APNs aps.alert.loc-key for reason call_missed when the extension cannot decrypt (iPhone locked, CALL-04 E9); no title and no Message action",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -2197,8 +3187,62 @@
         }
       }
     },
+    "settings.call_log_last_sync" : {
+      "comment" : "Row in Settings › Calls (Mac pane, iPhone/iPad group) with the last call log sync (CALL-04 field 11); {time} is a relative time formatted by the system (“5 minutes ago”)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last synced: %1$@"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lần đồng bộ cuối: %1$@"
+          }
+        }
+      }
+    },
+    "settings.call_notify" : {
+      "comment" : "Option for call.notify under Calls (SET-02 field 11, CALL-01 field 13): checkbox in the Mac Calls pane, switch in the Calls group on iPhone and iPad; off → the Mac shows no panel, ringtone or notification (the call only appears in the menu bar menu), iPhone and iPad show no banner and get no push",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Call Notifications"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thông báo cuộc gọi"
+          }
+        }
+      }
+    },
+    "settings.call_ringtone" : {
+      "comment" : "Checkbox for call.ringtone under Calls in the Mac Calls pane (SET-02 field 12, CALL-01 field 14); turning it on asks for the Focus status permission (infoplist.focus_status_usage)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ring on Mac"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đổ chuông trên Mac"
+          }
+        }
+      }
+    },
     "settings.calls" : {
-      "comment" : "Mac Settings pane title (toolbar item); the Calls feature card name on Android (SET-01 field 10)",
+      "comment" : "Mac Settings pane title (toolbar item); the switch for feature.call (SET-02 field 10) in that pane, on the Android Settings tab and in the Calls group of the iPhone/iPad Settings tab, which it also heads; the Calls feature card name on Android (SET-01 field 10)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -2553,6 +3597,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Điện thoại"
+          }
+        }
+      }
+    },
+    "settings.quick_replies" : {
+      "comment" : "Title of the list of call.quick_replies templates in the Mac Calls pane: add, edit, delete, reorder, at most 6 templates of 160 characters (CALL-02 field 8; design system Settings)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quick Replies"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tin trả lời nhanh"
           }
         }
       }
@@ -3242,7 +4304,7 @@
       }
     },
     "sms.compose_placeholder" : {
-      "comment" : "Placeholder of the compose field at the bottom of a conversation (MessageBubble) and of the quick-reply text field of the HL_SMS_REPLY notification action (SMS-02 API 4); at most 1,600 characters",
+      "comment" : "Placeholder of the compose field at the bottom of a conversation (MessageBubble) and of the quick-reply text field of the HL_SMS_REPLY notification action (SMS-02 API 4); at most 1,600 characters; also the single-line field of Custom Message… in Decline with Message… (CALL-02 field 7, at most 160 characters) and the text field of the HL_CALL_SMS action of a missed-call notification (CALL-04 API 4)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -3548,7 +4610,7 @@
       }
     },
     "sms.quick_reply_not_sent" : {
-      "comment" : "Body of the local notification when a quick reply from a notification got no ack within about 20 s (SMS-04 E8); no title",
+      "comment" : "Body of the local notification when a quick reply from a notification got no ack within about 20 s (SMS-04 E8), also after Message on a missed-call notification (CALL-04 API 4); no title",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -3656,7 +4718,7 @@
       }
     },
     "sms.send" : {
-      "comment" : "Send button of the quick-reply text field in the SMS notification, and accessibility label of the send button of the compose field (SMS-04 field 5)",
+      "comment" : "Send button of the quick-reply text field in the SMS notification, and accessibility label of the send button of the compose field (SMS-04 field 5); also the Send button of the Custom Message… field of Decline with Message… (CALL-02 field 7) and of the HL_CALL_SMS action of a missed-call notification (CALL-04 API 4)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
