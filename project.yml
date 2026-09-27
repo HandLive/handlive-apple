@@ -103,7 +103,8 @@ targets:
     dependencies:
       - package: HLiOSUI
       - target: HandLiveNotificationService
-  # I-NSE (CONN-04 step 9b): decrypts `hl` with K_push while unlocked; no database, no network.
+  # I-NSE (CONN-04 step 9b): decrypts `hl` with K_push while unlocked and rebuilds SMS and call notifications; no
+  # database, no network.
   HandLiveNotificationService:
     type: app-extension
     platform: iOS
@@ -122,6 +123,8 @@ targets:
     dependencies:
       - package: HLSMS
         product: HLSMSNotifications
+      - package: HLCalls
+        product: HLCallNotifications
       - package: HLProtocol
       - package: HLCrypto
       - package: HLAppCore
