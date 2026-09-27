@@ -66,8 +66,9 @@ public struct CallNotificationContent: Equatable, Sendable {
         if let identifier { object["identifier"] = identifier }
         if let categoryIdentifier { object["categoryIdentifier"] = categoryIdentifier }
         if let interruptionLevel { object["interruptionLevel"] = interruptionLevel.rawValue }
-        // The schema pins the sound of missed calls only; a ringing call's sound comes from its push or its level.
-        if playsSound, case .missed = info { object["sound"] = "default" }
+        // Missed calls and the Mac's time-sensitive incoming variant set the default sound (API 7: that level alone is
+        // silent on macOS); iPhone and iPad incoming content keeps the sound of its push.
+        if playsSound { object["sound"] = "default" }
         return object
     }
 }

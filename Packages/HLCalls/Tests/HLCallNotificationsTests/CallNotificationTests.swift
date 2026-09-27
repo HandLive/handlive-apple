@@ -60,6 +60,7 @@ struct CallNotificationTests {
         let focus = CallNotificationBuilder.incoming(Self.ringing(sim: nil, answer: true), pairId: Self.pairId,
                                                      platform: .mac, level: .timeSensitive, nowMs: Self.startedAt)
         #expect(focus.interruptionLevel == .timeSensitive && focus.playsSound && focus.body == L10n.Call.incomingBody)
+        #expect(focus.json["sound"] as? String == "default" && content.json["sound"] == nil)
         expectValid(focus, "call-notification.schema.json#/$defs/incoming")
     }
 
@@ -72,8 +73,10 @@ struct CallNotificationTests {
         expectValid(declineOnly, "call-notification.schema.json#/$defs/incoming")
         let none = CallStateData(callId: Self.callId, direction: .incoming, state: .ringing, number: "+84900000123",
                                  displayName: nil, presentation: .allowed, startedAt: Self.startedAt, controls: .none)
-        #expect(CallNotificationBuilder.incoming(none, pairId: Self.pairId, platform: .mac, level: .timeSensitive,
-                                                 nowMs: Self.startedAt).categoryIdentifier == nil)
+        let focusNone = CallNotificationBuilder.incoming(none, pairId: Self.pairId, platform: .mac, level: .timeSensitive,
+                                                         nowMs: Self.startedAt)
+        #expect(focusNone.categoryIdentifier == nil && focusNone.playsSound)
+        expectValid(focusNone, "call-notification.schema.json#/$defs/incoming")
     }
 
     @Test("iPhone: HL_CALL_INCOMING with the system's identifier; a push over 60 s late has no button, level active")
@@ -81,10 +84,11 @@ struct CallNotificationTests {
         let content = CallNotificationBuilder.incoming(Self.ringing(), pairId: Self.pairId, platform: .mobile,
                                                        level: .timeSensitive, nowMs: Self.startedAt + 2000)
         #expect(content.identifier == nil && content.categoryIdentifier == "HL_CALL_INCOMING")
+        #expect(content.json["sound"] == nil) // the push carries the sound
         expectValid(content, "call-notification.schema.json#/$defs/incoming")
         let late = CallNotificationBuilder.incoming(Self.ringing(), pairId: Self.pairId, platform: .mobile,
                                                     level: .timeSensitive, nowMs: Self.startedAt + 61_000)
-        #expect(late.categoryIdentifier == nil && late.interruptionLevel == .active && !late.playsSound)
+        #expect(late.categoryIdentifier == nil && late.interruptionLevel == .active && late.json["sound"] == nil)
         #expect(late.body == L10n.Call.incomingLate(time: CallNames.time(Self.startedAt)))
         expectValid(late, "call-notification.schema.json#/$defs/incoming")
         // The phone may not decline for us (ANSWER_PHONE_CALLS missing): no "Decline".
