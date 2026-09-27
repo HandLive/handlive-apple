@@ -22,6 +22,9 @@ public struct CallListView: View {
                     .foregroundStyle(Color.hl(.textOrange))
                     .fixedSize(horizontal: false, vertical: true)
             }
+            if model.entries.isEmpty, model.status != .permissionMissing {
+                emptyState
+            }
             ForEach(model.entries) { record in
                 CallRowView(record: record, simLabel: model.simLabel(subId: record.subId))
                     .onAppear { if record.id == model.entries.last?.id { model.loadMore() } }
@@ -29,6 +32,18 @@ public struct CallListView: View {
         }
         .onAppear { model.setVisible(true) }
         .onDisappear { model.setVisible(false) }
+    }
+
+    /// Field 1 with no entries yet, like SMS-03 E1: "No Calls Yet".
+    private var emptyState: some View {
+        VStack(spacing: HLSpacing.space8) {
+            Image(systemName: "phone").font(.largeTitle).foregroundStyle(Color.secondary)
+            Text(L10n.Call.emptyTitle).font(.headline)
+            Text(L10n.Call.emptyBody).font(.subheadline).foregroundStyle(Color.secondary).multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, HLSpacing.space40)
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -47,8 +62,13 @@ struct CallRowView: View {
                 Text(CallDisplay.title(record))
                     .fontWeight(record.isUnseenMissed ? .bold : .regular)
                     .foregroundStyle(record.type == .missed ? Color.hl(.textRed) : Color.primary)
-                if let detail = CallDisplay.detail(record, simLabel: simLabel) {
-                    Text(detail).font(.subheadline).foregroundStyle(Color.secondary)
+                let details = CallDisplay.details(record, simLabel: simLabel)
+                if !details.isEmpty {
+                    HStack(spacing: HLSpacing.space8) {
+                        ForEach(details, id: \.self) { Text($0) }
+                    }
+                    .font(.subheadline)
+                    .foregroundStyle(Color.secondary)
                 }
             }
             Spacer(minLength: HLSpacing.space8)

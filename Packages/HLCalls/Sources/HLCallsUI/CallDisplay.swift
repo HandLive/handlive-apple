@@ -60,17 +60,29 @@ public enum CallDisplay {
     }
 
     /// The line under the name: the SIM label when the phone has two SIMs, and the duration (fields 5–6).
-    public static func detail(_ record: CallLogRecord, simLabel: String?) -> String? {
-        let parts = [simLabel, duration(record.durationS)].compactMap { $0 }.filter { !$0.isEmpty }
-        return parts.isEmpty ? nil : parts.joined(separator: " · ")
+    public static func details(_ record: CallLogRecord, simLabel: String?) -> [String] {
+        [simLabel, duration(record.durationS)].compactMap { $0 }.filter { !$0.isEmpty }
     }
 
-    /// What VoiceOver reads for a row: the caller, "Missed call" for a missed one, the time and the details.
+    /// CALL-04 field 3: what VoiceOver says for the type icon.
+    public static func typeLabel(_ type: CallLogType) -> String? {
+        switch type {
+        case .incoming: L10n.Call.typeIncoming
+        case .outgoing: L10n.Call.typeOutgoing
+        case .missed: L10n.Call.typeMissed
+        case .rejected: L10n.Call.typeRejected
+        case .blocked: L10n.Call.typeBlocked
+        case .voicemail: L10n.Call.typeVoicemail
+        case .unrecognized: nil
+        }
+    }
+
+    /// What VoiceOver reads for a row: the caller, the call type, the time and the details.
     public static func accessibilityLabel(_ record: CallLogRecord, simLabel: String?, now: Date = Date()) -> String {
         var parts = [title(record)]
-        if record.type == .missed { parts.append(L10n.Call.missedCall) }
+        if let type = typeLabel(record.type) { parts.append(type) }
         parts.append(listTime(record.ts, now: now))
-        if let detail = detail(record, simLabel: simLabel) { parts.append(detail) }
+        parts += details(record, simLabel: simLabel)
         return parts.joined(separator: ", ")
     }
 }

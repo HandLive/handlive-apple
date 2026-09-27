@@ -37,10 +37,11 @@ struct CallDisplayTests {
         let entries = try await store.entries(pairId: pairId)
         let missed = try #require(entries.first { $0.entryId == 1 })
         let label = CallDisplay.accessibilityLabel(missed, simLabel: "SIM 1")
-        #expect(label.hasPrefix("Nguyễn Văn A, " + L10n.Call.missedCall) && label.hasSuffix("SIM 1"))
+        #expect(label.hasPrefix("Nguyễn Văn A, " + L10n.Call.typeMissed) && label.hasSuffix("SIM 1"))
+        #expect(CallDisplay.typeLabel(.rejected) == L10n.Call.typeRejected && CallDisplay.typeLabel(.unrecognized) == nil)
         let outgoing = try #require(entries.first { $0.entryId == 2 })
         #expect(CallDisplay.title(outgoing) == L10n.Call.noCallerId)
-        #expect(CallDisplay.detail(outgoing, simLabel: nil) == CallDisplay.duration(125))
+        #expect(CallDisplay.details(outgoing, simLabel: nil) == [CallDisplay.duration(125)].compactMap { $0 })
         #expect(CallDisplay.symbol(.missed) == "phone.arrow.down.left" && CallDisplay.symbol(.outgoing) == "phone.arrow.up.right")
     }
 }
