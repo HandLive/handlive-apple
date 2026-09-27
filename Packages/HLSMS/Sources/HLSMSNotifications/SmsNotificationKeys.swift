@@ -108,9 +108,12 @@ public enum SmsNotificationFilter {
         }
     }
 
-    /// The generic notifications shown while the device was locked (the relay's `p` and `hl` but none of our keys),
-    /// removed once SMS-01 has brought their messages into the app (logic 2).
+    /// The generic SMS notifications shown while the device was locked (the relay's `p` and an `sms` envelope in `hl`,
+    /// but none of our keys), removed once SMS-01 has brought their messages into the app (logic 2). Call pushes carry
+    /// a `call_event` envelope and stay: the calls code removes them (CALL-01 API 6 logic 4, CALL-04 step 12).
     public static func genericIdentifiers(in delivered: [DeliveredNotification]) -> [String] {
-        delivered.filter { SmsNotificationInfo($0.userInfo) == nil && $0.userInfo["p"] != nil }.map(\.identifier)
+        delivered.filter {
+            SmsNotificationInfo($0.userInfo) == nil && PushAlertFields(userInfo: $0.userInfo)?.envelope.type == .sms
+        }.map(\.identifier)
     }
 }
