@@ -7,6 +7,8 @@ import Network
 struct ForwardedConnector: ChannelConnecting {
     let host: String
     let port: UInt16
+    /// Print the messages of `/v1/pair` (plaintext) as they cross.
+    var tracePairing = false
     let base = WebSocketConnector()
 
     func connect(to target: ConnectTarget, path: String, policy: CertificatePolicy,
@@ -15,7 +17,17 @@ struct ForwardedConnector: ChannelConnecting {
         case .service: .host(host, port: port)
         case .host: target
         }
-        return try await base.connect(to: forwarded, path: path, policy: policy, timeout: timeout)
+        let connection: ChannelConnection
+        do {
+            connection = try await base.connect(to: forwarded, path: path, policy: policy, timeout: timeout)
+        } catch {
+            if tracePairing { DevConsole.line("\(path) connection failed: \(error)") }
+            throw error
+        }
+        guard tracePairing, path == TransportConstants.pairPath else { return connection }
+        return ChannelConnection(channel: TracingChannel(connection.channel, label: path),
+                                 certificateSHA256: connection.certificateSHA256, host: connection.host,
+                                 port: connection.port)
     }
 }
 

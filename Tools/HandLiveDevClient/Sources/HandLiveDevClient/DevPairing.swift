@@ -39,8 +39,8 @@ struct DevPairing {
     func run() async throws -> Bool {
         let options = workspace.options
         let discovery = ForwardedDiscovery(host: options.host, port: options.port)
-        let search = PairingSearch(discovery: discovery,
-                                   connector: ForwardedConnector(host: options.host, port: options.port))
+        let search = PairingSearch(discovery: discovery, connector: ForwardedConnector(host: options.host, port: options.port,
+                                                                                    tracePairing: true))
         let host = DevPairingHost(workspace: workspace)
         let controller = PairingController(host: host, search: search) { host.paired($0) }
         controller.start()
