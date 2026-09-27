@@ -31,6 +31,17 @@ extension SmsEngine {
         return compact
     }
 
+    /// A message to `address` in its existing one-to-one conversation, if there is one: the quick reply of "Decline with
+    /// Message…" (CALL-02 API 5) and the "Message" action of a missed call (CALL-04 API 4).
+    @discardableResult
+    public func send(text: String, toNumber address: String, subId: Int32?) async throws -> String {
+        guard let pairId else { throw SmsComposeError.notPaired }
+        let threadId = try? await store.database.pool.read { db in
+            try SmsStore.thread(db, pairId: pairId, address: address)?.threadId
+        }
+        return try await send(text: text, to: address, threadId: threadId ?? nil, subId: subId)
+    }
+
     /// Steps 2–5: validate, queue as `pending` (the placeholder bubble), then send when a session exists; otherwise ask
     /// for a wake-up and wait (E1). Returns the `local_id`.
     @discardableResult
