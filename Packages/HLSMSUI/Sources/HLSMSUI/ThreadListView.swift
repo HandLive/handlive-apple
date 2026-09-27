@@ -4,19 +4,24 @@ import HLSMS
 import SwiftUI
 
 /// The conversation list (SMS-03 fields 1–5, SMS-01 fields 1–2): the sync banner above `ThreadRow`s sorted by the
-/// latest message, the empty state (E1), and the row actions ("Mark as Read", "Copy Number").
-public struct ThreadListView: View {
+/// latest message, the empty state (E1), and the row actions ("Mark as Read", "Copy Number"). `header` puts rows above
+/// the conversations in the same selectable list (the Mac's "Calls" item, CALL-04 field 1).
+public struct ThreadListView<Header: View>: View {
     @ObservedObject var model: MessagesModel
     /// "Copy Number" (Mac context menu): the platform's pasteboard.
     let copyNumber: (String) -> Void
+    let header: Header
 
-    public init(model: MessagesModel, copyNumber: @escaping (String) -> Void = { _ in }) {
+    public init(model: MessagesModel, copyNumber: @escaping (String) -> Void = { _ in },
+                @ViewBuilder header: () -> Header) {
         self.model = model
         self.copyNumber = copyNumber
+        self.header = header()
     }
 
     public var body: some View {
         List(selection: $model.selection) {
+            header
             if let banner = SmsDisplay.syncBanner(model.syncStatus) {
                 VStack(alignment: .leading, spacing: HLSpacing.space4) {
                     Text(banner).font(.footnote).foregroundStyle(Color.secondary)
@@ -62,6 +67,12 @@ public struct ThreadListView: View {
 
     private func markRead(_ thread: SmsThread) {
         Task { await model.engine.markAsRead(threadId: thread.threadId) }
+    }
+}
+
+extension ThreadListView where Header == EmptyView {
+    public init(model: MessagesModel, copyNumber: @escaping (String) -> Void = { _ in }) {
+        self.init(model: model, copyNumber: copyNumber) { EmptyView() }
     }
 }
 
