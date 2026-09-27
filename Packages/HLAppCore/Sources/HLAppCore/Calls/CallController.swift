@@ -40,6 +40,8 @@ public final class CallController: ObservableObject {
 
     public private(set) var pairId: String?
     var peer: (any CallPeer)?
+    /// `peer` of the bench lines: the phone's first 8 hex digits.
+    var benchPeer = "00000000"
     /// `features.call` of the phone's last capability, and its missing permissions.
     public private(set) var phoneFeature: CallFeature?
     public private(set) var permissionsMissing: [String] = []
@@ -59,7 +61,8 @@ public final class CallController: ObservableObject {
     // MARK: - Pair and session
 
     /// The active pair changed (or was removed): whatever was shown for the old one goes.
-    public func setPair(_ pairId: String?, capability: CapabilityData? = nil) {
+    public func setPair(_ pairId: String?, phoneDeviceId: String? = nil, capability: CapabilityData? = nil) {
+        benchPeer = phoneDeviceId.map { String($0.replacingOccurrences(of: "-", with: "").prefix(8)) } ?? "00000000"
         phoneFeature = capability?.features.call
         permissionsMissing = capability?.permissionsMissing ?? []
         guard pairId != self.pairId else { return }
@@ -129,6 +132,9 @@ public final class CallController: ObservableObject {
         guard envelope.type == .callEvent, case .json(let payload) = envelope.body,
               payload.op == CallEventOp.state.rawValue,
               let state = try? payload.decodeData(as: CallStateData.self) else { return }
+        var fields = [("call", state.callId), ("env", envelope.id), ("peer", benchPeer), ("state", state.state.rawValue)]
+        if state.waiting { fields.append(("waiting", "true")) }
+        BenchLog.event("call_state_received", fields: fields)
         apply(state, envelopeTs: envelope.ts)
     }
 

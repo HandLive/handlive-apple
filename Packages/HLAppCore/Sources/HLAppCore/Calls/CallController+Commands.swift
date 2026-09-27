@@ -30,9 +30,10 @@ extension CallController {
     /// the panel goes back to how it was with "Couldn't send the command to the phone" (E5); a session lost meanwhile
     /// gets the same envelope `id` again if it comes back in time; no new `id` is ever sent on its own.
     @discardableResult
-    public func perform(_ command: CallCommand) async -> CommandOutcome {
+    public func perform(_ command: CallCommand, from source: CallActionSource = .panel) async -> CommandOutcome {
         guard allows(command), var current = call else { return .notAllowed }
         let callId = current.callId
+        BenchLog.event("call_action_tap", ["call": callId, "action": command.action.rawValue, "from": source.rawValue])
         current.command = command
         current.problem = nil
         call = current
@@ -40,33 +41,40 @@ extension CallController {
         var audio: CallAudioLocation?
         if case .answer(let location) = command { audio = location }
         let request = CallActionRequest(callId: callId, action: command.action, audio: audio)
-        let answer = await send(request)
-        switch answer {
-        case .some(let ack) where ack.ok:
-            if let reply = pendingReply, reply.callId == callId, let state = call?.state {
-                pendingReply = nil
-                sendReply(reply.body, for: state) // API 5 logic 1: on the successful ack of the decline
-            }
-            waitForState(callId: callId)
-            return .accepted
-        case .some(let ack):
-            var problem = ack.error.map { CallProblem(error: $0, command: command) } ?? .commandNotSent
-            if pendingReply?.callId == callId {
-                pendingReply = nil
-                if call?.phase == .inCall || problem == .answeredOnPhone { problem = .messageNotSent }
-            }
-            finish(callId: callId, problem: problem)
-            return .failed(problem)
-        case .none:
+        guard let ack = await send(request) else {
             finish(callId: callId, problem: .commandNotSent)
             return .failed(.commandNotSent)
         }
+        var fields = [("call", callId), ("env", ack.re), ("peer", benchPeer), ("ok", ack.ok ? "true" : "false")]
+        if let code = ack.error?.code { fields.append(("code", code.rawValue)) }
+        BenchLog.event("call_action_ack_received", fields: fields)
+        return ack.ok ? accepted(callId: callId) : refused(ack, command: command, callId: callId)
+    }
+
+    private func accepted(callId: String) -> CommandOutcome {
+        if let reply = pendingReply, reply.callId == callId, let state = call?.state {
+            pendingReply = nil
+            sendReply(reply.body, for: state) // API 5 logic 1: on the successful ack of the decline
+        }
+        waitForState(callId: callId)
+        return .accepted
+    }
+
+    private func refused(_ ack: Ack, command: CallCommand, callId: String) -> CommandOutcome {
+        var problem = ack.error.map { CallProblem(error: $0, command: command) } ?? .commandNotSent
+        if pendingReply?.callId == callId {
+            pendingReply = nil
+            if call?.phase == .inCall || problem == .answeredOnPhone { problem = .messageNotSent }
+        }
+        finish(callId: callId, problem: problem)
+        return .failed(problem)
     }
 
     /// One `ack` wait of `requestTimeout` from the click; the same envelope `id` whenever a session is there.
     private func send(_ request: CallActionRequest) async -> Ack? {
         let id = HLUUID.v7()
         let deadline = ContinuousClock.now.advanced(by: requestTimeout)
+        var attempt = 0
         while true {
             let remaining = ContinuousClock.now.duration(to: deadline)
             guard remaining > .zero else { return nil }
@@ -74,6 +82,10 @@ extension CallController {
                 try? await Task.sleep(for: min(.milliseconds(100), remaining))
                 continue
             }
+            attempt += 1
+            BenchLog.event("call_action_sent", ["call": request.callId, "env": id, "peer": benchPeer,
+                                                "action": request.action.rawValue,
+                                                "via": peer.route == .lan ? "lan" : "relay", "attempt": String(attempt)])
             do {
                 return try await peer.request(.action, data: request, id: id, timeout: remaining)
             } catch SessionError.timedOut {

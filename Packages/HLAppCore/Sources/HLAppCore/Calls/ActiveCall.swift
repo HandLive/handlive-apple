@@ -80,6 +80,11 @@ public enum CallCommand: Equatable, Sendable {
     }
 }
 
+/// Where a call command was chosen, for the bench lines (`call_action_tap`, shared/tools/bench/README.md).
+public enum CallActionSource: String, Sendable {
+    case panel, menu, notification, banner
+}
+
 /// The call the phone reports, as this device shows it: the latest `call_event/state` with the envelope that carried
 /// it, and what the user did here (Ignore, a command in progress, the last problem).
 public struct ActiveCall: Equatable, Sendable {
