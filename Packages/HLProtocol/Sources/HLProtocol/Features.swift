@@ -96,8 +96,13 @@ public struct CallFeature: Codable, Equatable, Sendable {
     public var callerId: Bool?
     public var notify: Bool?
 
-    public init(enabled: Bool, notify: Bool? = nil) {
+    /// `can_answer`, `can_end` and `caller_id` come only from the phone; `notify` only from iPhone and iPad.
+    public init(enabled: Bool, canAnswer: Bool? = nil, canEnd: Bool? = nil, callerId: Bool? = nil,
+                notify: Bool? = nil) {
         self.enabled = enabled
+        self.canAnswer = canAnswer
+        self.canEnd = canEnd
+        self.callerId = callerId
         self.notify = notify
     }
 
