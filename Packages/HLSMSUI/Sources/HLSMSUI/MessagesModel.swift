@@ -25,6 +25,10 @@ public final class MessagesModel: ObservableObject {
     /// `sync_cursor.updated_at` of the pair (SMS-01 field 4, Settings › Messages).
     @Published public private(set) var lastSyncAt: Int64?
 
+    /// The "Calls" item at the top of the Mac sidebar (CALL-04 field 1): a selection no conversation has, since the
+    /// phone's thread ids are positive.
+    public static let callsItem: Int64 = -1
+
     public let engine: SmsEngine
     public let store: SmsStore
     public private(set) var pairId: String?
@@ -140,7 +144,7 @@ public final class MessagesModel: ObservableObject {
     public func setActive(_ active: Bool) {
         guard active != isActive else { return }
         isActive = active
-        guard let selection else { return }
+        guard let selection, selection != Self.callsItem else { return }
         if active {
             Task { await engine.openConversation(threadId: selection) }
         } else {
@@ -176,9 +180,10 @@ public final class MessagesModel: ObservableObject {
     }
 
     private func selectionChanged(from old: Int64?) {
-        if let old { engine.closeConversation(threadId: old) }
+        if let old, old != Self.callsItem { engine.closeConversation(threadId: old) }
         guard let selection else { return }
         newMessage = nil
+        guard selection != Self.callsItem else { return }
         guard isActive else { return }
         Task { await engine.openConversation(threadId: selection) }
     }
