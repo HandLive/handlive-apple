@@ -59,23 +59,35 @@ public struct RelayPairList: Codable, Equatable, Sendable {
     }
 }
 
-/// One pair of `GET /v1/pairs`: `revoked_at` set means revoked; `peer_online` comes from the relay's presence.
+/// One pair of `GET /v1/pairs`: `revoked_at` set means revoked; `revoked_by` and `revoke_sig` carry the revoking device's
+/// `HLREVOKE1` statement (`nil` on rows revoked before signed revocation); `peer_online` comes from the relay's presence.
 public struct RelayPairEntry: Codable, Equatable, Sendable {
     public let pairId: String
     public let peerDeviceId: String
     public let peerPlatform: CapabilityData.Platform
     public let createdAt: Int64
     public let revokedAt: Int64?
+    public let revokedBy: String?
+    public let revokeSig: String?
     public let peerOnline: Bool
 
     public init(pairId: String, peerDeviceId: String, peerPlatform: CapabilityData.Platform, createdAt: Int64,
-                revokedAt: Int64?, peerOnline: Bool) {
+                revokedAt: Int64?, revokedBy: String? = nil, revokeSig: String? = nil, peerOnline: Bool) {
         self.pairId = pairId
         self.peerDeviceId = peerDeviceId
         self.peerPlatform = peerPlatform
         self.createdAt = createdAt
         self.revokedAt = revokedAt
+        self.revokedBy = revokedBy
+        self.revokeSig = revokeSig
         self.peerOnline = peerOnline
+    }
+
+    /// The row's revocation as the relay's `pair_revoked` would carry it (an empty `by` when the row names no one);
+    /// `nil` while the pair is not revoked.
+    public var revocation: RelayPairRevocation? {
+        guard revokedAt != nil else { return nil }
+        return RelayPairRevocation(pairId: pairId, by: revokedBy ?? "", revokedAt: revokedAt, sig: revokeSig)
     }
 
     enum CodingKeys: String, CodingKey {
@@ -84,20 +96,61 @@ public struct RelayPairEntry: Codable, Equatable, Sendable {
         case peerPlatform = "peer_platform"
         case createdAt = "created_at"
         case revokedAt = "revoked_at"
+        case revokedBy = "revoked_by"
+        case revokeSig = "revoke_sig"
         case peerOnline = "peer_online"
     }
 }
 
-/// `POST /v1/pairs/{pair_id}/revoke` (PAIR-03 API 3).
+/// `POST /v1/pairs/{pair_id}/revoke` (PAIR-03 API 3): the caller's `HLREVOKE1` statement (0.6.2) and an informational
+/// reason, which is not signed and not stored.
 public struct RelayPairRevokeRequest: Codable, Equatable, Sendable {
     public enum Reason: String, Codable, Sendable {
         case user, reinstall
         case lostDevice = "lost_device"
     }
 
-    public let reason: Reason
+    public let revokedAt: Int64
+    /// b64u of the 64-byte signature.
+    public let sig: String
+    public let reason: Reason?
 
-    public init(reason: Reason) {
+    public init(revokedAt: Int64, sig: String, reason: Reason?) {
+        self.revokedAt = revokedAt
+        self.sig = sig
         self.reason = reason
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case revokedAt = "revoked_at"
+        case sig, reason
+    }
+}
+
+/// One item of `revocations[]` in `DELETE /v1/devices/me?revoke_pairs=true` (SET-02 API 2): a statement per pair.
+public struct RelayRevocation: Codable, Equatable, Sendable {
+    public let pairId: String
+    public let revokedAt: Int64
+    public let sig: String
+
+    public init(pairId: String, revokedAt: Int64, sig: String) {
+        self.pairId = pairId
+        self.revokedAt = revokedAt
+        self.sig = sig
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case pairId = "pair_id"
+        case revokedAt = "revoked_at"
+        case sig
+    }
+}
+
+/// Body of `DELETE /v1/devices/me?revoke_pairs=true` (SET-02 API 2).
+public struct RelayDeviceDeleteRequest: Codable, Equatable, Sendable {
+    public let revocations: [RelayRevocation]
+
+    public init(revocations: [RelayRevocation]) {
+        self.revocations = revocations
     }
 }

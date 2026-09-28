@@ -12,7 +12,7 @@ struct RelayFramesTests {
                                    payload: Base64Coding.encodeB64(Data([1, 2, 3])))
 
     static func dictionary(_ data: Data) throws -> NSDictionary {
-        NSDictionary(dictionary: try object(String(decoding: data, as: UTF8.self)))
+        NSDictionary(dictionary: try object(String(bytes: data, encoding: .utf8) ?? ""))
     }
 
     static func dictionary(_ text: String) throws -> NSDictionary {
