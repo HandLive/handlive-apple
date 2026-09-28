@@ -182,13 +182,14 @@ enum ManagerHarness {
         let hints: [String]
     }
 
-    static func make(lastHost: String? = nil) async -> Setup {
+    static func make(lastHost: String? = nil,
+                     configuration: ConnectionConfiguration = ManagerHarness.configuration()) async -> Setup {
         let pair = SessionHarness.pair()
         let discovery = FakeDiscovery()
         let network = FakeNetwork()
         let connector = FakeConnector(pair: pair)
         let manager = ConnectionManager(localCapability: SessionHarness.macCapability, discovery: discovery,
-                                        network: network, connector: connector, configuration: configuration())
+                                        network: network, connector: connector, configuration: configuration)
         let recorder = LinkRecorder(manager.events)
         let phone = PairedPhone(pair: pair, certificateSHA256: pin, lastHost: lastHost, lastPort: lastHost == nil ? nil : 47800)
         let hints = (try? DiscoveryHint.acceptedHints(prk: pair.prk, nowMs: HLUUID.currentTimeMs())) ?? []
