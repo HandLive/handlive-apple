@@ -10,6 +10,12 @@
 	<string>%1$@, %2$@</string>
 	<key>a11y.sms_bubble_sent</key>
 	<string>You, %1$@, %2$@</string>
+	<key>a11y.web_badge</key>
+	<string>HandLive, page from your phone available</string>
+	<key>a11y.web_ios_banner</key>
+	<string>Continue browsing: %1$@, %2$@</string>
+	<key>a11y.web_menu_item</key>
+	<string>Page from %1$@: %2$@</string>
 	<key>call.answer</key>
 	<string>Answer</string>
 	<key>call.answer_on_mac</key>
@@ -278,6 +284,8 @@
 	<string>Update HandLive on the phone</string>
 	<key>error.update_this_app</key>
 	<string>Update HandLive on this device</string>
+	<key>infoplist.apple_events_usage</key>
+	<string>HandLive reads the address of the page open in your browser so you can continue on your phone.</string>
 	<key>infoplist.focus_status_usage</key>
 	<string>HandLive reads your Focus status so it doesn't ring or show calls while a Focus is on.</string>
 	<key>infoplist.local_network_usage</key>
@@ -604,5 +612,21 @@
 	<string>Needs to be paired again</string>
 	<key>status.retry_in</key>
 	<string>Retrying in %1$@</string>
+	<key>web.automation.not_allowed</key>
+	<string>Not allowed</string>
+	<key>web.browsers</key>
+	<string>Browsers</string>
+	<key>web.ios_banner</key>
+	<string>Continue browsing: %1$@</string>
+	<key>web.mac_notification_body</key>
+	<string>%1$@ — from %2$@</string>
+	<key>web.menu_item</key>
+	<string>%1$@ — from %2$@</string>
+	<key>web.notify</key>
+	<string>Page Notifications</string>
+	<key>web.send_mac</key>
+	<string>Send Pages from This Mac</string>
+	<key>web.title</key>
+	<string>Continue Browsing</string>
 </dict>
 </plist>
