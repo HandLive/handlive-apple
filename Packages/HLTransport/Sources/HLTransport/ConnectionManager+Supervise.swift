@@ -10,7 +10,10 @@ extension ConnectionManager {
 
     func superviseSession() async {
         guard let current = session else { return apply(.connectionLost) }
-        let signal = await signals.next(timeout: current.route == .relay ? Self.upgradeRecheck : nil)
+        let upgradeIn = current.route == .relay ? Self.upgradeRecheck : nil
+        let resetIn = backoffResetAt.map { ContinuousClock.now.duration(to: $0) }
+        let signal = await signals.next(timeout: [upgradeIn, resetIn].compactMap { $0 }.min())
+        let resetDue = resetBackoffIfStable()
         switch signal {
         case .sessionEnded(let reason, let token)? where token == sessionToken:
             await sessionEnded(current, reason)
@@ -26,12 +29,21 @@ extension ConnectionManager {
             if current.route == .relay { await upgradeToLAN(from: current) }
         case .relay(let event)?:
             await relayEventWhileConnected(event, current)
-        case nil where current.route == .relay:
+        case nil where current.route == .relay && !resetDue:
             upgradeTried.removeAll()
             await upgradeToLAN(from: current)
         default:
             break
         }
+    }
+
+    /// The session has stayed `Connected` for `backoffResetAfter`: the next loss starts again from 0.5 s. Returns
+    /// whether that just happened (the wait ended for this, not for the relay upgrade recheck).
+    private func resetBackoffIfStable() -> Bool {
+        guard let resetAt = backoffResetAt, ContinuousClock.now >= resetAt else { return false }
+        backoff.reset()
+        backoffResetAt = nil
+        return true
     }
 
     private func networkChanged(_ current: ControlSession) async {

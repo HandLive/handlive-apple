@@ -147,7 +147,9 @@ extension ConnectionManager {
         session = established
         sessionToken &+= 1
         let token = sessionToken
-        backoff.reset()
+        // A peer that accepts and then drops at once must not be retried every 0.5 s: the step resets only after a
+        // stable session (`RECONNECT_BACKOFF`, 0.10).
+        backoffResetAt = ContinuousClock.now.advanced(by: configuration.backoffResetAfter)
         if issue != .localNetworkDenied && issue != .relayDeviceRemoved { issue = nil }
         let capability = await established.peerCapability ?? FallbackCapability.empty
         phone?.relayEnabled = capability.features.relay?.enabled ?? false

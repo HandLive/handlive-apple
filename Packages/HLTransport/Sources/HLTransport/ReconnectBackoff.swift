@@ -1,4 +1,5 @@
-/// `RECONNECT_BACKOFF` (0.10): 0,5 → 1 → 2 → 4 → 8 → 16 → 30 s, jitter ±20 %; về 0 khi thành công.
+/// `RECONNECT_BACKOFF` (0.10): 0.5 → 1 → 2 → 4 → 8 → 16 → 30 s, jitter ±20 %; back to 0 once a session has stayed
+/// `Connected` for `ConnectionConfiguration.backoffResetAfter` (30 s), not as soon as it connects.
 public struct ReconnectBackoff: Sendable {
     public static let steps: [Double] = [0.5, 1, 2, 4, 8, 16, 30]
     public static let jitter = 0.2

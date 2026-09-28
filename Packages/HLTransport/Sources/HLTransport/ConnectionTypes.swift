@@ -108,6 +108,8 @@ public struct ConnectionConfiguration: Sendable {
     public var fastPathTimeout: Duration = .milliseconds(1500)
     /// Multiplies `RECONNECT_BACKOFF` and the AUTH_FAILED wait (tests use a small factor).
     public var delayScale = 1.0
+    /// `RECONNECT_BACKOFF` goes back to its first step once a session has stayed `Connected` this long (0.10).
+    public var backoffResetAfter: Duration = .seconds(30)
     /// Waiting for the relay's first `presence` of the pair after connecting (CONN-03 step 6).
     public var presenceWait: Duration = .seconds(3)
     /// A `wake` push for the same reason goes out at most this often (CONN-03 E5, CONN-04 step 5a).

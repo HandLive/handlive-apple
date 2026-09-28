@@ -35,6 +35,9 @@ public final class CallController: ObservableObject {
     /// After reconnecting, the phone sends the current state right after the capability exchange (CALL-01 E8); a call
     /// it does not mention within this time is over.
     var reconnectGrace: Duration = .seconds(3)
+    /// "Lost connection to the phone" shows only once the session has been gone this long: a quick reconnect (rekey,
+    /// network change) shows nothing (CALL-03 E6).
+    var connectionLostDelay: Duration = .seconds(3)
     /// Ended calls remembered to drop their late versions (logic 6): at most this many.
     static let recentlyEndedCapacity = 32
 
@@ -52,6 +55,7 @@ public final class CallController: ObservableObject {
     var pendingReply: (callId: String, body: String)?
     var closeTask: Task<Void, Never>?
     var staleTask: Task<Void, Never>?
+    var connectionLostTask: Task<Void, Never>?
     var stateWaitTask: Task<Void, Never>?
 
     public init(now: @escaping () -> Int64 = { HLUUID.currentTimeMs() }) {
@@ -72,40 +76,11 @@ public final class CallController: ObservableObject {
         clear()
     }
 
-    /// A session reached `Connected`. The phone sends the current call right after the capability exchange (CALL-01
-    /// E8, logic 3); a call it no longer has gets no `state`, so one not refreshed within `reconnectGrace` goes.
-    public func connected(peer: any CallPeer, capability: CapabilityData) {
-        self.peer = peer
-        connectedAtMs = now()
-        capabilityUpdated(capability)
-        guard var current = call, current.phase != .ended else { return }
-        current.connectionLost = false
-        call = current
-        let callId = current.callId
-        let since = connectedAtMs
-        staleTask?.cancel()
-        staleTask = Task { [weak self, reconnectGrace] in
-            try? await Task.sleep(for: reconnectGrace)
-            guard !Task.isCancelled, let self, let call = self.call, call.callId == callId,
-                  call.receivedAtMs < since else { return }
-            self.clear()
-        }
-    }
-
     /// `capability/update`: calls may stop being in effect (SET-02 API 1 logic 4: the panel and notifications close).
     public func capabilityUpdated(_ capability: CapabilityData) {
         phoneFeature = capability.features.call
         permissionsMissing = capability.permissionsMissing ?? []
         if !callsInEffect { clear() }
-    }
-
-    /// The session is gone: a call on screen says "Lost connection to the phone" (CALL-03 E6) until it comes back.
-    public func disconnected() {
-        peer = nil
-        staleTask?.cancel()
-        guard var current = call, current.phase != .ended else { return }
-        current.connectionLost = true
-        call = current
     }
 
     /// `feature.call` changed here: off closes everything (SET-02 field 10).
@@ -228,6 +203,7 @@ public final class CallController: ObservableObject {
     func clear() {
         closeTask?.cancel()
         staleTask?.cancel()
+        connectionLostTask?.cancel()
         stateWaitTask?.cancel()
         pendingReply = nil
         call = nil
