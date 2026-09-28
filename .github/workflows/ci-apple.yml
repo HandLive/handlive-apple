@@ -63,8 +63,12 @@ jobs:
           GH_TOKEN: ${{ secrets.HANDLIVE_REPOS_TOKEN || github.token }}
         run: |
           # gh reads GH_TOKEN from the environment: the token never appears in a URL or on a command line.
+          # The branch name is data: URL-encoded per path segment in the API path, and passed to jq with --arg (never
+          # spliced into the jq program).
+          encoded="$(jq -rn --arg b "$BRANCH" '$b | split("/") | map(@uri) | join("/")')"
           resolve() {
-            n="$(gh api "repos/${OWNER}/$1/git/matching-refs/heads/${BRANCH}" --jq "map(select(.ref == \"refs/heads/${BRANCH}\")) | length" 2>/dev/null || echo 0)"
+            n="$(gh api "repos/${OWNER}/$1/git/matching-refs/heads/${encoded}" 2>/dev/null \
+              | jq --arg r "refs/heads/${BRANCH}" 'map(select(.ref == $r)) | length' || echo 0)"
             if [ "$n" = 1 ]; then echo "$BRANCH"; else echo main; fi
           }
           hub="$(resolve handlive)"; shared="$(resolve handlive-shared)"
