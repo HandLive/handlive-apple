@@ -129,6 +129,7 @@ extension CallController {
         controller.stateWait = .milliseconds(200)
         controller.endedDisplay = .milliseconds(150)
         controller.reconnectGrace = .milliseconds(150)
+        controller.connectionLostDelay = .milliseconds(150)
         controller.setPair(CallSamples.pairId, capability: capability)
         controller.connected(peer: peer, capability: capability)
         return controller

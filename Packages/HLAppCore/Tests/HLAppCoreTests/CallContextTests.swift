@@ -120,7 +120,7 @@ struct CallContextTests {
         let controller = CallController.connectedForTest(peer: peer, clock: clock)
         controller.apply(CallSamples.ringing(), envelopeTs: 100)
         controller.disconnected()
-        #expect(controller.call?.connectionLost == true)
+        #expect(await eventually { controller.call?.connectionLost == true })
         clock.now += 1000
         controller.connected(peer: peer, capability: CallSamples.capability())
         #expect(controller.call?.connectionLost == false)
@@ -132,6 +132,24 @@ struct CallContextTests {
         clock.now += 1000
         controller.connected(peer: peer, capability: CallSamples.capability())
         #expect(await eventually { controller.call == nil })
+    }
+
+    @Test("Lost connection shows only after the session has been gone for the delay, and hides once it is back")
+    func connectionLostNoticeWaits() async throws {
+        let peer = FakeCallPeer()
+        let controller = CallController.connectedForTest(peer: peer)
+        controller.apply(CallSamples.offhook(answeredAt: CallSamples.startedAt + 5000), envelopeTs: 100)
+        controller.disconnected()
+        #expect(controller.call?.connectionLost == false) // CALL-03 E6: nothing right away
+        try await Task.sleep(for: .milliseconds(60))
+        controller.connected(peer: peer, capability: CallSamples.capability()) // a quick reconnect
+        try await Task.sleep(for: .milliseconds(300))
+        #expect(controller.call?.connectionLost == false)
+        controller.apply(CallSamples.offhook(answeredAt: CallSamples.startedAt + 5000), envelopeTs: 200)
+        controller.disconnected()
+        #expect(await eventually { controller.call?.connectionLost == true })
+        controller.connected(peer: peer, capability: CallSamples.capability())
+        #expect(controller.call?.connectionLost == false)
     }
 
     @Test("Calls off on either side, or the phone's state permission missing: nothing is shown")
