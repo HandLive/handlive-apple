@@ -1,0 +1,74 @@
+# XcodeGen spec of the camera spike (gate G5); not part of apple/project.yml nor of CI.
+# `./build.sh` generates CameraSpike.xcodeproj (git-ignored) and builds it; see README.md.
+# Signing: the team comes from the command line (DEVELOPMENT_TEAM=…); nothing here names a person or a team.
+name: CameraSpike
+options:
+  bundleIdPrefix: app.handlive.spike
+  developmentLanguage: en
+  deploymentTarget:
+    macOS: "13.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    # Swift 5 mode: the CoreMediaIO and Core Audio C APIs carry no concurrency annotations.
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "0.1"
+    # Bumped with HL_BUILD_NUMBER to test an extension update (C11).
+    CURRENT_PROJECT_VERSION: "1"
+    CODE_SIGN_STYLE: Automatic
+    ENABLE_HARDENED_RUNTIME: YES
+    DEAD_CODE_STRIPPING: YES
+packages:
+  CameraSpikeKit:
+    path: .
+targets:
+  CameraSpikeHost:
+    type: application
+    platform: macOS
+    sources:
+      - path: Host
+      - path: Shared
+    dependencies:
+      - package: CameraSpikeKit
+      - target: CameraSpikeExtension
+        embed: true
+        copy:
+          destination: wrapper
+          subpath: Contents/Library/SystemExtensions
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.handlive.spike.camera
+        PRODUCT_NAME: HandLiveCameraSpike
+        INFOPLIST_FILE: Host/Info.plist
+        CODE_SIGN_ENTITLEMENTS: Host/CameraSpikeHost.entitlements
+  CameraSpikeExtension:
+    type: system-extension
+    platform: macOS
+    sources:
+      - path: Extension
+      - path: Shared
+    dependencies:
+      - package: CameraSpikeKit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.handlive.spike.camera.extension
+        # A system extension bundle is named after its bundle identifier.
+        PRODUCT_NAME: $(PRODUCT_BUNDLE_IDENTIFIER)
+        INFOPLIST_FILE: Extension/Info.plist
+        CODE_SIGN_ENTITLEMENTS: Extension/CameraExtension.entitlements
+        SKIP_INSTALL: YES
+  HandLiveSpikeMic:
+    type: bundle
+    platform: macOS
+    sources:
+      - path: AudioPlugin
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.handlive.spike.mic
+        PRODUCT_NAME: HandLiveSpikeMic
+        WRAPPER_EXTENSION: driver
+        INFOPLIST_FILE: AudioPlugin/Info.plist
+        GCC_C_LANGUAGE_STANDARD: gnu11
+        GCC_TREAT_WARNINGS_AS_ERRORS: YES
+        OTHER_LDFLAGS: "-framework CoreAudio -framework CoreFoundation"
+        SKIP_INSTALL: YES
