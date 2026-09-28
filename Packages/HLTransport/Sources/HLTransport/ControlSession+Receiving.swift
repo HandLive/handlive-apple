@@ -40,6 +40,11 @@ extension ControlSession {
             return
         }
         recentIDs.record(envelope.id) // only now: a forged envelope never takes an id
+        if recentIDs.isFull {
+            // The rekey has not completed while the ids piled up (DEDUP_WINDOW, 0.10): 4410 REKEY_FAILED.
+            await end(.rekeyFailed, closing: .rekeyFailed)
+            return
+        }
         if envelope.type == .clipboard, ClipboardChunkPlaintext.isBinaryChunk(plaintext) {
             eventSink.yield(.message(IncomingEnvelope(id: envelope.id, type: envelope.type, ts: envelope.ts,
                                                       body: .binary(plaintext))))

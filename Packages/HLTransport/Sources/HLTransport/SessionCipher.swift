@@ -55,8 +55,12 @@ struct SessionCipher {
 /// `DEDUP_WINDOW` (0.5.1 rule 2): every envelope `id` accepted in the current key epoch and the `ack` answered to
 /// each request, so a repeated request gets the same `ack` without being processed again. The set is emptied at
 /// rekey; the previous epoch's ids stay while its keys are still accepted. `REKEY_AFTER` (10,000 envelopes per
-/// direction) bounds it, so nothing is evicted inside an epoch: an evicted id could be replayed.
+/// direction) bounds it, so nothing is evicted inside an epoch: an evicted id could be replayed. A set that reaches
+/// `limit` (20,000) because the rekey has not completed is full: the session closes with 4410.
 struct RecentEnvelopeIDs {
+    static let defaultLimit = 20_000
+
+    let limit: Int
     private var current: [String: String?] = [:]
     private var previous: (ids: [String: String?], until: ContinuousClock.Instant)?
 
@@ -68,6 +72,11 @@ struct RecentEnvelopeIDs {
     /// Ids accepted in the current epoch.
     var count: Int { current.count }
     var isEmpty: Bool { current.isEmpty }
+    var isFull: Bool { current.count >= limit }
+
+    init(limit: Int = RecentEnvelopeIDs.defaultLimit) {
+        self.limit = limit
+    }
 
     /// Reports whether `id` was already accepted; records nothing (a forged envelope must not take an id).
     mutating func lookup(_ id: String, now: ContinuousClock.Instant) -> Lookup {
