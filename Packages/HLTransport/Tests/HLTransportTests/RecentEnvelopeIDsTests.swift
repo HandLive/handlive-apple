@@ -54,4 +54,17 @@ struct RecentEnvelopeIDsTests {
         #expect(ids.lookup("epoch0", now: start.advanced(by: .seconds(2))) == .new)
         #expect(ids.lookup("epoch1", now: start.advanced(by: .seconds(2))) == .duplicate(ackWire: nil))
     }
+
+    @Test("A set that reaches its limit (20,000 by default) reports full")
+    func limit() {
+        #expect(RecentEnvelopeIDs.defaultLimit == 20_000)
+        var ids = RecentEnvelopeIDs(limit: 3)
+        ids.record("a")
+        ids.record("b")
+        #expect(!ids.isFull)
+        ids.record("c")
+        #expect(ids.isFull)
+        ids.startEpoch(now: start, previousKeptFor: .seconds(30))
+        #expect(!ids.isFull)
+    }
 }

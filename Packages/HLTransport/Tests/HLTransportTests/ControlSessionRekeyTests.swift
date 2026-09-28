@@ -65,6 +65,18 @@ struct ControlSessionRekeyTests {
         #expect(messages.count == 1)
     }
 
+    @Test("The epoch id set reaches its limit because the rekey never completed → close 4410 (DEDUP_WINDOW)")
+    func dedupLimitCloses() async throws {
+        var configuration = Self.rekeyAfter(1_000)
+        configuration.dedupLimit = 3
+        let connected = try await SessionHarness.connect(configuration)
+        // capability/hello already took one id; two more reach the limit.
+        try await connected.phone.send(.clipboard, op: "push", data: ClipText(text: "1"))
+        try await connected.phone.send(.clipboard, op: "push", data: ClipText(text: "2"))
+        #expect(await connected.events.ended() == .rekeyFailed)
+        #expect(connected.phoneChannel.receivedCloseCode == .rekeyFailed)
+    }
+
     @Test("A rekey request with the wrong epoch is refused with BAD_REQUEST")
     func wrongEpoch() async throws {
         let connected = try await SessionHarness.connect()
