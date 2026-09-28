@@ -42,23 +42,37 @@ extension RelayAPIClient {
     }
 
     /// SET-02 API 2 and E6: a device the relay no longer knows (404 at the challenge or at the call) is already deleted.
-    /// With `revokePairs` the body carries one `HLREVOKE1` statement for each pair the relay still lists as unrevoked.
-    public func deleteDevice(revokePairs: Bool) async throws {
+    /// With `revokePairs` the body carries one `HLREVOKE1` statement for every local pair and every pair the relay still
+    /// lists as unrevoked (it ignores statements for pairs it does not hold). A 400 `BAD_REQUEST` (a pair appeared, or a
+    /// clock skew) lists and signs again and retries once before it is reported.
+    public func deleteDevice(revokePairs: Bool, localPairIds: [String]) async throws {
         defer { dropToken() }
         do {
             _ = try await accessToken(registerIfUnknown: false)
-            var body: Data?
-            if revokePairs {
-                let open = try await perform("GET", "pairs", query: [URLQueryItem(name: "include_revoked", value: "false")],
-                                             body: nil, authorized: true, registerIfUnknown: false, as: RelayPairList.self)
-                let revocations = try open.pairs.filter { $0.revokedAt == nil }.map { try revocation(of: $0.pairId) }
-                body = try HLJSON.encode(RelayDeviceDeleteRequest(revocations: revocations))
+            do {
+                try await sendDelete(revokePairs: revokePairs, localPairIds: localPairIds)
+            } catch RelayAPIError.http(400, _, _) where revokePairs {
+                try await sendDelete(revokePairs: revokePairs, localPairIds: localPairIds)
             }
-            _ = try await perform("DELETE", "devices/me", query: [URLQueryItem(name: "revoke_pairs", value: "\(revokePairs)")],
-                                  body: body, authorized: true, registerIfUnknown: false, as: NoContent.self)
         } catch RelayAPIError.http(404, _, _) {
             return
         }
+    }
+
+    private func sendDelete(revokePairs: Bool, localPairIds: [String]) async throws {
+        var body: Data?
+        if revokePairs {
+            let open = try await perform("GET", "pairs", query: [URLQueryItem(name: "include_revoked", value: "false")],
+                                         body: nil, authorized: true, registerIfUnknown: false, as: RelayPairList.self)
+            var pairIds: [String] = []
+            for pairId in localPairIds + open.pairs.filter({ $0.revokedAt == nil }).map(\.pairId)
+            where HLUUID.isCanonical(pairId) && !pairIds.contains(pairId) {
+                pairIds.append(pairId)
+            }
+            body = try HLJSON.encode(RelayDeviceDeleteRequest(revocations: try pairIds.map { try revocation(of: $0) }))
+        }
+        _ = try await perform("DELETE", "devices/me", query: [URLQueryItem(name: "revoke_pairs", value: "\(revokePairs)")],
+                              body: body, authorized: true, registerIfUnknown: false, as: NoContent.self)
     }
 
     /// This device's `HLREVOKE1` statement for `pairId`, signed with `ik_sig` at the current time (0.6.2).

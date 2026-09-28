@@ -29,7 +29,7 @@ extension AppModel {
     public func removeFromServer() async -> ServerRemovalResult {
         guard let api = relay?.api else { return .failed }
         do {
-            try await api.deleteDevice(revokePairs: false)
+            try await api.deleteDevice(revokePairs: false, localPairIds: [])
         } catch {
             return .failed
         }
@@ -49,7 +49,7 @@ extension AppModel {
     public func deleteAllData(evenIfOffline: Bool = false) async -> DeleteAllResult {
         if !evenIfOffline, let api = relay?.api {
             do {
-                try await api.deleteDevice(revokePairs: true)
+                try await api.deleteDevice(revokePairs: true, localPairIds: ((try? store?.all()) ?? []).map(\.pairId))
             } catch {
                 return .serverUnreachable
             }
