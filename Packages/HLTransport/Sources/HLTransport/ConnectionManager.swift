@@ -18,6 +18,8 @@ public actor ConnectionManager {
 
     var machine = ConnectionStateMachine()
     var backoff = ReconnectBackoff()
+    /// When the current session will have been `Connected` long enough to reset `backoff`; `nil` once reset (0.10).
+    var backoffResetAt: ContinuousClock.Instant?
     var phone: PairedPhone?
     var localCapability: CapabilityData
     var networkPath: NetworkPathStatus?
