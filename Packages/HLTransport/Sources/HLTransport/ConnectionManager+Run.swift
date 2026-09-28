@@ -130,15 +130,16 @@ extension ConnectionManager {
     }
 
     /// A handshake that did not reach `Connected`: backoff per its reaction, pair removal when the phone forgot it. Over
-    /// the relay the phone is not yet authenticated, so `PAIR_UNKNOWN` / `PAIR_REVOKED` there only back off: anyone on
-    /// the relay path could forge them (CONN-03 E9); a revocation comes through a signed `pair_revoked` or the LAN.
+    /// the relay the phone is not yet authenticated and anyone on the relay path could forge a `session/error` (CONN-03
+    /// E9): `PAIR_UNKNOWN` / `PAIR_REVOKED` only back off (a revocation comes through a signed `pair_revoked` or the
+    /// LAN), and `AUTH_FAILED` / `UNSUPPORTED_VERSION` show their message on the normal schedule.
     func handshakeFailed(_ error: Error, route: ConnectionRoute) {
         let failure = (error as? SessionEstablishError) ?? .protocolError
         var minProtocol: Int32?
         if case .rejected(_, let min) = failure { minProtocol = min }
         var reaction = failure.reaction
         if route == .relay, reaction == .removePair { reaction = .backoff }
-        scheduleBackoff(reaction, minProtocol: minProtocol)
+        scheduleBackoff(reaction, minProtocol: minProtocol, keepSchedule: route == .relay)
         apply(.handshakeFailed)
         if reaction == .removePair {
             removePair(failure == .rejected(.pairUnknown, minProtocol: nil) ? .unknownToPhone : .revoked)
