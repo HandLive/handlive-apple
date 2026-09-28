@@ -123,7 +123,8 @@ final class ScriptedRelayAPI: RelayAPI, @unchecked Sendable {
     func updatePushToken(_ request: RelayPushTokenRequest) async throws { try record("updatePushToken") }
     func push(_ request: RelayPushRequest) async throws { try record("push") }
     func deleteDevice(revokePairs: Bool, localPairIds: [String]) async throws {
-        try record("deleteDevice revoke_pairs=\(revokePairs)" + (revokePairs ? " local=\(localPairIds.joined(separator: ","))" : ""))
+        let local = revokePairs ? " local=\(localPairIds.joined(separator: ","))" : ""
+        try record("deleteDevice revoke_pairs=\(revokePairs)" + local)
     }
 }
 
