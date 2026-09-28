@@ -37,7 +37,7 @@ struct RecentEnvelopeIDsTests {
         ids.record("old")
         ids.remember(ackWire: "ack-old", for: "old")
         ids.startEpoch(now: start, previousKeptFor: .seconds(30))
-        #expect(ids.count == 0)
+        #expect(ids.isEmpty)
         #expect(ids.lookup("old", now: start.advanced(by: .seconds(29))) == .duplicate(ackWire: "ack-old"))
         ids.record("new")
         #expect(ids.lookup("old", now: start.advanced(by: .seconds(31))) == .new)

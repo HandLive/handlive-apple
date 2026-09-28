@@ -67,6 +67,7 @@ struct RecentEnvelopeIDs {
 
     /// Ids accepted in the current epoch.
     var count: Int { current.count }
+    var isEmpty: Bool { current.isEmpty }
 
     /// Reports whether `id` was already accepted; records nothing (a forged envelope must not take an id).
     mutating func lookup(_ id: String, now: ContinuousClock.Instant) -> Lookup {
