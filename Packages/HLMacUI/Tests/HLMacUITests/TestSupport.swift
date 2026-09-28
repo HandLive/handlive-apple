@@ -122,7 +122,9 @@ final class ScriptedRelayAPI: RelayAPI, @unchecked Sendable {
     }
     func updatePushToken(_ request: RelayPushTokenRequest) async throws { try record("updatePushToken") }
     func push(_ request: RelayPushRequest) async throws { try record("push") }
-    func deleteDevice(revokePairs: Bool) async throws { try record("deleteDevice revoke_pairs=\(revokePairs)") }
+    func deleteDevice(revokePairs: Bool, localPairIds: [String]) async throws {
+        try record("deleteDevice revoke_pairs=\(revokePairs)" + (revokePairs ? " local=\(localPairIds.joined(separator: ","))" : ""))
+    }
 }
 
 /// A relay WebSocket that never opens: the tests stay on the (silent) LAN.
