@@ -145,6 +145,60 @@
         }
       }
     },
+    "a11y.web_badge" : {
+      "comment" : "VoiceOver label of the menu bar icon in its badge variant while a page from the phone is kept (WEB-02 field 1, special requirements)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HandLive, page from your phone available"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HandLive, có trang từ điện thoại"
+          }
+        }
+      }
+    },
+    "a11y.web_ios_banner" : {
+      "comment" : "VoiceOver label of the iPhone/iPad page banner, read as a button (WEB-05 special requirements); {title_or_host} = the page title, else its host; {host} = the page host",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue browsing: %1$@, %2$@"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duyệt web tiếp: %1$@, %2$@"
+          }
+        }
+      }
+    },
+    "a11y.web_menu_item" : {
+      "comment" : "VoiceOver label of the page menu item web.menu_item (WEB-02 special requirements); {device_name} = the phone; {title_or_host} = the page title, else its host",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Page from %1$@: %2$@"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trang từ %1$@: %2$@"
+          }
+        }
+      }
+    },
     "call.answer" : {
       "comment" : "Round Answer button of the Mac call panel (call-accept-fill, on the right, key Return; also its accessibility label), the HL_CALL_ANSWER action of the Mac incoming-call notification and the Answer item of the ringing call in the menu bar menu (also after Ignore); only when controls.answer = true (CALL-01 fields 6, 15, CALL-02 field 1)",
       "extractionState" : "manual",
@@ -1604,7 +1658,7 @@
       }
     },
     "common.agree" : {
-      "comment" : "ConsentSheet primary button (right on Mac, full width at the bottom on Android); max 2 words",
+      "comment" : "ConsentSheet primary button (right on Mac, full width at the bottom on Android); max 2 words; also the Continue Browsing disclosure (WEB-01 field 4)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -1640,7 +1694,7 @@
       }
     },
     "common.close" : {
-      "comment" : "VoiceOver label of an xmark close button, e.g. the new-content banner (CLIP-04 field 3; design system 1-foundations/08)",
+      "comment" : "VoiceOver label of an xmark close button, e.g. the new-content banner (CLIP-04 field 3) and the page banner (WEB-05 field 5; design system 1-foundations/08)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -1802,7 +1856,7 @@
       }
     },
     "common.open_system_settings" : {
-      "comment" : "Mac button that opens the right page of System Settings (paste permission, login items, local network)",
+      "comment" : "Mac button that opens the right page of System Settings (paste permission, login items, local network, Automation of a browser: WEB-03 field 3)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -2553,6 +2607,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cập nhật HandLive trên máy này"
+          }
+        }
+      }
+    },
+    "infoplist.apple_events_usage" : {
+      "comment" : "Purpose string of the Automation permission, asked once per browser the first time it comes to the front with web.send on (WEB-03 field 4, API 3)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HandLive reads the address of the page open in your browser so you can continue on your phone."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HandLive đọc địa chỉ trang đang mở trong trình duyệt để bạn xem tiếp trên điện thoại."
           }
         }
       }
@@ -5631,6 +5703,150 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Thử lại sau %1$@"
+          }
+        }
+      }
+    },
+    "web.automation.not_allowed" : {
+      "comment" : "Mac status of a browser row in the Browsers list when Automation was denied (WEB-03 field 3, E2), next to common.open_system_settings",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not allowed"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không được phép"
+          }
+        }
+      }
+    },
+    "web.browsers" : {
+      "comment" : "Header of the per-browser list web.browsers (SET-02 field 37): one switch (Android) or checkbox (Mac) per supported browser; browser names are proper names and are not in the catalog",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Browsers"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trình duyệt"
+          }
+        }
+      }
+    },
+    "web.ios_banner" : {
+      "comment" : "iPhone/iPad banner laid over the top of the visible tab (WEB-05 field 1), with the host under it and a close button (common.close); {title_or_host} = the page title, else its host",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue browsing: %1$@"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duyệt web tiếp: %1$@"
+          }
+        }
+      }
+    },
+    "web.mac_notification_body" : {
+      "comment" : "Body of the optional Mac page notification (WEB-02 field 4); the title is the page title, else its host (user content); {host} = the page host (punycode per QW7); {device_name} = the phone",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ — from %2$@"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ — từ %2$@"
+          }
+        }
+      }
+    },
+    "web.menu_item" : {
+      "comment" : "First item of the Mac menu bar menu while a page from the phone is kept (WEB-02 field 2), with the browser glyph and ⌘O; {title_or_host} = the page title, else its host; {device_name} = the phone",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ — from %2$@"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ — từ %2$@"
+          }
+        }
+      }
+    },
+    "web.notify" : {
+      "comment" : "Settings option web.notify (SET-02 field 36): Android shows the Mac's page as a notification (WEB-04 field 5); Mac posts a notification besides the menu item (WEB-02 field 5)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Page Notifications"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thông báo trang"
+          }
+        }
+      }
+    },
+    "web.send_mac" : {
+      "comment" : "Mac settings switch web.send under Continue Browsing (SET-02 field 35, WEB-03 field 1)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send Pages from This Mac"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gửi trang từ Mac này"
+          }
+        }
+      }
+    },
+    "web.title" : {
+      "comment" : "Name of the Continue Browsing feature: settings switch (SET-02 field 34, feature.web), feature card in the feature list (SET-01 field 10), iPhone/iPad settings switch (WEB-05 field 4); title-style",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue Browsing"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duyệt web tiếp"
           }
         }
       }

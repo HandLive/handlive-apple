@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>HandLive reads the address of the page open in your browser so you can continue on your phone.</string>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_handlive._tcp</string>

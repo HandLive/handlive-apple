@@ -10,6 +10,12 @@
 	<string>%1$@, %2$@</string>
 	<key>a11y.sms_bubble_sent</key>
 	<string>Bạn, %1$@, %2$@</string>
+	<key>a11y.web_badge</key>
+	<string>HandLive, có trang từ điện thoại</string>
+	<key>a11y.web_ios_banner</key>
+	<string>Duyệt web tiếp: %1$@, %2$@</string>
+	<key>a11y.web_menu_item</key>
+	<string>Trang từ %1$@: %2$@</string>
 	<key>call.answer</key>
 	<string>Trả lời</string>
 	<key>call.answer_on_mac</key>
@@ -278,6 +284,8 @@
 	<string>Cập nhật HandLive trên điện thoại</string>
 	<key>error.update_this_app</key>
 	<string>Cập nhật HandLive trên máy này</string>
+	<key>infoplist.apple_events_usage</key>
+	<string>HandLive đọc địa chỉ trang đang mở trong trình duyệt để bạn xem tiếp trên điện thoại.</string>
 	<key>infoplist.focus_status_usage</key>
 	<string>HandLive đọc trạng thái Tập trung để không đổ chuông và không hiện cuộc gọi khi bạn đang tập trung.</string>
 	<key>infoplist.local_network_usage</key>
@@ -604,5 +612,21 @@
 	<string>Cần ghép nối lại</string>
 	<key>status.retry_in</key>
 	<string>Thử lại sau %1$@</string>
+	<key>web.automation.not_allowed</key>
+	<string>Không được phép</string>
+	<key>web.browsers</key>
+	<string>Trình duyệt</string>
+	<key>web.ios_banner</key>
+	<string>Duyệt web tiếp: %1$@</string>
+	<key>web.mac_notification_body</key>
+	<string>%1$@ — từ %2$@</string>
+	<key>web.menu_item</key>
+	<string>%1$@ — từ %2$@</string>
+	<key>web.notify</key>
+	<string>Thông báo trang</string>
+	<key>web.send_mac</key>
+	<string>Gửi trang từ Mac này</string>
+	<key>web.title</key>
+	<string>Duyệt web tiếp</string>
 </dict>
 </plist>

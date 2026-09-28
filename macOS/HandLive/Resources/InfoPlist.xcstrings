@@ -1,6 +1,24 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "NSAppleEventsUsageDescription" : {
+      "comment" : "Purpose string of the Automation permission, asked once per browser the first time it comes to the front with web.send on (WEB-03 field 4, API 3)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HandLive reads the address of the page open in your browser so you can continue on your phone."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HandLive đọc địa chỉ trang đang mở trong trình duyệt để bạn xem tiếp trên điện thoại."
+          }
+        }
+      }
+    },
     "NSFocusStatusUsageDescription" : {
       "comment" : "Purpose string of the Focus status permission, asked when the user turns on Ring on Mac; one active sentence starting with HandLive",
       "extractionState" : "manual",
