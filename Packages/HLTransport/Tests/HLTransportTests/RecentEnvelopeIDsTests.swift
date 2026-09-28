@@ -67,4 +67,21 @@ struct RecentEnvelopeIDsTests {
         ids.startEpoch(now: start, previousKeptFor: .seconds(30))
         #expect(!ids.isFull)
     }
+
+    @Test("Kept acks are bounded (8 MiB by default), oldest dropped first; the id stays a duplicate without an answer")
+    func ackBudget() {
+        #expect(RecentEnvelopeIDs.defaultAckBudget == 8 * 1024 * 1024)
+        var ids = RecentEnvelopeIDs(ackBudget: 10)
+        for id in ["a", "b", "c"] { ids.record(id) }
+        ids.remember(ackWire: "12345", for: "a")
+        ids.startEpoch(now: start, previousKeptFor: .seconds(30)) // the budget spans both epochs
+        ids.record("d")
+        ids.remember(ackWire: "1234", for: "b") // 9 bytes kept
+        #expect(ids.lookup("a", now: start) == .duplicate(ackWire: "12345"))
+        ids.remember(ackWire: "12", for: "d") // 11 > 10: the oldest ack (a) goes
+        #expect(ids.lookup("a", now: start) == .duplicate(ackWire: nil))
+        #expect(ids.lookup("b", now: start) == .duplicate(ackWire: "1234"))
+        #expect(ids.lookup("d", now: start) == .duplicate(ackWire: "12"))
+        #expect(ids.keptAckBytes == 6)
+    }
 }
