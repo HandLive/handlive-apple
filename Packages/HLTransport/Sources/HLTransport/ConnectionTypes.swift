@@ -1,4 +1,5 @@
 import Foundation
+import HLCrypto
 import HLProtocol
 
 /// The paired phone as the connection manager needs it: keys, pinned certificate and last known address.
@@ -6,6 +7,8 @@ public struct PairedPhone: Sendable, Equatable {
     public let pair: PairContext
     /// SHA-256 of the phone's TLS certificate, pinned at pairing (`peer_tls_sha256`).
     public let certificateSHA256: Data
+    /// The phone's `ik_sig` public key stored at pairing (`peer_ik_sig_pub`): checks its revocation statements.
+    public let peerSigningPublicKey: Data
     /// `last_host` / `last_port`: tried first, in parallel with mDNS (CONN-01 step 2).
     public var lastHost: String?
     public var lastPort: UInt16?
@@ -16,14 +19,29 @@ public struct PairedPhone: Sendable, Equatable {
     /// (CONN-03 step 3, PAIR-01 E8).
     public var relayRegistration: RelayPairRegistration?
 
-    public init(pair: PairContext, certificateSHA256: Data, lastHost: String? = nil, lastPort: UInt16? = nil,
-                relayEnabled: Bool = true, relayRegistration: RelayPairRegistration? = nil) {
+    public init(pair: PairContext, certificateSHA256: Data, peerSigningPublicKey: Data, lastHost: String? = nil,
+                lastPort: UInt16? = nil, relayEnabled: Bool = true, relayRegistration: RelayPairRegistration? = nil) {
         self.pair = pair
         self.certificateSHA256 = certificateSHA256
+        self.peerSigningPublicKey = peerSigningPublicKey
         self.lastHost = lastHost
         self.lastPort = lastPort
         self.relayEnabled = relayEnabled
         self.relayRegistration = relayRegistration
+    }
+}
+
+extension PairedPhone {
+    /// A revocation from the relay counts only when it names this pair, `by` is the phone and `sig` verifies with the
+    /// phone's stored key (PAIR-03 API 4, PAIR-02 API 1 logic 4). Anything else — no statement, another signer, a bad
+    /// signature — is ignored: the relay alone can never unpair this device.
+    public func acceptsRevocation(_ notice: RelayPairRevocation?) -> Bool {
+        guard let notice, notice.pairId == pair.pairId, notice.by == pair.serverDeviceId,
+              let revokedAt = notice.revokedAt, let encoded = notice.sig,
+              let sig = try? Base64Coding.decodeB64u(encoded)
+        else { return false }
+        return RevokeStatement.verify(sig, pairId: pair.pairId, by: notice.by, revokedAt: revokedAt,
+                                      publicKey: peerSigningPublicKey)
     }
 }
 

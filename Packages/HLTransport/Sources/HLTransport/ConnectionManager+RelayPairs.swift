@@ -27,7 +27,8 @@ extension ConnectionManager {
         eventSink.yield(.relayPairRegistered(pairId: pairId))
     }
 
-    /// CONN-03 E4 and PAIR-02 API 1 logic 3: what the relay says about the pair. Revoked there → PAIR-03 flow B;
+    /// CONN-03 E4 and PAIR-02 API 1 logic 3–4: what the relay says about the pair. Revoked there with the phone's valid
+    /// statement → PAIR-03 flow B; revoked without one (or signed by anyone else) → ignored, the user can still unpair;
     /// listed while still unregistered here → the phone completed the registration (`relay_registered = 1`, which also
     /// ends a 24 h wait); unknown there → the phone left the relay or the pair was never registered: register it
     /// again when possible, keep the LAN.
@@ -38,6 +39,7 @@ extension ConnectionManager {
                 if phone.relayRegistration != nil { pairRegistered(phone.pair.pairId) }
                 return
             }
+            guard phone.acceptsRevocation(entry.revocation) else { return }
             if let current = session {
                 session = nil
                 await current.close(bye: nil)

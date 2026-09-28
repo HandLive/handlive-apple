@@ -63,7 +63,7 @@ extension ConnectionManager {
                 scheduleBackoff(.backoff)
                 apply(.relayFailed)
                 return .interrupted
-            case .relay(.pairRevoked(let pairId, _))? where pairId == phone.pair.pairId:
+            case .relay(.pairRevoked(let notice))? where phone.acceptsRevocation(notice):
                 await closeRelay()
                 removePair(.revokedByPhone)
                 return .interrupted
@@ -88,7 +88,7 @@ extension ConnectionManager {
                 return apply(.peerOffline)
             }
             await closeRelay()
-            handshakeFailed(error)
+            handshakeFailed(error, route: .relay)
         }
     }
 
@@ -130,7 +130,7 @@ extension ConnectionManager {
             await handshakeOverRelay(link, phone: phone)
         case .closed:
             await leaveWaiting(to: .relayConnectionLost)
-        case .pairRevoked(let pairId, _) where pairId == phone.pair.pairId:
+        case .pairRevoked(let notice) where phone.acceptsRevocation(notice):
             await closeRelay()
             removePair(.revokedByPhone)
         case .error(.notPaired, _):

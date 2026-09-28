@@ -78,7 +78,7 @@ extension ConnectionManager {
     private func relayEventWhileConnected(_ event: RelayLinkEvent, _ current: ControlSession) async {
         guard let phone else { return }
         switch event {
-        case .pairRevoked(let pairId, _) where pairId == phone.pair.pairId:
+        case .pairRevoked(let notice) where phone.acceptsRevocation(notice):
             session = nil
             await current.close(bye: nil)
             eventSink.yield(.disconnected)
