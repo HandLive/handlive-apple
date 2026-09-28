@@ -48,6 +48,23 @@ struct ControlSessionRekeyTests {
         #expect(await connected.events.first { if case .message = $0 { return true } else { return false } } != nil)
     }
 
+    @Test("An envelope of the previous epoch replayed during the key grace gets its earlier ack, not a second run")
+    func replayAcrossRekey() async throws {
+        let connected = try await SessionHarness.connect()
+        let push = try await connected.phone.send(.clipboard, op: "push", data: ClipText(text: "once"))
+        _ = await connected.events.first { if case .message = $0 { return true } else { return false } }
+        try await connected.session.reply(to: push.id, with: .success(re: push.id))
+        let firstAck = try await connected.phone.receiveEnvelope()
+        let offer = try await connected.phone.startRekey()
+        let rekeyAck = try await connected.phone.receiveAck()
+        try await connected.phone.finishRekey(offer, ack: rekeyAck)
+        try await connected.phone.sendRaw(push.wireString())
+        #expect(try await connected.phone.receiveEnvelope() == firstAck)
+        try await Task.sleep(for: .milliseconds(50))
+        let messages = await connected.events.events.filter { if case .message = $0 { return true } else { return false } }
+        #expect(messages.count == 1)
+    }
+
     @Test("A rekey request with the wrong epoch is refused with BAD_REQUEST")
     func wrongEpoch() async throws {
         let connected = try await SessionHarness.connect()
