@@ -1,4 +1,5 @@
 import Foundation
+import HLCrypto
 import HLProtocol
 
 extension RelayAPIClient {
@@ -19,12 +20,14 @@ extension RelayAPIClient {
         try await perform("GET", "pairs", body: nil, authorized: true, as: RelayPairList.self)
     }
 
-    /// PAIR-03 API 3: a pair the relay does not know counts as revoked (E4).
+    /// PAIR-03 API 3 and step 8: the body carries this device's `HLREVOKE1` statement, signed now, so a retry after E3
+    /// signs a new one within the relay's ±10 minutes; a pair the relay does not know counts as revoked (E4).
     public func revokePair(pairId: String, reason: RelayPairRevokeRequest.Reason) async throws {
         guard HLUUID.isCanonical(pairId) else { throw RelayAPIError.malformedResponse }
+        let statement = try revocation(of: pairId)
+        let body = RelayPairRevokeRequest(revokedAt: statement.revokedAt, sig: statement.sig, reason: reason)
         do {
-            _ = try await call("POST", "pairs/\(pairId)/revoke", body: RelayPairRevokeRequest(reason: reason),
-                               authorized: true, as: NoContent.self)
+            _ = try await call("POST", "pairs/\(pairId)/revoke", body: body, authorized: true, as: NoContent.self)
         } catch RelayAPIError.http(404, _, _) {
             return
         }
@@ -39,15 +42,31 @@ extension RelayAPIClient {
     }
 
     /// SET-02 API 2 and E6: a device the relay no longer knows (404 at the challenge or at the call) is already deleted.
+    /// With `revokePairs` the body carries one `HLREVOKE1` statement for each pair the relay still lists as unrevoked.
     public func deleteDevice(revokePairs: Bool) async throws {
         defer { dropToken() }
         do {
             _ = try await accessToken(registerIfUnknown: false)
+            var body: Data?
+            if revokePairs {
+                let open = try await perform("GET", "pairs", query: [URLQueryItem(name: "include_revoked", value: "false")],
+                                             body: nil, authorized: true, registerIfUnknown: false, as: RelayPairList.self)
+                let revocations = try open.pairs.filter { $0.revokedAt == nil }.map { try revocation(of: $0.pairId) }
+                body = try HLJSON.encode(RelayDeviceDeleteRequest(revocations: revocations))
+            }
             _ = try await perform("DELETE", "devices/me", query: [URLQueryItem(name: "revoke_pairs", value: "\(revokePairs)")],
-                                  body: nil, authorized: true, registerIfUnknown: false, as: NoContent.self)
+                                  body: body, authorized: true, registerIfUnknown: false, as: NoContent.self)
         } catch RelayAPIError.http(404, _, _) {
             return
         }
+    }
+
+    /// This device's `HLREVOKE1` statement for `pairId`, signed with `ik_sig` at the current time (0.6.2).
+    func revocation(of pairId: String) throws -> RelayRevocation {
+        let revokedAt = Int64((now().timeIntervalSince1970 * 1000).rounded(.down))
+        let sig = try RevokeStatement.sign(pairId: pairId, by: identity.deviceId, revokedAt: revokedAt,
+                                           seed: identity.signingSeed)
+        return RelayRevocation(pairId: pairId, revokedAt: revokedAt, sig: Base64Coding.encodeB64u(sig))
     }
 
     // MARK: - Plumbing
