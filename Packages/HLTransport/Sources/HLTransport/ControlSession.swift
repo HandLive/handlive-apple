@@ -18,7 +18,7 @@ public actor ControlSession {
     let configuration: SessionConfiguration
     var cipher: SessionCipher?
     var pendingAcks: [String: PendingAck] = [:]
-    var recentIDs: RecentEnvelopeIDs
+    var recentIDs = RecentEnvelopeIDs()
     var ending: SessionEnd?
     /// `session/bye` already went out (relayed sessions always say it before they end, CONN-02 API 4).
     var byeSent = false
@@ -32,7 +32,6 @@ public actor ControlSession {
         self.pair = pair
         self.route = route
         self.configuration = configuration
-        recentIDs = RecentEnvelopeIDs(window: configuration.dedupWindow, capacity: configuration.dedupCapacity)
         (events, eventSink) = AsyncStream.makeStream(of: SessionEvent.self)
     }
 

@@ -11,8 +11,6 @@ public struct SessionConfiguration: Sendable {
     public var rekeyAfterEnvelopes = TransportConstants.rekeyAfterEnvelopes
     public var rekeyAfterAge = TransportConstants.rekeyAfterAge
     public var rekeyOldKeyGrace = TransportConstants.rekeyOldKeyGrace
-    public var dedupWindow = TransportConstants.dedupWindow
-    public var dedupCapacity = TransportConstants.dedupCapacity
     /// Types whose messages the app handles (clipboard, SMS, calls); a request of any other type is answered
     /// `UNSUPPORTED_TYPE` (0.5.1 rule 3).
     public var handledTypes: Set<MessageType> = [.clipboard, .sms, .callEvent]

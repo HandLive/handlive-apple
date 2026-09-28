@@ -51,7 +51,7 @@ extension ControlSession {
               let payload = try? Payload.parse(plaintext), payload.op == CapabilityOp.hello.rawValue,
               let capability = try? payload.decodeData(as: CapabilityData.self)
         else { throw SessionEstablishError.protocolError }
-        _ = recentIDs.check(envelope.id, now: .now)
+        recentIDs.record(envelope.id)
         return capability
     }
 

@@ -28,7 +28,7 @@ extension ControlSession {
     private func handle(_ text: String) async {
         // Unknown `type` from a newer peer, or a malformed frame: nothing to answer (0.5.1 rules 3, 6).
         guard let envelope = try? Envelope.parse(Data(text.utf8)) else { return }
-        switch recentIDs.check(envelope.id, now: .now) {
+        switch recentIDs.lookup(envelope.id, now: .now) {
         case .duplicate(let ackWire):
             if let ackWire { try? await channel.send(.text(ackWire)) }
             return
@@ -39,6 +39,7 @@ extension ControlSession {
             await end(.decryptFailed, closing: .badRequest) // DECRYPT_FAILED → 4400, reconnect (CONN-02 E5)
             return
         }
+        recentIDs.record(envelope.id) // only now: a forged envelope never takes an id
         if envelope.type == .clipboard, ClipboardChunkPlaintext.isBinaryChunk(plaintext) {
             eventSink.yield(.message(IncomingEnvelope(id: envelope.id, type: envelope.type, ts: envelope.ts,
                                                       body: .binary(plaintext))))

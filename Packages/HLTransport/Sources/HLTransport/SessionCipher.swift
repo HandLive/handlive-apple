@@ -52,43 +52,51 @@ struct SessionCipher {
     }
 }
 
-/// `DEDUP_WINDOW` (0.5.1 rule 2): ids handled in the last 5 minutes (at most 1 000) and the `ack` answered to
-/// each request, so a repeated request gets the same `ack` without being processed again.
+/// `DEDUP_WINDOW` (0.5.1 rule 2): every envelope `id` accepted in the current key epoch and the `ack` answered to
+/// each request, so a repeated request gets the same `ack` without being processed again. The set is emptied at
+/// rekey; the previous epoch's ids stay while its keys are still accepted. `REKEY_AFTER` (10,000 envelopes per
+/// direction) bounds it, so nothing is evicted inside an epoch: an evicted id could be replayed.
 struct RecentEnvelopeIDs {
-    private let window: Duration
-    private let capacity: Int
-    private var order: [String] = []
-    private var entries: [String: (at: ContinuousClock.Instant, ack: String?)] = [:]
-
-    init(window: Duration, capacity: Int) {
-        self.window = window
-        self.capacity = capacity
-    }
+    private var current: [String: String?] = [:]
+    private var previous: (ids: [String: String?], until: ContinuousClock.Instant)?
 
     enum Lookup: Equatable {
         case new
         case duplicate(ackWire: String?)
     }
 
-    /// Records `id` when new; reports a duplicate otherwise.
-    mutating func check(_ id: String, now: ContinuousClock.Instant) -> Lookup {
-        purge(now: now)
-        if let entry = entries[id] { return .duplicate(ackWire: entry.ack) }
-        entries[id] = (now, nil)
-        order.append(id)
-        if order.count > capacity { entries[order.removeFirst()] = nil }
+    /// Ids accepted in the current epoch.
+    var count: Int { current.count }
+
+    /// Reports whether `id` was already accepted; records nothing (a forged envelope must not take an id).
+    mutating func lookup(_ id: String, now: ContinuousClock.Instant) -> Lookup {
+        if let ack = current[id] { return .duplicate(ackWire: ack) }
+        guard let kept = previous else { return .new }
+        guard now < kept.until else {
+            previous = nil
+            return .new
+        }
+        if let ack = kept.ids[id] { return .duplicate(ackWire: ack) }
         return .new
+    }
+
+    /// Records `id` once its envelope decrypted.
+    mutating func record(_ id: String) {
+        if current[id] == nil { current[id] = .some(nil) }
     }
 
     /// Remembers the `ack` sent for a request.
     mutating func remember(ackWire: String, for id: String) {
-        if let entry = entries[id] { entries[id] = (entry.at, ackWire) }
+        if current[id] != nil {
+            current[id] = .some(ackWire)
+        } else if previous?.ids[id] != nil {
+            previous?.ids[id] = .some(ackWire)
+        }
     }
 
-    private mutating func purge(now: ContinuousClock.Instant) {
-        while let first = order.first, let entry = entries[first], entry.at.duration(to: now) > window {
-            entries[first] = nil
-            order.removeFirst()
-        }
+    /// New key epoch: the ids so far stay duplicates for as long as the old keys are accepted.
+    mutating func startEpoch(now: ContinuousClock.Instant, previousKeptFor grace: Duration) {
+        previous = (current, now.advanced(by: grace))
+        current = [:]
     }
 }
