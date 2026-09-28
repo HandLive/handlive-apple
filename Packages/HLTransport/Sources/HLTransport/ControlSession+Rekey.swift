@@ -59,7 +59,7 @@ extension ControlSession {
             await end(.rekeyFailed, closing: .rekeyFailed)
             return
         }
-        cipher?.install(keys, epoch: rekey.epoch, now: .now, grace: configuration.rekeyOldKeyGrace)
+        installKeys(keys, epoch: rekey.epoch)
     }
 
     /// Answers the phone's `session/rekey`: `ack` with this side's `{epoch, eph, nonce}` under the old key, then
@@ -91,9 +91,16 @@ extension ControlSession {
         }
         // The ack is sealed with the old key; everything sent after it uses the new one. NWConnection keeps
         // the order of send calls, so switching before the ack's send completes cannot reorder them.
-        self.cipher?.install(keys, epoch: epoch, now: .now, grace: configuration.rekeyOldKeyGrace)
+        installKeys(keys, epoch: epoch)
         recentIDs.remember(ackWire: ackEnvelope.wireString(), for: envelope.id)
         try? await channel.send(.text(ackEnvelope.wireString()))
+    }
+
+    /// Switches keys; the de-duplication set follows the key epoch (0.5.1 rule 2, `DEDUP_WINDOW`).
+    private func installKeys(_ keys: SessionKeys, epoch: Int32) {
+        let now = ContinuousClock.now
+        cipher?.install(keys, epoch: epoch, now: now, grace: configuration.rekeyOldKeyGrace)
+        recentIDs.startEpoch(now: now, previousKeptFor: configuration.rekeyOldKeyGrace)
     }
 
     /// `device_id`s compared as 16 bytes, unsigned (same order as the lowercase uuid strings).

@@ -52,43 +52,100 @@ struct SessionCipher {
     }
 }
 
-/// `DEDUP_WINDOW` (0.5.1 rule 2): ids handled in the last 5 minutes (at most 1 000) and the `ack` answered to
-/// each request, so a repeated request gets the same `ack` without being processed again.
+/// `DEDUP_WINDOW` (0.5.1 rule 2): every envelope `id` accepted in the current key epoch and the `ack` answered to
+/// each request, so a repeated request gets the same `ack` without being processed again. The set is emptied at
+/// rekey; the previous epoch's ids stay while its keys are still accepted. `REKEY_AFTER` (10,000 envelopes per
+/// direction) bounds it, so nothing is evicted inside an epoch: an evicted id could be replayed. A set that reaches
+/// `limit` (20,000) because the rekey has not completed is full: the session closes with 4410. The kept acks are
+/// bounded to `ackBudget` bytes (8 MiB) for both epochs, oldest dropped first; a duplicate whose ack was dropped is
+/// still a duplicate, only without an answer.
 struct RecentEnvelopeIDs {
-    private let window: Duration
-    private let capacity: Int
-    private var order: [String] = []
-    private var entries: [String: (at: ContinuousClock.Instant, ack: String?)] = [:]
+    static let defaultLimit = 20_000
+    static let defaultAckBudget = 8 * 1024 * 1024
 
-    init(window: Duration, capacity: Int) {
-        self.window = window
-        self.capacity = capacity
-    }
+    let limit: Int
+    let ackBudget: Int
+    private var current: [String: String?] = [:]
+    private var previous: (ids: [String: String?], until: ContinuousClock.Instant)?
+    /// UTF-8 bytes of every kept ack.
+    private(set) var keptAckBytes = 0
+    /// Ids whose ack is kept, oldest first.
+    private var ackOrder: [String] = []
 
     enum Lookup: Equatable {
         case new
         case duplicate(ackWire: String?)
     }
 
-    /// Records `id` when new; reports a duplicate otherwise.
-    mutating func check(_ id: String, now: ContinuousClock.Instant) -> Lookup {
-        purge(now: now)
-        if let entry = entries[id] { return .duplicate(ackWire: entry.ack) }
-        entries[id] = (now, nil)
-        order.append(id)
-        if order.count > capacity { entries[order.removeFirst()] = nil }
+    init(limit: Int = RecentEnvelopeIDs.defaultLimit, ackBudget: Int = RecentEnvelopeIDs.defaultAckBudget) {
+        self.limit = limit
+        self.ackBudget = ackBudget
+    }
+
+    /// Ids accepted in the current epoch.
+    var count: Int { current.count }
+    var isEmpty: Bool { current.isEmpty }
+    var isFull: Bool { current.count >= limit }
+
+    /// Reports whether `id` was already accepted; records nothing (a forged envelope must not take an id).
+    mutating func lookup(_ id: String, now: ContinuousClock.Instant) -> Lookup {
+        if let ack = current[id] { return .duplicate(ackWire: ack) }
+        guard let kept = previous else { return .new }
+        guard now < kept.until else {
+            dropPrevious()
+            return .new
+        }
+        if let ack = kept.ids[id] { return .duplicate(ackWire: ack) }
         return .new
     }
 
-    /// Remembers the `ack` sent for a request.
-    mutating func remember(ackWire: String, for id: String) {
-        if let entry = entries[id] { entries[id] = (entry.at, ackWire) }
+    /// Records `id` once its envelope decrypted.
+    mutating func record(_ id: String) {
+        if current[id] == nil { current[id] = .some(nil) }
     }
 
-    private mutating func purge(now: ContinuousClock.Instant) {
-        while let first = order.first, let entry = entries[first], entry.at.duration(to: now) > window {
-            entries[first] = nil
-            order.removeFirst()
+    /// Remembers the `ack` sent for a request, then drops the oldest acks beyond `ackBudget`.
+    mutating func remember(ackWire: String, for id: String) {
+        guard current[id] != nil || previous?.ids[id] != nil else { return }
+        if forgetAck(of: id) { ackOrder.removeAll { $0 == id } } // a second ack for the same request replaces it
+        if current[id] != nil {
+            current[id] = .some(ackWire)
+        } else {
+            previous?.ids[id] = .some(ackWire)
         }
+        keptAckBytes += ackWire.utf8.count
+        ackOrder.append(id)
+        while keptAckBytes > ackBudget, !ackOrder.isEmpty {
+            forgetAck(of: ackOrder.removeFirst())
+        }
+    }
+
+    /// New key epoch: the ids so far stay duplicates for as long as the old keys are accepted.
+    mutating func startEpoch(now: ContinuousClock.Instant, previousKeptFor grace: Duration) {
+        dropPrevious()
+        previous = (current, now.advanced(by: grace))
+        current = [:]
+    }
+
+    /// Drops the ack kept for `id` (the id itself stays), wherever it is. Returns whether one was kept.
+    @discardableResult
+    private mutating func forgetAck(of id: String) -> Bool {
+        if case .some(.some(let ack)) = current[id] {
+            current[id] = .some(nil)
+            keptAckBytes -= ack.utf8.count
+            return true
+        } else if case .some(.some(let ack)) = previous?.ids[id] {
+            previous?.ids[id] = .some(nil)
+            keptAckBytes -= ack.utf8.count
+            return true
+        }
+        return false
+    }
+
+    private mutating func dropPrevious() {
+        guard let old = previous else { return }
+        previous = nil
+        for case .some(let ack) in old.ids.values { keptAckBytes -= ack.utf8.count }
+        ackOrder.removeAll { old.ids[$0] != nil }
     }
 }

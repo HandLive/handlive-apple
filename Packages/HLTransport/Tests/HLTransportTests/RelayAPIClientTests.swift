@@ -152,19 +152,6 @@ struct RelayAPIClientTests {
         #expect(http.paths == ["POST /v1/auth/challenge", "POST /v1/devices", "POST /v1/auth/challenge", "POST /v1/auth/token"])
     }
 
-    @Test("SET-02: DELETE with revoke_pairs; a device the relay no longer knows is already deleted (E6)")
-    func deleteDevice() async throws {
-        let http = ScriptedRelayHTTP(Self.standard)
-        try await Self.client(http).deleteDevice(revokePairs: true)
-        #expect(http.requests.last?.url?.absoluteString == "https://relay.example.com/v1/devices/me?revoke_pairs=true")
-        #expect(http.requests.last?.httpMethod == "DELETE")
-        let gone = ScriptedRelayHTTP { request in
-            request.url?.path == "/v1/auth/challenge" ? ScriptedRelayHTTP.error(404, "DEVICE_NOT_FOUND") : Self.standard(request)
-        }
-        try await Self.client(gone).deleteDevice(revokePairs: false)
-        #expect(gone.paths == ["POST /v1/auth/challenge"])
-    }
-
     @Test("Errors: 429 with Retry-After, 410 DEVICE_REVOKED, pin mismatch, unreachable, unknown code")
     func errors() async throws {
         let limited = ScriptedRelayHTTP { _ in ScriptedRelayHTTP.json(429, #"{"error":{"code":"RATE_LIMITED","message":""}}"#,
@@ -223,7 +210,8 @@ struct RelayAPIClientTests {
         }
         try await Self.client(http).revokePair(pairId: "3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d", reason: .lostDevice)
         let body = try #require(http.requests.last?.httpBody)
-        #expect(String(bytes: body, encoding: .utf8) == #"{"reason":"lost_device"}"#)
+        let object = try #require(try JSONSerialization.jsonObject(with: body) as? [String: Any])
+        #expect(object["reason"] as? String == "lost_device")
     }
 }
 

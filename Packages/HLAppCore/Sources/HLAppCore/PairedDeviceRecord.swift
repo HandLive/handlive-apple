@@ -53,7 +53,8 @@ public struct PairedDeviceRecord: Codable, Sendable, Equatable {
     /// capability and, while `relay_registered = 0`, the registration of the pair (PAIR-01 API 8).
     public func pairedPhone(clientDeviceId: String, prk: Data) -> PairedPhone {
         PairedPhone(pair: PairContext(pairId: pairId, clientDeviceId: clientDeviceId, serverDeviceId: peerDeviceId, prk: prk),
-                    certificateSHA256: peerCertificateSHA256, lastHost: lastHost, lastPort: lastPort,
+                    certificateSHA256: peerCertificateSHA256, peerSigningPublicKey: peerSigningPublicKey,
+                    lastHost: lastHost, lastPort: lastPort,
                     relayEnabled: peerCapability.map { $0.features.relay?.enabled ?? false } ?? true,
                     relayRegistration: relayRegistered ? nil : relayRegistration(clientDeviceId: clientDeviceId))
     }

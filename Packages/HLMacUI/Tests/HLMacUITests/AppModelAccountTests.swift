@@ -68,8 +68,10 @@ struct AppModelAccountTests {
     func deleteAllOnline() async throws {
         let relay = ScriptedRelayAPI()
         let model = try Self.pairedModel(relay: relay)
+        let pairId = try #require(model.pairedDevice?.pairId)
         #expect(await model.deleteAllData() == .deleted)
-        #expect(relay.calls.contains("deleteDevice revoke_pairs=true"))
+        // Every local pair is signed besides those the relay lists (SET-02 API 2).
+        #expect(relay.calls.contains("deleteDevice revoke_pairs=true local=\(pairId)"))
         #expect(model.pairedDevice == nil)
     }
 

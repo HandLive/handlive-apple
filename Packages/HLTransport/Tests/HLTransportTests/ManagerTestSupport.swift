@@ -191,7 +191,8 @@ enum ManagerHarness {
         let manager = ConnectionManager(localCapability: SessionHarness.macCapability, discovery: discovery,
                                         network: network, connector: connector, configuration: configuration)
         let recorder = LinkRecorder(manager.events)
-        let phone = PairedPhone(pair: pair, certificateSHA256: pin, lastHost: lastHost, lastPort: lastHost == nil ? nil : 47800)
+        let phone = PairedPhone(pair: pair, certificateSHA256: pin, peerSigningPublicKey: SessionHarness.phoneSigningKey,
+                                lastHost: lastHost, lastPort: lastHost == nil ? nil : 47800)
         let hints = (try? DiscoveryHint.acceptedHints(prk: pair.prk, nowMs: HLUUID.currentTimeMs())) ?? []
         return Setup(manager: manager, discovery: discovery, network: network, connector: connector, recorder: recorder,
                      phone: phone, hints: hints)

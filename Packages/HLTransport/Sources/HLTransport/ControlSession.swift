@@ -32,7 +32,7 @@ public actor ControlSession {
         self.pair = pair
         self.route = route
         self.configuration = configuration
-        recentIDs = RecentEnvelopeIDs(window: configuration.dedupWindow, capacity: configuration.dedupCapacity)
+        recentIDs = RecentEnvelopeIDs(limit: configuration.dedupLimit)
         (events, eventSink) = AsyncStream.makeStream(of: SessionEvent.self)
     }
 

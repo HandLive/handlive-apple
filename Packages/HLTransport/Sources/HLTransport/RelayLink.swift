@@ -4,7 +4,8 @@ import HLProtocol
 /// What the relay connection reports besides forwarded envelopes (0.7.3).
 public enum RelayLinkEvent: Sendable, Equatable {
     case presence(pairId: String, peerDeviceId: String, online: Bool)
-    case pairRevoked(pairId: String, by: String)
+    /// `pair_revoked` as the relay sent it; the manager checks the statement before acting (PAIR-03 API 4).
+    case pairRevoked(RelayPairRevocation)
     case error(code: RelayErrorCode, to: String?)
     case rendezvousJoined(rvId: String, peerPresent: Bool)
     /// The connection to the relay ended; every channel through it is closed.
@@ -115,8 +116,8 @@ public actor RelayLink {
                 peers[to] = nil
             }
             eventSink.yield(.error(code: code, to: to))
-        case .control(.pairRevoked(let pairId, let by)):
-            eventSink.yield(.pairRevoked(pairId: pairId, by: by))
+        case .control(.pairRevoked(let notice)):
+            eventSink.yield(.pairRevoked(notice))
         case .control(.rendezvousJoined(let rvId, let present)):
             rendezvous[rvId]?.joined(peerPresent: present)
             eventSink.yield(.rendezvousJoined(rvId: rvId, peerPresent: present))

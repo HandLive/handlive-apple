@@ -23,7 +23,4 @@ public enum TransportConstants {
     public static let rekeyAfterAge: Duration = .seconds(24 * 3600)
     /// Old keys stay valid this long after a rekey for envelopes in flight (0.6.3 step 6).
     public static let rekeyOldKeyGrace: Duration = .seconds(30)
-    /// `DEDUP_WINDOW`: 5 minutes / 1 000 ids.
-    public static let dedupWindow: Duration = .seconds(300)
-    public static let dedupCapacity = 1000
 }

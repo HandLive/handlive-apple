@@ -54,8 +54,9 @@ public protocol RelayAPI: Sendable {
     func revokePair(pairId: String, reason: RelayPairRevokeRequest.Reason) async throws
     func updatePushToken(_ request: RelayPushTokenRequest) async throws
     func push(_ request: RelayPushRequest) async throws
-    /// `DELETE /v1/devices/me?revoke_pairs=` (SET-02 API 2); a device the relay no longer knows counts as deleted.
-    func deleteDevice(revokePairs: Bool) async throws
+    /// `DELETE /v1/devices/me?revoke_pairs=` (SET-02 API 2); a device the relay no longer knows counts as deleted. With
+    /// `revokePairs`, `localPairIds` (every pair this device stores) are signed besides the relay's unrevoked pairs.
+    func deleteDevice(revokePairs: Bool, localPairIds: [String]) async throws
 }
 
 /// REST client of the relay: registration, the challenge–signature exchange for a 15-minute JWT, and the calls that

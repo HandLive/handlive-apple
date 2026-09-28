@@ -8,6 +8,26 @@ enum SessionHarness {
     static let smallerDeviceId = "11111111-1111-8111-8111-111111111111"
     static let largerDeviceId = "22222222-2222-8222-8222-222222222222"
 
+    /// `ik_sig` of the test phone (RFC 8032 TEST 2); its public key is what the client stored at pairing.
+    static let phoneSigningSeed = (try? Hex.decode("4ccd089b28ff96da9db6c346ec114e0f5b8a319f35aba624da8cf6ed4fb8a6fb")) ?? Data()
+    static let phoneSigningKey = (try? Ed25519.publicKey(seed: phoneSigningSeed)) ?? Data()
+
+    /// A `pair_revoked` notice carrying the phone's `HLREVOKE1` statement (PAIR-03 API 4).
+    static func signedRevocation(_ pair: PairContext, seed: Data = phoneSigningSeed,
+                                 revokedAt: Int64 = 1_727_160_000_000) throws -> RelayPairRevocation {
+        let sig = try RevokeStatement.sign(pairId: pair.pairId, by: pair.serverDeviceId, revokedAt: revokedAt, seed: seed)
+        return RelayPairRevocation(pairId: pair.pairId, by: pair.serverDeviceId, revokedAt: revokedAt,
+                                   sig: Base64Coding.encodeB64u(sig))
+    }
+
+    /// The same notice as the relay's text frame.
+    static func frame(_ notice: RelayPairRevocation) -> String {
+        var fields = [#""op":"pair_revoked""#, #""pair_id":"\#(notice.pairId)""#, #""by":"\#(notice.by)""#]
+        if let revokedAt = notice.revokedAt { fields.append(#""revoked_at":\#(revokedAt)"#) }
+        if let sig = notice.sig { fields.append(#""sig":"\#(sig)""#) }
+        return "{" + fields.joined(separator: ",") + "}"
+    }
+
     /// A pair with a random `PRK`; by default the client has the smaller `device_id`.
     static func pair(clientFirst: Bool = true) -> PairContext {
         PairContext(pairId: "3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d",

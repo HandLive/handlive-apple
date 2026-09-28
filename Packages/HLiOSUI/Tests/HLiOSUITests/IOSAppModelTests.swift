@@ -146,8 +146,9 @@ struct IOSAppModelTests {
         relay.reachable = true
         var erased = false
         model.didEraseAllData = { erased = true }
+        let pairId = try #require(model.pairedDevice?.pairId)
         #expect(await model.deleteAllData() == .deleted)
-        #expect(relay.calls.contains("deleteDevice revoke_pairs=true"))
+        #expect(relay.calls.contains("deleteDevice revoke_pairs=true local=\(pairId)"))
         #expect(erased && model.pairedDevice == nil && !model.setupCompleted && model.deviceId != oldDevice)
         #expect(notifications.removedEverything == 1)
     }

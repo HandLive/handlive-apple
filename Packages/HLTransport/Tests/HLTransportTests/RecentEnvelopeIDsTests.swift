@@ -1,0 +1,87 @@
+import Foundation
+import Testing
+@testable import HLTransport
+
+@Suite("DEDUP_WINDOW: every id accepted in the key epoch (0.5.1 rule 2)")
+struct RecentEnvelopeIDsTests {
+    private let start = ContinuousClock.now
+
+    @Test("An id stays a duplicate for the whole epoch, however old it is")
+    func keptForTheEpoch() {
+        var ids = RecentEnvelopeIDs()
+        ids.record("a")
+        ids.remember(ackWire: "ack-a", for: "a")
+        #expect(ids.lookup("a", now: start.advanced(by: .seconds(23 * 3600))) == .duplicate(ackWire: "ack-a"))
+    }
+
+    @Test("More than 1,000 ids in one epoch: the first one is still a duplicate")
+    func noEvictionWithinTheEpoch() {
+        var ids = RecentEnvelopeIDs()
+        for index in 0..<10_000 { ids.record("id-\(index)") }
+        #expect(ids.lookup("id-0", now: start) == .duplicate(ackWire: nil))
+        #expect(ids.count == 10_000)
+    }
+
+    @Test("A lookup does not record: only a decrypted envelope takes its id")
+    func lookupDoesNotRecord() {
+        var ids = RecentEnvelopeIDs()
+        #expect(ids.lookup("forged", now: start) == .new)
+        #expect(ids.lookup("forged", now: start) == .new)
+        ids.record("forged")
+        #expect(ids.lookup("forged", now: start) == .duplicate(ackWire: nil))
+    }
+
+    @Test("Rekey empties the set; the previous epoch's ids last while its keys are accepted")
+    func rekeyKeepsThePreviousEpochDuringGrace() {
+        var ids = RecentEnvelopeIDs()
+        ids.record("old")
+        ids.remember(ackWire: "ack-old", for: "old")
+        ids.startEpoch(now: start, previousKeptFor: .seconds(30))
+        #expect(ids.isEmpty)
+        #expect(ids.lookup("old", now: start.advanced(by: .seconds(29))) == .duplicate(ackWire: "ack-old"))
+        ids.record("new")
+        #expect(ids.lookup("old", now: start.advanced(by: .seconds(31))) == .new)
+        #expect(ids.lookup("new", now: start.advanced(by: .seconds(31))) == .duplicate(ackWire: nil))
+    }
+
+    @Test("A second rekey drops the epoch before the previous one")
+    func secondRekey() {
+        var ids = RecentEnvelopeIDs()
+        ids.record("epoch0")
+        ids.startEpoch(now: start, previousKeptFor: .seconds(30))
+        ids.record("epoch1")
+        ids.startEpoch(now: start.advanced(by: .seconds(1)), previousKeptFor: .seconds(30))
+        #expect(ids.lookup("epoch0", now: start.advanced(by: .seconds(2))) == .new)
+        #expect(ids.lookup("epoch1", now: start.advanced(by: .seconds(2))) == .duplicate(ackWire: nil))
+    }
+
+    @Test("A set that reaches its limit (20,000 by default) reports full")
+    func limit() {
+        #expect(RecentEnvelopeIDs.defaultLimit == 20_000)
+        var ids = RecentEnvelopeIDs(limit: 3)
+        ids.record("a")
+        ids.record("b")
+        #expect(!ids.isFull)
+        ids.record("c")
+        #expect(ids.isFull)
+        ids.startEpoch(now: start, previousKeptFor: .seconds(30))
+        #expect(!ids.isFull)
+    }
+
+    @Test("Kept acks are bounded (8 MiB by default), oldest dropped first; the id stays a duplicate without an answer")
+    func ackBudget() {
+        #expect(RecentEnvelopeIDs.defaultAckBudget == 8 * 1024 * 1024)
+        var ids = RecentEnvelopeIDs(ackBudget: 10)
+        for id in ["a", "b", "c"] { ids.record(id) }
+        ids.remember(ackWire: "12345", for: "a")
+        ids.startEpoch(now: start, previousKeptFor: .seconds(30)) // the budget spans both epochs
+        ids.record("d")
+        ids.remember(ackWire: "1234", for: "b") // 9 bytes kept
+        #expect(ids.lookup("a", now: start) == .duplicate(ackWire: "12345"))
+        ids.remember(ackWire: "12", for: "d") // 11 > 10: the oldest ack (a) goes
+        #expect(ids.lookup("a", now: start) == .duplicate(ackWire: nil))
+        #expect(ids.lookup("b", now: start) == .duplicate(ackWire: "1234"))
+        #expect(ids.lookup("d", now: start) == .duplicate(ackWire: "12"))
+        #expect(ids.keptAckBytes == 6)
+    }
+}

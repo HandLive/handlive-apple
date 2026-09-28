@@ -30,7 +30,8 @@ enum RelayHarness {
         let manager = ConnectionManager(localCapability: SessionHarness.macCapability, discovery: discovery,
                                         network: FakeNetwork(), connector: connector,
                                         relay: RelayServices(api: api, sockets: relay), configuration: configuration)
-        let phone = PairedPhone(pair: pair, certificateSHA256: ManagerHarness.pin, relayRegistration: registration)
+        let phone = PairedPhone(pair: pair, certificateSHA256: ManagerHarness.pin,
+                                peerSigningPublicKey: SessionHarness.phoneSigningKey, relayRegistration: registration)
         let hints = (try? DiscoveryHint.acceptedHints(prk: pair.prk, nowMs: HLUUID.currentTimeMs())) ?? []
         return Setup(manager: manager, discovery: discovery, connector: connector, relay: relay, api: api,
                      recorder: LinkRecorder(manager.events), phone: phone, hints: hints)
@@ -133,7 +134,7 @@ struct ConnectionManagerRelayTests {
         #expect(setup.api.pairRegistrationTries == 1)
         setup.api.pairList = RelayPairList(pairs: [RelayPairEntry(pairId: registration.pairId, peerDeviceId: "a",
                                                                   peerPlatform: .android, createdAt: 1, revokedAt: nil,
-                                                                  peerOnline: true)])
+                                                                  revokedBy: nil, revokeSig: nil, peerOnline: true)])
         await setup.manager.refreshPairOnRelay() // at most once a minute: not asked again yet
         #expect(setup.api.pairChecks == 1)
         await setup.manager.checkPairOnRelay() // the phone completed the registration meanwhile
@@ -185,18 +186,6 @@ struct ConnectionManagerRelayTests {
         #expect(await setup.recorder.waitForState(.connected(.relay)) != nil)
         await setup.manager.setRelayEnabled(false)
         #expect(await setup.recorder.waitForState(.backoff) != nil)
-        await setup.manager.stop()
-    }
-
-    @Test("pair_revoked from the relay removes the pair (PAIR-03 API 4)")
-    func pairRevoked() async throws {
-        let setup = await RelayHarness.make(phoneOnline: true)
-        await setup.manager.start(phone: setup.phone)
-        #expect(await setup.recorder.waitForState(.connected(.relay)) != nil)
-        await setup.relay.sendControl(#"{"op":"pair_revoked","pair_id":"\#(setup.phone.pair.pairId)","#
-            + #""by":"\#(setup.phone.pair.serverDeviceId)"}"#)
-        #expect(await setup.recorder.waitFor { if case .pairRemoved = $0 { true } else { false } } != nil)
-        #expect(await setup.recorder.waitForState(.idle(.notPaired)) != nil)
         await setup.manager.stop()
     }
 

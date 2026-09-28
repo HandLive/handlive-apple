@@ -124,19 +124,24 @@ extension ConnectionManager {
             await adopt(established, host: connection.host, port: connection.port)
             await closeRelay() // a LAN session never needs the relay connection
         } catch {
-            handshakeFailed(error)
+            handshakeFailed(error, route: .lan)
         }
         return .done
     }
 
-    /// A handshake that did not reach `Connected`: backoff per its reaction, pair removal when the phone forgot it.
-    func handshakeFailed(_ error: Error) {
+    /// A handshake that did not reach `Connected`: backoff per its reaction, pair removal when the phone forgot it. Over
+    /// the relay the phone is not yet authenticated and anyone on the relay path could forge a `session/error` (CONN-03
+    /// E9): `PAIR_UNKNOWN` / `PAIR_REVOKED` only back off (a revocation comes through a signed `pair_revoked` or the
+    /// LAN), and `AUTH_FAILED` / `UNSUPPORTED_VERSION` show their message on the normal schedule.
+    func handshakeFailed(_ error: Error, route: ConnectionRoute) {
         let failure = (error as? SessionEstablishError) ?? .protocolError
         var minProtocol: Int32?
         if case .rejected(_, let min) = failure { minProtocol = min }
-        scheduleBackoff(failure.reaction, minProtocol: minProtocol)
+        var reaction = failure.reaction
+        if route == .relay, reaction == .removePair { reaction = .backoff }
+        scheduleBackoff(reaction, minProtocol: minProtocol, keepSchedule: route == .relay)
         apply(.handshakeFailed)
-        if failure.reaction == .removePair {
+        if reaction == .removePair {
             removePair(failure == .rejected(.pairUnknown, minProtocol: nil) ? .unknownToPhone : .revoked)
         }
     }

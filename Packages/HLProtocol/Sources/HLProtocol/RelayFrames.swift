@@ -13,9 +13,26 @@ public enum RelayControl: Sendable, Equatable {
     case error(code: RelayErrorCode, message: String, to: String?)
     case rendezvousJoined(rvId: String, peerPresent: Bool)
     case rendezvousMessage(rvId: String, envelope: Envelope)
-    case pairRevoked(pairId: String, by: String)
+    case pairRevoked(RelayPairRevocation)
     /// A control op this version does not know: ignored (0.5.1 rule 6).
     case unknown(op: String)
+}
+
+/// `pair_revoked` (PAIR-03 API 4) with the revoking device's `HLREVOKE1` statement (0.6.2). `revokedAt` and `sig` are
+/// `nil` when the relay sent no statement (a pair revoked before signed revocation): such a notice is ignored.
+public struct RelayPairRevocation: Sendable, Equatable {
+    public let pairId: String
+    public let by: String
+    public let revokedAt: Int64?
+    /// b64u, 64 bytes when well formed.
+    public let sig: String?
+
+    public init(pairId: String, by: String, revokedAt: Int64?, sig: String?) {
+        self.pairId = pairId
+        self.by = by
+        self.revokedAt = revokedAt
+        self.sig = sig
+    }
 }
 
 /// `code` of the relay `error` op (CONN-03 API 5).
@@ -80,7 +97,10 @@ public enum RelayFrame {
         case "rv_msg":
             return .rendezvousMessage(rvId: try string("rv_id", object), envelope: try envelope(in: object))
         case "pair_revoked":
-            return .pairRevoked(pairId: try uuid("pair_id", object), by: try uuid("by", object))
+            // A missing or malformed statement still parses, as a notice the receiver ignores (PAIR-03 API 4).
+            let revokedAt = (object["revoked_at"] as? NSNumber).flatMap { CFNumberIsFloatType($0) ? nil : $0.int64Value }
+            return .pairRevoked(RelayPairRevocation(pairId: try uuid("pair_id", object), by: try uuid("by", object),
+                                                    revokedAt: revokedAt, sig: object["sig"] as? String))
         default:
             return .unknown(op: op)
         }

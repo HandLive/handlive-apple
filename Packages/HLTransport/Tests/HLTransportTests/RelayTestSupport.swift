@@ -74,7 +74,7 @@ final class FakeRelayAPI: RelayAPI, @unchecked Sendable {
         try check()
     }
 
-    func deleteDevice(revokePairs: Bool) async throws { try check() }
+    func deleteDevice(revokePairs: Bool, localPairIds: [String]) async throws { try check() }
 }
 
 /// The WebSocket side of a fake relay with one phone behind it: forwards `{"to","env"}` from the client to the phone's
@@ -102,8 +102,25 @@ actor FakeRelay: RelaySocketOpening {
         let (client, server) = InMemoryChannel.pair()
         clientSocket = server
         loops.append(Task { await self.readClient(server) })
-        await sendPresence()
+        if let openFrames {
+            for frame in openFrames { try? await server.send(.text(frame)) }
+        } else {
+            await sendPresence()
+        }
         return client
+    }
+
+    private var helloAnswer: FakePhone.HelloAnswer = .welcome
+    private var openFrames: [String]?
+
+    /// On the next opens, sends these control frames instead of the first `presence`.
+    func replacePresenceOnOpen(with frames: [String]) {
+        openFrames = frames
+    }
+
+    /// How the phone behind the relay answers the next `session/hello`.
+    func setHelloAnswer(_ answer: FakePhone.HelloAnswer) {
+        helloAnswer = answer
     }
 
     /// The phone connects to (or leaves) the relay; online answers the handshake like a real phone.
@@ -115,7 +132,10 @@ actor FakeRelay: RelaySocketOpening {
             let fake = FakePhone(channel: phoneSide, pair: pair)
             phone = fake
             loops.append(Task { await self.readPhone(relaySide) })
-            Task { try? await fake.accept() }
+            let answer = helloAnswer
+            Task {
+                if case .welcome = answer { try? await fake.accept() } else { try? await fake.answerHello(answer) }
+            }
         } else {
             await phoneLink?.close(code: .normal)
             phoneLink = nil

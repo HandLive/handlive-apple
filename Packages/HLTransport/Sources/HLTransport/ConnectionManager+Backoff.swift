@@ -46,17 +46,21 @@ extension ConnectionManager {
         !matchingCandidates().isEmpty
     }
 
-    /// Chooses the wait of the next `Backoff` from the reaction (CONN-01 E3, E5; CONN-02).
-    func scheduleBackoff(_ reaction: CloseReaction, minProtocol: Int32? = nil) {
+    /// Chooses the wait of the next `Backoff` from the reaction (CONN-01 E3, E5; CONN-02). `keepSchedule`: the error
+    /// came over the relay before the phone was authenticated, so it may be forged — its message is shown but the
+    /// normal schedule goes on, never a stop or the 5-minute wait (CONN-03 E9).
+    func scheduleBackoff(_ reaction: CloseReaction, minProtocol: Int32? = nil, keepSchedule: Bool = false) {
+        let normalDelay = { Duration.seconds(self.backoff.nextDelay() * self.configuration.delayScale) }
         switch reaction {
         case .backoff, .none:
-            pendingDelay = .seconds(backoff.nextDelay() * configuration.delayScale)
+            pendingDelay = normalDelay()
         case .backoffAfterAuthFailure:
             issue = .authFailed
-            pendingDelay = .seconds(ReconnectBackoff.authFailedDelay * configuration.delayScale)
+            pendingDelay = keepSchedule ? normalDelay() : .seconds(ReconnectBackoff.authFailedDelay * configuration.delayScale)
         case .updateRequired:
             issue = (minProtocol ?? 0) > currentProtocolVersion ? .updateThisApp : .updatePhoneApp
-            pendingDelay = nil // no point retrying until one side updates; Reconnect Now still works
+            // No point retrying until one side updates (Reconnect Now still works), unless the error may be forged.
+            pendingDelay = keepSchedule ? normalDelay() : nil
         case .removePair:
             pendingDelay = nil
         }
