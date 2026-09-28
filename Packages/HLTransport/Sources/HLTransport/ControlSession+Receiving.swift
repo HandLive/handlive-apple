@@ -28,23 +28,7 @@ extension ControlSession {
     private func handle(_ text: String) async {
         // Unknown `type` from a newer peer, or a malformed frame: nothing to answer (0.5.1 rules 3, 6).
         guard let envelope = try? Envelope.parse(Data(text.utf8)) else { return }
-        switch recentIDs.lookup(envelope.id, now: .now) {
-        case .duplicate(let ackWire):
-            if let ackWire { try? await channel.send(.text(ackWire)) }
-            return
-        case .new:
-            break
-        }
-        guard let plaintext = try? cipher?.open(envelope, now: .now) else {
-            await end(.decryptFailed, closing: .badRequest) // DECRYPT_FAILED → 4400, reconnect (CONN-02 E5)
-            return
-        }
-        recentIDs.record(envelope.id) // only now: a forged envelope never takes an id
-        if recentIDs.isFull {
-            // The rekey has not completed while the ids piled up (DEDUP_WINDOW, 0.10): 4410 REKEY_FAILED.
-            await end(.rekeyFailed, closing: .rekeyFailed)
-            return
-        }
+        guard let plaintext = await accept(envelope) else { return }
         if envelope.type == .clipboard, ClipboardChunkPlaintext.isBinaryChunk(plaintext) {
             eventSink.yield(.message(IncomingEnvelope(id: envelope.id, type: envelope.type, ts: envelope.ts,
                                                       body: .binary(plaintext))))
@@ -58,6 +42,29 @@ extension ControlSession {
             await dispatch(envelope, payload)
         }
         startRekeyIfNeeded()
+    }
+
+    /// De-duplication and decryption (0.5.1 rule 2): a repeated id gets its earlier `ack`; an envelope that does not
+    /// decrypt ends the session 4400; the id is recorded only after decryption, and a set that reaches its limit
+    /// because the rekey has not completed ends it 4410. Returns the plaintext of a new, authentic envelope.
+    private func accept(_ envelope: Envelope) async -> Data? {
+        switch recentIDs.lookup(envelope.id, now: .now) {
+        case .duplicate(let ackWire):
+            if let ackWire { try? await channel.send(.text(ackWire)) }
+            return nil
+        case .new:
+            break
+        }
+        guard let plaintext = try? cipher?.open(envelope, now: .now) else {
+            await end(.decryptFailed, closing: .badRequest) // DECRYPT_FAILED → 4400, reconnect (CONN-02 E5)
+            return nil
+        }
+        recentIDs.record(envelope.id) // only now: a forged envelope never takes an id
+        if recentIDs.isFull {
+            await end(.rekeyFailed, closing: .rekeyFailed) // DEDUP_WINDOW bound (0.10): 4410 REKEY_FAILED
+            return nil
+        }
+        return plaintext
     }
 
     private func dispatch(_ envelope: Envelope, _ payload: Payload) async {
