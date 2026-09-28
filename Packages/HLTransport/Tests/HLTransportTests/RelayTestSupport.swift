@@ -106,6 +106,13 @@ actor FakeRelay: RelaySocketOpening {
         return client
     }
 
+    private var helloAnswer: FakePhone.HelloAnswer = .welcome
+
+    /// How the phone behind the relay answers the next `session/hello`.
+    func setHelloAnswer(_ answer: FakePhone.HelloAnswer) {
+        helloAnswer = answer
+    }
+
     /// The phone connects to (or leaves) the relay; online answers the handshake like a real phone.
     func setPhoneOnline(_ online: Bool) async {
         phoneOnline = online
@@ -115,7 +122,10 @@ actor FakeRelay: RelaySocketOpening {
             let fake = FakePhone(channel: phoneSide, pair: pair)
             phone = fake
             loops.append(Task { await self.readPhone(relaySide) })
-            Task { try? await fake.accept() }
+            let answer = helloAnswer
+            Task {
+                if case .welcome = answer { try? await fake.accept() } else { try? await fake.answerHello(answer) }
+            }
         } else {
             await phoneLink?.close(code: .normal)
             phoneLink = nil

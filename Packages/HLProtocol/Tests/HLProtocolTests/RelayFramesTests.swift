@@ -11,6 +11,14 @@ struct RelayFramesTests {
     static let envelope = Envelope(type: .sms, id: "0192f4b2-5c6d-7e8f-9a0b-1c2d3e4f5a6b", ts: 1_727_151_200_000,
                                    payload: Base64Coding.encodeB64(Data([1, 2, 3])))
 
+    static func dictionary(_ data: Data) throws -> NSDictionary {
+        NSDictionary(dictionary: try object(String(decoding: data, as: UTF8.self)))
+    }
+
+    static func dictionary(_ text: String) throws -> NSDictionary {
+        NSDictionary(dictionary: try object(text))
+    }
+
     static func object(_ text: String) throws -> [String: Any] {
         try #require(try JSONSerialization.jsonObject(with: Data(text.utf8)) as? [String: Any])
     }
@@ -36,9 +44,10 @@ struct RelayFramesTests {
         #expect(try RelayFrame.parse(error) == .control(.error(code: .notConnected, message: "peer offline", to: Self.phone)))
         let newer = #"{"op":"error","code":"SLOW_DOWN","message":""}"#
         #expect(try RelayFrame.parse(newer) == .control(.error(code: .unrecognized, message: "", to: nil)))
+        // A notice without a statement still parses; the receiver ignores it (PAIR-03 API 4).
         let revoked = #"{"op":"pair_revoked","pair_id":"3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d","by":"\#(Self.phone)"}"#
-        #expect(try RelayFrame.parse(revoked) == .control(.pairRevoked(pairId: "3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d",
-                                                                        by: Self.phone)))
+        #expect(try RelayFrame.parse(revoked) == .control(.pairRevoked(RelayPairRevocation(
+            pairId: "3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d", by: Self.phone, revokedAt: nil, sig: nil))))
         #expect(try RelayFrame.parse(#"{"op":"stats","n":1}"#) == .control(.unknown(op: "stats")))
         #expect(throws: ProtocolError.invalidField("online")) {
             try RelayFrame.parse(#"{"op":"presence","pair_id":"\#(Self.phone)","peer_device_id":"\#(Self.mac)","online":1}"#)
@@ -96,8 +105,45 @@ struct RelayFramesTests {
         #expect(pairs.pairs.first?.peerPlatform == .android && pairs.pairs.first?.revokedAt == nil)
         let error = try HLJSON.decode(RelayErrorBody.self, from: Data(#"{"error":{"code":"TOKEN_EXPIRED","message":"x"}}"#.utf8))
         #expect(error.error.code == .tokenExpired)
-        #expect(String(data: try HLJSON.encode(RelayPairRevokeRequest(reason: .lostDevice)), encoding: .utf8)
-                == #"{"reason":"lost_device"}"#)
+        let revoke = RelayPairRevokeRequest(revokedAt: 1_727_160_000_000, sig: "c2ln", reason: .lostDevice)
+        #expect(try Self.dictionary(try HLJSON.encode(revoke))
+                == NSDictionary(dictionary: ["revoked_at": 1_727_160_000_000, "sig": "c2ln", "reason": "lost_device"]))
+        let signedList = try HLJSON.decode(RelayPairList.self, from: Data((#"{"pairs":[{"#
+            + #""pair_id":"3f2b1c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d","peer_device_id":"8c7d6e5f-4a3b-8c2d-9e1f-0a1b2c3d4e5f","#
+            + #""peer_platform":"android","created_at":1,"revoked_at":1727160000000,"#
+            + #""revoked_by":"8c7d6e5f-4a3b-8c2d-9e1f-0a1b2c3d4e5f","revoke_sig":"c2ln","peer_online":false}]}"#).utf8))
+        #expect(signedList.pairs.first?.revokedBy == "8c7d6e5f-4a3b-8c2d-9e1f-0a1b2c3d4e5f")
+        #expect(signedList.pairs.first?.revokeSig == "c2ln" && signedList.pairs.first?.revokedAt == 1_727_160_000_000)
+        #expect(pairs.pairs.first?.revokedBy == nil && pairs.pairs.first?.revokeSig == nil)
+    }
+
+    @Test("revoke.json: pair_revoked, the revoke body and a revocations[] item keep the wire form")
+    func revokeVectors() throws {
+        let file = try VectorFile("revoke.json")
+        for vector in file.vectors {
+            let pairId = try vector.string("pair_id")
+            let revokedAt = try #require(vector["revoked_at"] as? NSNumber).int64Value
+            let sig = try vector.string("sig_b64u")
+            let expected = RelayPairRevocation(pairId: pairId, by: try vector.string("device_id"), revokedAt: revokedAt,
+                                               sig: sig)
+            #expect(try RelayFrame.parse(try vector.string("pair_revoked")) == .control(.pairRevoked(expected)))
+            let request = RelayPairRevokeRequest(revokedAt: revokedAt, sig: sig, reason: nil)
+            #expect(try Self.dictionary(try HLJSON.encode(request))
+                    == (try Self.dictionary(try vector.string("revoke_request"))), "\(vector.label)")
+            let item = RelayRevocation(pairId: pairId, revokedAt: revokedAt, sig: sig)
+            #expect(try Self.dictionary(try HLJSON.encode(item))
+                    == (try Self.dictionary(try vector.string("revocation"))), "\(vector.label)")
+            let body = RelayDeviceDeleteRequest(revocations: [item])
+            #expect(try Self.dictionary(try HLJSON.encode(body))
+                    == NSDictionary(dictionary: ["revocations": [try Self.object(try vector.string("revocation"))]]))
+        }
+        let unsigned = try #require(file.invalidVectors.first { $0["reason"] as? String == "missing_statement"
+            && $0["check"] as? String == "receiver" })
+        guard case .control(.pairRevoked(let notice)) = try RelayFrame.parse(try unsigned.string("pair_revoked")) else {
+            Issue.record("pair_revoked without a statement must still parse")
+            return
+        }
+        #expect(notice.revokedAt == nil && notice.sig == nil)
     }
 
     @Test("Registration and token bodies of relay-auth.json")
