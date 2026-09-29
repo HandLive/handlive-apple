@@ -32,9 +32,16 @@ public final class WindowPresenter {
         window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true
         window.isReleasedWhenClosed = false
+        window.delegate = WelcomeWindowDelegate { [weak self] in
+            self?.model.welcomeWindowVisibilityChanged(false)
+            self?.welcomeWindow = nil
+            self?.flow = nil
+        }
         window.contentViewController = hostingController()
         window.center()
+        window.level = .floating
         welcomeWindow = window
+        model.welcomeWindowVisibilityChanged(true)
         bringForward(window)
     }
 
@@ -44,7 +51,7 @@ public final class WindowPresenter {
 
     /// Settings › Devices and the rest (`Settings` scene).
     public func showSettings() {
-        SettingsOpener.open()
+        SettingsOpener.open(model: model)
     }
 
     /// The Messages window (SMS-03 step 1); without the SMS database (SMS-01 E7) there is nothing to show.
@@ -77,8 +84,25 @@ public final class WindowPresenter {
     }
 
     private func bringForward(_ window: NSWindow) {
+        model.welcomeWindowVisibilityChanged(true)
         NSApp.activate(ignoringOtherApps: true)
+        window.level = .floating
+        window.collectionBehavior.insert(.moveToActiveSpace)
         window.makeKeyAndOrderFront(nil)
+        window.orderFrontRegardless()
+    }
+}
+
+/// Clears the welcome-window flag when the user closes Pair Phone / setup.
+private final class WelcomeWindowDelegate: NSObject, NSWindowDelegate {
+    private let onClose: () -> Void
+
+    init(onClose: @escaping () -> Void) {
+        self.onClose = onClose
+    }
+
+    func windowWillClose(_ notification: Notification) {
+        onClose()
     }
 }
 

@@ -59,10 +59,14 @@ public struct PairingResult: Sendable, Equatable {
     public let signatureSelf: Data
     public let signaturePeer: Data
     public let prk: Data
+    /// LAN address of the `/v1/pair` connection, so CONN-01 can use `last_host` before TXT `h=` refreshes.
+    public let lanHost: String?
+    public let lanPort: UInt16?
 
     public init(pairId: String, createdAt: Int64, phoneDeviceId: String, phoneName: String, phoneModel: String,
                 phoneOSVersion: String, phoneSigningPublicKey: Data, phoneDHPublicKey: Data, certificateSHA256: Data,
-                attestation: Data, signatureSelf: Data, signaturePeer: Data, prk: Data) {
+                attestation: Data, signatureSelf: Data, signaturePeer: Data, prk: Data,
+                lanHost: String? = nil, lanPort: UInt16? = nil) {
         self.pairId = pairId
         self.createdAt = createdAt
         self.phoneDeviceId = phoneDeviceId
@@ -76,6 +80,17 @@ public struct PairingResult: Sendable, Equatable {
         self.signatureSelf = signatureSelf
         self.signaturePeer = signaturePeer
         self.prk = prk
+        self.lanHost = lanHost
+        self.lanPort = lanPort
+    }
+
+    /// Attaches the resolved LAN address from the pairing WebSocket (relay rendezvous leaves these nil).
+    public func withLAN(host: String, port: UInt16) -> PairingResult {
+        PairingResult(pairId: pairId, createdAt: createdAt, phoneDeviceId: phoneDeviceId, phoneName: phoneName,
+                      phoneModel: phoneModel, phoneOSVersion: phoneOSVersion,
+                      phoneSigningPublicKey: phoneSigningPublicKey, phoneDHPublicKey: phoneDHPublicKey,
+                      certificateSHA256: certificateSHA256, attestation: attestation, signatureSelf: signatureSelf,
+                      signaturePeer: signaturePeer, prk: prk, lanHost: host, lanPort: port)
     }
 }
 

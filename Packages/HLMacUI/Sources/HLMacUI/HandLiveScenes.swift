@@ -4,6 +4,19 @@ import SwiftUI
 /// The scenes of the Mac app (03-platforms/01-macos.md): the menu bar extra, shown while "Show HandLive in Menu
 /// Bar" is on (`isInserted`; removing the icon turns the setting off), and the `Settings` window. The welcome window
 /// is an AppKit window of `WindowPresenter`.
+/// Captures SwiftUI `openSettings` for AppKit callers (`SettingsOpener.open(model:)`). macOS 14+.
+@available(macOS 14, *)
+private struct OpenSettingsCapture: ViewModifier {
+    @ObservedObject var model: AppModel
+    @Environment(\.openSettings) private var openSettings
+
+    func body(content: Content) -> some View {
+        content.onAppear {
+            model.openSettingsAction = { openSettings() }
+        }
+    }
+}
+
 public struct HandLiveScenes: Scene {
     @ObservedObject var model: AppModel
     let actions: AppActions
@@ -20,7 +33,7 @@ public struct HandLiveScenes: Scene {
             guard inserted != model.showInMenuBar else { return }
             model.setShowInMenuBar(inserted)
         })) {
-            MenuBarMenu(model: model, actions: actions)
+            menuContent
         } label: {
             MenuBarIcon(model: model)
         }
@@ -32,6 +45,16 @@ public struct HandLiveScenes: Scene {
             HandLiveCommands(model: model, actions: actions)
             SidebarCommands()
             TextEditingCommands()
+        }
+    }
+
+    @ViewBuilder
+    private var menuContent: some View {
+        if #available(macOS 14, *) {
+            MenuBarMenu(model: model, actions: actions)
+                .modifier(OpenSettingsCapture(model: model))
+        } else {
+            MenuBarMenu(model: model, actions: actions)
         }
     }
 }

@@ -3619,6 +3619,24 @@
         }
       }
     },
+    "settings.check_again" : {
+      "comment" : "Mac Permissions pane: re-probe notifications, local network and paste access after the user changes System Settings",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check Again"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kiểm Tra Lại"
+          }
+        }
+      }
+    },
     "settings.clipboard" : {
       "comment" : "Mac Settings pane title; group header of the settings list on iPhone and Android",
       "extractionState" : "manual",
@@ -3835,6 +3853,24 @@
         }
       }
     },
+    "settings.local_network_unknown" : {
+      "comment" : "Mac Permissions pane value for local network before the first probe, or while the probe runs",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not Checked"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chưa Kiểm Tra"
+          }
+        }
+      }
+    },
     "settings.messages" : {
       "comment" : "Mac Settings pane title (toolbar item); header of the Messages group of the Settings tab on iPhone and iPad",
       "extractionState" : "manual",
@@ -3854,7 +3890,7 @@
       }
     },
     "settings.notifications" : {
-      "comment" : "Row with the notification permission state: Android Settings › Permissions & Background (SET-01 field 3, SET-02 field 23); iPhone Permissions group (SET-03 field 7)",
+      "comment" : "Row with the notification permission state: Android Settings › Permissions & Background (SET-01 field 3, SET-02 field 23); iPhone Permissions group (SET-03 field 7); Mac Permissions pane",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -3926,7 +3962,7 @@
       }
     },
     "settings.permissions" : {
-      "comment" : "Header of the Settings group with the Notifications and Local Network rows (iPhone, iPad)",
+      "comment" : "Header of the Settings group with the Notifications and Local Network rows (iPhone, iPad); Mac Settings tab title",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -3939,6 +3975,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Quyền"
+          }
+        }
+      }
+    },
+    "settings.permissions_footer_mac" : {
+      "comment" : "Footer of the Mac Permissions pane (SET-03 field 9, E4)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HandLive needs Local Network to find your phone on Wi-Fi. Turn it on in System Settings › Privacy & Security › Local Network, then tap Check Again."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HandLive cần Mạng cục bộ để tìm điện thoại trên Wi-Fi. Bật trong Cài đặt hệ thống › Quyền riêng tư & Bảo mật › Mạng cục bộ, rồi nhấn Kiểm Tra Lại."
           }
         }
       }

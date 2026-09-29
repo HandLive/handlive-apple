@@ -37,12 +37,34 @@ public enum TimeSensitiveSetting: Equatable, Sendable {
     }
 }
 
+/// SET-03 field 9: local network permission as the UI shows it.
+public enum LocalNetworkAccess: Equatable, Sendable {
+    case allowed
+    case denied
+    case unknown
+    /// macOS 13–14 never asks; browsing works without a separate grant.
+    case notRequired
+
+    public static func from(_ state: DiscoveryState) -> LocalNetworkAccess {
+        switch state {
+        case .localNetworkDenied: .denied
+        case .ready: .allowed
+        default: .unknown
+        }
+    }
+}
+
 /// SET-03 API 5: browse `_handlive._tcp` so the system shows the local network prompt (iOS, macOS 15+). A phone in
 /// the results means allowed, `PolicyDenied` means denied; with neither after `settle`, the answer is taken as allowed
 /// and a later denial still shows up as a connection issue (CONN-01 E8).
 public enum LocalNetworkProbe {
     @Sendable public static func run() async -> DiscoveryState {
         await probe(settle: .seconds(8))
+    }
+
+    /// Shorter settle for Settings › Permissions "Check Again".
+    @Sendable public static func check() async -> DiscoveryState {
+        await probe(settle: .seconds(3))
     }
 
     static func probe(settle: Duration) async -> DiscoveryState {
@@ -52,6 +74,7 @@ public enum LocalNetworkProbe {
                     switch event {
                     case .state(.localNetworkDenied): return .localNetworkDenied
                     case .results(let phones) where !phones.isEmpty: return .ready
+                    case .state(.ready): return .ready
                     default: continue
                     }
                 }

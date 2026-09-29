@@ -75,7 +75,9 @@ extension ConnectionManager {
     /// `last_host` first, while mDNS browses: a stale address or a pin mismatch there is not an error (the address
     /// may now belong to another device). Returns `true` when the attempt settled the state.
     private func tryFastPath(_ phone: PairedPhone) async -> Bool {
-        guard let host = phone.lastHost, let port = phone.lastPort else { return false }
+        guard let host = phone.lastHost, let port = phone.lastPort else {
+            return false
+        }
         let result = await connectLAN(.host(host, port: port), phone: phone, timeout: configuration.fastPathTimeout,
                                       fastPath: true)
         return result == .done

@@ -12,13 +12,27 @@ extension AppModel {
         applyActivationPolicy()
     }
 
-    /// `.accessory` while the menu bar icon is shown and the Messages window is closed, `.regular` (Dock, app menu bar)
-    /// otherwise (SET-03 step 6, SMS-03 on the Mac).
+    /// `.accessory` while the menu bar icon is shown and no HandLive window is open; `.regular` (Dock, app menu
+    /// bar) while Messages, Pair Phone or Settings is forward so the window can come to the front.
     public func applyActivationPolicy() {
-        let policy: NSApplication.ActivationPolicy = showInMenuBar && !messagesWindowOpen ? .accessory : .regular
+        let policy: NSApplication.ActivationPolicy =
+            showInMenuBar && !messagesWindowOpen && !welcomeWindowOpen && !settingsWindowOpen
+            ? .accessory : .regular
         guard let app = NSApp, app.activationPolicy() != policy else { return } // no NSApplication in unit tests
         app.setActivationPolicy(policy)
         if policy == .regular { app.activate(ignoringOtherApps: true) }
+    }
+
+    /// Welcome / Pair Phone window (PAIR-01): forces `.regular` so the sheet is not stuck behind other apps.
+    public func welcomeWindowVisibilityChanged(_ open: Bool) {
+        welcomeWindowOpen = open
+        applyActivationPolicy()
+    }
+
+    /// Settings scene: same as Messages — Dock and menu bar while the user configures permissions.
+    public func settingsWindowVisibilityChanged(_ open: Bool) {
+        settingsWindowOpen = open
+        applyActivationPolicy()
     }
 
     /// "Open HandLive at Login" (SET-02 field 22, SET-03 API 3).

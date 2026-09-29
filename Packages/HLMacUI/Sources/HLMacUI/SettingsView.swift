@@ -16,6 +16,8 @@ public struct SettingsView: View {
         TabView {
             GeneralSettingsPane(model: model)
                 .tabItem { Label(L10n.Settings.general, systemImage: "gearshape") }
+            PermissionsSettingsPane(model: model)
+                .tabItem { Label(L10n.Settings.permissions, systemImage: "lock.shield") }
             DevicesSettingsPane(model: model)
                 .tabItem { Label(L10n.Pairing.devices, systemImage: "candybarphone") }
             ClipboardSettingsPane(model: model)
@@ -26,7 +28,96 @@ public struct SettingsView: View {
                 .tabItem { Label(L10n.Settings.calls, systemImage: "phone") }
         }
         .frame(width: 520)
-        .onAppear { model.refreshSystemState() }
+        .onAppear {
+            model.refreshSystemState()
+            SettingsOpener.settingsDidAppear(model: model)
+        }
+        .onDisappear {
+            SettingsOpener.settingsDidDisappear(model: model)
+        }
+    }
+}
+
+/// Permissions: notifications, local network and paste access (SET-03 fields 7, 9, 10).
+struct PermissionsSettingsPane: View {
+    @ObservedObject var model: AppModel
+
+    var body: some View {
+        Form {
+            Section {
+                permissionRow(title: L10n.Settings.notifications, value: notificationsValue,
+                              reason: model.notificationPermission == .denied
+                                  ? L10n.Setup.notificationsDeniedMac : nil,
+                              pane: .notifications)
+                permissionRow(title: L10n.Settings.localNetwork, value: localNetworkValue,
+                              reason: model.localNetworkAccess == .denied
+                                  ? L10n.Setup.localNetworkDeniedMac : nil,
+                              pane: .localNetwork)
+                if model.pasteAccess.needsGuide {
+                    permissionRow(title: L10n.Settings.pasteFromOtherApps, value: pasteValue,
+                                  reason: L10n.Settings.pastePermissionHint,
+                                  pane: .privacyAndSecurity)
+                } else if #available(macOS 15.4, *) {
+                    permissionRow(title: L10n.Settings.pasteFromOtherApps, value: pasteValue,
+                                  reason: nil, pane: .privacyAndSecurity)
+                }
+            } footer: {
+                Text(L10n.Settings.permissionsFooterMac)
+                    .hlTextStyle(.macFootnote)
+                    .foregroundStyle(.secondary)
+            }
+            Section {
+                Button {
+                    Task { await model.refreshPermissionStatuses(probeLocalNetwork: true) }
+                } label: {
+                    HStack {
+                        Text(L10n.Settings.checkAgain)
+                        if model.checkingPermissions {
+                            Spacer()
+                            ProgressView().controlSize(.small)
+                        }
+                    }
+                }
+                .disabled(model.checkingPermissions)
+            }
+        }
+        .formStyle(.grouped)
+        .onAppear {
+            Task { await model.refreshPermissionStatuses(probeLocalNetwork: true) }
+        }
+    }
+
+    private var notificationsValue: String {
+        switch model.notificationPermission {
+        case .allowed: L10n.Common.on
+        case .denied: L10n.Common.off
+        case .notDetermined: L10n.Settings.localNetworkUnknown
+        }
+    }
+
+    private var localNetworkValue: String {
+        switch model.localNetworkAccess {
+        case .allowed, .notRequired: L10n.Common.on
+        case .denied: L10n.Common.off
+        case .unknown: L10n.Settings.localNetworkUnknown
+        }
+    }
+
+    private var pasteValue: String {
+        switch model.pasteAccess {
+        case .alwaysAllow, .standard, .notApplicable: L10n.Common.on
+        case .ask, .alwaysDeny: L10n.Common.off
+        }
+    }
+
+    private func permissionRow(title: String, value: String, reason: String?,
+                               pane: SystemSettingsPane) -> some View {
+        VStack(alignment: .leading, spacing: HLSpacing.space8) {
+            LabeledContent(title) { Text(value) }
+            if let reason {
+                GuidanceRow(text: reason, pane: pane)
+            }
+        }
     }
 }
 

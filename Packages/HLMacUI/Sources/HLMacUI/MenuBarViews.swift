@@ -103,7 +103,7 @@ public struct MenuBarMenu: View {
             }
         }
         Divider()
-        SettingsCommand()
+        SettingsCommand(model: model)
         Button(L10n.Menu.quit) { NSApp.terminate(nil) }
             .keyboardShortcut("q")
     }
@@ -132,30 +132,103 @@ enum StatusImage {
     }
 }
 
-/// "Settings…" ⌘, : `SettingsLink` from macOS 14; macOS 13 sends the standard action.
+/// "Settings…" ⌘,: always a `Button` so we switch to `.regular` and raise the window before the Settings scene
+/// opens. `SettingsLink` inside `MenuBarExtra` never runs a simultaneous gesture, so the sheet stayed behind other
+/// apps (Cursor).
 struct SettingsCommand: View {
+    @ObservedObject var model: AppModel
+
     var body: some View {
         if #available(macOS 14, *) {
-            SettingsLink { Text(L10n.Menu.settings) }
-                .keyboardShortcut(",")
+            SettingsCommandModern(model: model)
         } else {
-            Button(L10n.Menu.settings) { SettingsOpener.open() }
+            Button(L10n.Menu.settings) { SettingsOpener.open(model: model) }
                 .keyboardShortcut(",")
         }
     }
 }
 
-enum SettingsOpener {
-    /// The `Settings` scene from code (reopen, Dock menu). macOS 14+ ignores the `showSettingsWindow:` action, so the
-    /// app menu's own "Settings…" item (⌘,) is triggered; the action is the fallback for macOS 13.
-    @MainActor
-    static func open() {
-        NSApp.activate(ignoringOtherApps: true)
-        if let menu = NSApp.mainMenu?.items.first?.submenu,
-           let index = menu.items.firstIndex(where: { $0.keyEquivalent == "," && $0.keyEquivalentModifierMask == .command }) {
-            menu.performActionForItem(at: index)
-            return
+@available(macOS 14, *)
+private struct SettingsCommandModern: View {
+    @ObservedObject var model: AppModel
+    @Environment(\.openSettings) private var openSettings
+
+    var body: some View {
+        Button(L10n.Menu.settings) {
+            SettingsOpener.open(model: model, openSettings: openSettings)
         }
-        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+        .keyboardShortcut(",")
+    }
+}
+
+enum SettingsOpener {
+    /// Switch to `.regular` and activate before the Settings scene appears (menu-bar-only apps otherwise keep the
+    /// window behind other apps).
+    @MainActor
+    static func prepareFront(model: AppModel) {
+        model.settingsWindowVisibilityChanged(true)
+        NSApp.activate(ignoringOtherApps: true)
+        scheduleBringForward()
+    }
+
+    /// Opens Settings from a SwiftUI environment action (menu bar / ⌘,). macOS 14+.
+    @available(macOS 14, *)
+    @MainActor
+    static func open(model: AppModel, openSettings: OpenSettingsAction) {
+        prepareFront(model: model)
+        openSettings()
+        scheduleBringForward()
+    }
+
+    /// The `Settings` scene from AppKit (reopen, Dock menu) when the SwiftUI `openSettings` action is not in scope.
+    @MainActor
+    static func open(model: AppModel) {
+        prepareFront(model: model)
+        if let open = model.openSettingsAction {
+            open()
+        } else if let menu = NSApp.mainMenu?.items.first?.submenu,
+                  let index = menu.items.firstIndex(where: {
+                      $0.keyEquivalent == "," && $0.keyEquivalentModifierMask.contains(.command)
+                  }) {
+            menu.performActionForItem(at: index)
+        } else {
+            NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+        }
+        scheduleBringForward()
+    }
+
+    /// Called from `SettingsView.onAppear` so a system Settings path still raises the window.
+    @MainActor
+    static func settingsDidAppear(model: AppModel) {
+        model.settingsWindowVisibilityChanged(true)
+        NSApp.activate(ignoringOtherApps: true)
+        scheduleBringForward()
+    }
+
+    @MainActor
+    static func settingsDidDisappear(model: AppModel) {
+        model.settingsWindowVisibilityChanged(false)
+    }
+
+    @MainActor
+    private static func scheduleBringForward() {
+        bringSettingsForward()
+        DispatchQueue.main.async { bringSettingsForward() }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { bringSettingsForward() }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { bringSettingsForward() }
+    }
+
+    @MainActor
+    private static func bringSettingsForward() {
+        for window in NSApp.windows where window.canBecomeKey && !window.className.contains("StatusBar") {
+            // Settings + welcome share titled windows; skip panels (call UI).
+            guard window.styleMask.contains(.titled), !(window is NSPanel) else { continue }
+            // Match Pair Phone: floating + orderFrontRegardless so Cursor cannot keep covering Settings.
+            window.level = .floating
+            window.collectionBehavior.insert([.moveToActiveSpace, .fullScreenAuxiliary])
+            window.makeKeyAndOrderFront(nil)
+            window.orderFrontRegardless()
+        }
+        NSApp.activate(ignoringOtherApps: true)
     }
 }

@@ -487,6 +487,8 @@ public enum L10n {
         public static var calls: String { L10nLookup.string("settings.calls") }
         /// Camera
         public static var camera: String { L10nLookup.string("settings.camera") }
+        /// Check Again
+        public static var checkAgain: String { L10nLookup.string("settings.check_again") }
         /// Clipboard
         public static var clipboard: String { L10nLookup.string("settings.clipboard") }
         /// Data
@@ -511,6 +513,8 @@ public enum L10n {
         public static var internetConnection: String { L10nLookup.string("settings.internet_connection") }
         /// Local Network
         public static var localNetwork: String { L10nLookup.string("settings.local_network") }
+        /// Not Checked
+        public static var localNetworkUnknown: String { L10nLookup.string("settings.local_network_unknown") }
         /// Messages
         public static var messages: String { L10nLookup.string("settings.messages") }
         /// Notifications
@@ -523,6 +527,8 @@ public enum L10n {
         public static var pastePermissionHint: String { L10nLookup.string("settings.paste_permission_hint") }
         /// Permissions
         public static var permissions: String { L10nLookup.string("settings.permissions") }
+        /// HandLive needs Local Network to find your phone on Wi-Fi. Turn it on in System Settings › Privacy & Security › Local Network, then tap Check Again.
+        public static var permissionsFooterMac: String { L10nLookup.string("settings.permissions_footer_mac") }
         /// Phone
         public static var phone: String { L10nLookup.string("settings.phone") }
         /// Quick Replies

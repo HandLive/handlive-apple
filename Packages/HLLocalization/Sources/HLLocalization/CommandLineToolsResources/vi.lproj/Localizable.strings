@@ -396,6 +396,8 @@
 	<string>Cuộc gọi</string>
 	<key>settings.camera</key>
 	<string>Camera</string>
+	<key>settings.check_again</key>
+	<string>Kiểm Tra Lại</string>
 	<key>settings.clipboard</key>
 	<string>Bảng nhớ tạm</string>
 	<key>settings.data</key>
@@ -420,6 +422,8 @@
 	<string>Kết nối qua Internet</string>
 	<key>settings.local_network</key>
 	<string>Mạng cục bộ</string>
+	<key>settings.local_network_unknown</key>
+	<string>Chưa Kiểm Tra</string>
 	<key>settings.messages</key>
 	<string>Tin nhắn</string>
 	<key>settings.notifications</key>
@@ -432,6 +436,8 @@
 	<string>Để tự gửi bảng nhớ tạm, mở Cài đặt hệ thống › Quyền riêng tư &amp; Bảo mật › Dán từ ứng dụng khác và chọn Luôn cho phép cho HandLive.</string>
 	<key>settings.permissions</key>
 	<string>Quyền</string>
+	<key>settings.permissions_footer_mac</key>
+	<string>HandLive cần Mạng cục bộ để tìm điện thoại trên Wi-Fi. Bật trong Cài đặt hệ thống › Quyền riêng tư &amp; Bảo mật › Mạng cục bộ, rồi nhấn Kiểm Tra Lại.</string>
 	<key>settings.phone</key>
 	<string>Điện thoại</string>
 	<key>settings.quick_replies</key>

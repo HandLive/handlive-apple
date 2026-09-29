@@ -24,6 +24,10 @@ public final class AppModel: ObservableObject {
     @Published public internal(set) var pairedDevice: PairedDeviceRecord?
     @Published public internal(set) var loginItemStatus = LoginItem.status
     @Published public internal(set) var pasteAccess = PasteAccess.current
+    /// SET-03 fields 7 and 9: Notification and Local Network grants, refreshed from Settings › Permissions.
+    @Published public internal(set) var notificationPermission = NotificationPermission.notDetermined
+    @Published public internal(set) var localNetworkAccess = LocalNetworkAccess.unknown
+    @Published public internal(set) var checkingPermissions = false
     /// Settings mirrored for the views (SET-02 fields 1, 4–6, 21, 31); setters live in `AppModel+Settings`.
     @Published public internal(set) var showInMenuBar: Bool
     @Published public internal(set) var clipboardEnabled: Bool
@@ -76,8 +80,14 @@ public final class AppModel: ObservableObject {
     let smsNotifier: any SmsNotifying
     /// The Messages window is open: the app shows its Dock icon and menu bar (SET-03 step 6).
     var messagesWindowOpen = false
+    /// Pair Phone / first-run welcome (AppKit); keeps `.regular` while visible.
+    var welcomeWindowOpen = false
+    /// Settings scene; keeps `.regular` while the user may be changing Local Network.
+    var settingsWindowOpen = false
     /// Opens the Messages window (the app coordinator's window presenter).
     public var openMessagesWindow: () -> Void = {}
+    /// Opens the Settings scene when AppKit calls (reopen without SwiftUI `openSettings` in scope).
+    public var openSettingsAction: (() -> Void)?
     /// "Delete All HandLive Data" finished: the windows start over at the welcome window (SET-02 A6).
     public var didEraseAllData: () -> Void = {}
 
@@ -230,6 +240,24 @@ public final class AppModel: ObservableObject {
         pasteAccess = PasteAccess.current
         loginItemStatus = LoginItem.status
         calls.refreshFocus()
+        Task { await refreshPermissionStatuses(probeLocalNetwork: false) }
+    }
+
+    /// Settings › Permissions: re-read notifications and paste, and optionally probe Bonjour for Local Network.
+    public func refreshPermissionStatuses(probeLocalNetwork: Bool) async {
+        notificationPermission = await NotificationPermission.current()
+        pasteAccess = PasteAccess.current
+        if link.issue == .localNetworkDenied {
+            localNetworkAccess = .denied
+        }
+        guard probeLocalNetwork else { return }
+        if #available(macOS 15, *) {
+            checkingPermissions = true
+            defer { checkingPermissions = false }
+            localNetworkAccess = LocalNetworkAccess.from(await LocalNetworkProbe.check())
+        } else {
+            localNetworkAccess = .notRequired
+        }
     }
 
     /// Quit: `session/bye {shutdown}` first (CONN-02 step 8).
