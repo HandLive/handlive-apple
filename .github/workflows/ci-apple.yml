@@ -142,6 +142,11 @@ jobs:
         working-directory: apple/Tools/HandLiveDevClient
         run: swift build
 
+      # The HFP spike probe (apple/Tools/HFPSpike) runs by hand with a real phone: built only.
+      - name: swift build HFP spike
+        working-directory: apple/Tools/HFPSpike
+        run: swift build
+
       - name: Cài XcodeGen + SwiftLint
         run: brew install xcodegen swiftlint
 

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleIdentifier</key>
+	<string>app.handlive.tools.hfp-spike</string>
+	<key>CFBundleName</key>
+	<string>HFP Spike</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>The HFP spike connects to your paired phone as a hands-free device to test call audio.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>The HFP spike sends your voice to the phone during a test call.</string>
+</dict>
+</plist>
