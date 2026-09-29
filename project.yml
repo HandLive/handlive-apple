@@ -46,7 +46,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: app.handlive.mac
         PRODUCT_NAME: HandLive
-        MARKETING_VERSION: "0.0.1"
+        MARKETING_VERSION: "0.1.0"
         CURRENT_PROJECT_VERSION: "1"
         GENERATE_INFOPLIST_FILE: YES
         # Purpose strings (English, from the catalog) and NSBonjourServices; InfoPlist.xcstrings translates them.
@@ -82,7 +82,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: app.handlive.ios
         PRODUCT_NAME: HandLive
-        MARKETING_VERSION: "0.0.1"
+        MARKETING_VERSION: "0.1.0"
         CURRENT_PROJECT_VERSION: "1"
         TARGETED_DEVICE_FAMILY: "1,2"
         GENERATE_INFOPLIST_FILE: YES
@@ -114,7 +114,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: app.handlive.ios.nse
         PRODUCT_NAME: HandLiveNotificationService
-        MARKETING_VERSION: "0.0.1"
+        MARKETING_VERSION: "0.1.0"
         CURRENT_PROJECT_VERSION: "1"
         TARGETED_DEVICE_FAMILY: "1,2"
         GENERATE_INFOPLIST_FILE: YES
