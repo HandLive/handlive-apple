@@ -81,8 +81,8 @@ final class DevWorkspace {
             peerKeyAgreementPublicKey: result.phoneDHPublicKey, peerCertificateSHA256: result.certificateSHA256,
             attestation: result.attestation, signatureSelf: result.signatureSelf, signaturePeer: result.signaturePeer,
             createdAt: result.createdAt)
-        record.lastHost = options.host
-        record.lastPort = options.port
+        record.lastHost = result.lanHost ?? options.host
+        record.lastPort = result.lanPort ?? options.port
         do {
             try store.upsert(record)
         } catch {

@@ -27,6 +27,16 @@ public enum L10n {
         public static func unreadConversations(count: Int) -> String {
             L10nLookup.format("a11y.unread_conversations", count)
         }
+        /// HandLive, page from your phone available
+        public static var webBadge: String { L10nLookup.string("a11y.web_badge") }
+        /// Continue browsing: {title_or_host}, {host}
+        public static func webIosBanner(titleOrHost: String, host: String) -> String {
+            L10nLookup.format("a11y.web_ios_banner", titleOrHost, host)
+        }
+        /// Page from {device_name}: {title_or_host}
+        public static func webMenuItem(deviceName: String, titleOrHost: String) -> String {
+            L10nLookup.format("a11y.web_menu_item", deviceName, titleOrHost)
+        }
     }
     public enum Call {
         /// Answer
@@ -337,6 +347,8 @@ public enum L10n {
         public static var updateThisApp: String { L10nLookup.string("error.update_this_app") }
     }
     public enum Infoplist {
+        /// HandLive reads the address of the page open in your browser so you can continue on your phone.
+        public static var appleEventsUsage: String { L10nLookup.string("infoplist.apple_events_usage") }
         /// HandLive reads your Focus status so it doesn't ring or show calls while a Focus is on.
         public static var focusStatusUsage: String { L10nLookup.string("infoplist.focus_status_usage") }
         /// HandLive looks for your Android phone on your Wi-Fi network to connect to it directly, not over the internet.
@@ -475,6 +487,8 @@ public enum L10n {
         public static var calls: String { L10nLookup.string("settings.calls") }
         /// Camera
         public static var camera: String { L10nLookup.string("settings.camera") }
+        /// Check Again
+        public static var checkAgain: String { L10nLookup.string("settings.check_again") }
         /// Clipboard
         public static var clipboard: String { L10nLookup.string("settings.clipboard") }
         /// Data
@@ -499,6 +513,8 @@ public enum L10n {
         public static var internetConnection: String { L10nLookup.string("settings.internet_connection") }
         /// Local Network
         public static var localNetwork: String { L10nLookup.string("settings.local_network") }
+        /// Not Checked
+        public static var localNetworkUnknown: String { L10nLookup.string("settings.local_network_unknown") }
         /// Messages
         public static var messages: String { L10nLookup.string("settings.messages") }
         /// Notifications
@@ -511,6 +527,8 @@ public enum L10n {
         public static var pastePermissionHint: String { L10nLookup.string("settings.paste_permission_hint") }
         /// Permissions
         public static var permissions: String { L10nLookup.string("settings.permissions") }
+        /// HandLive needs Local Network to find your phone on Wi-Fi. Turn it on in System Settings › Privacy & Security › Local Network, then tap Check Again.
+        public static var permissionsFooterMac: String { L10nLookup.string("settings.permissions_footer_mac") }
         /// Phone
         public static var phone: String { L10nLookup.string("settings.phone") }
         /// Quick Replies
@@ -729,5 +747,31 @@ public enum L10n {
         public static func retryIn(duration: String) -> String {
             L10nLookup.format("status.retry_in", duration)
         }
+    }
+    public enum Web {
+        public enum Automation {
+            /// Not allowed
+            public static var notAllowed: String { L10nLookup.string("web.automation.not_allowed") }
+        }
+        /// Browsers
+        public static var browsers: String { L10nLookup.string("web.browsers") }
+        /// Continue browsing: {title_or_host}
+        public static func iosBanner(titleOrHost: String) -> String {
+            L10nLookup.format("web.ios_banner", titleOrHost)
+        }
+        /// {host} — from {device_name}
+        public static func macNotificationBody(host: String, deviceName: String) -> String {
+            L10nLookup.format("web.mac_notification_body", host, deviceName)
+        }
+        /// {title_or_host} — from {device_name}
+        public static func menuItem(titleOrHost: String, deviceName: String) -> String {
+            L10nLookup.format("web.menu_item", titleOrHost, deviceName)
+        }
+        /// Page Notifications
+        public static var notify: String { L10nLookup.string("web.notify") }
+        /// Send Pages from This Mac
+        public static var sendMac: String { L10nLookup.string("web.send_mac") }
+        /// Continue Browsing
+        public static var title: String { L10nLookup.string("web.title") }
     }
 }

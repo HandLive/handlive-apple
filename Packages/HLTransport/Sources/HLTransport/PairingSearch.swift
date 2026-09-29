@@ -30,7 +30,8 @@ public protocol PairingSearching: Sendable {
 public struct PairingSearch: PairingSearching {
     public let discovery: any LANDiscovering
     public let connector: any ChannelConnecting
-    public var connectTimeout: Duration = .seconds(5)
+    /// Short so stale Bonjour ghosts fail fast and the live instance is tried (PAIR-01 E3).
+    public var connectTimeout: Duration = .seconds(2)
     public var retryDelay: Duration = .seconds(1)
     /// PAIR-01 step 7: "Waits up to 20 s".
     public var unreachableAfter: Duration = .seconds(20)
@@ -60,16 +61,31 @@ public struct PairingSearch: PairingSearching {
         var exchange = PairingExchange(identity: identity, credential: credential, offerTimeout: offerTimeout)
         exchange.pinParameters = pinParameters
         var iterator = changes.makeAsyncIterator()
+        var failedNames = Set<String>()
         reporter.report(.waitingForPhone)
         while true {
             try Task.checkCancellation()
-            guard let (phone, seenSince) = board.candidate() else {
+            // Keep failures for every instance still visible (matching or not); ghosts often lose `pr` briefly.
+            failedNames = failedNames.intersection(board.visibleNames)
+            // Prefer TXT match; if every match is a ghost, try any protocol-v1 phone (exchange rejects wrong peers).
+            guard let (phone, seenSince, viaFallback) = board.nextAttempt(excluding: failedNames) else {
                 if let result = try await Self.pairThroughRendezvous(credential, board: board, exchange: exchange,
                                                                       reporter: reporter) {
                     return result
                 }
-                reporter.report(board.denied ? .localNetworkDenied : .waitingForPhone)
-                guard await iterator.next() != nil else { throw CancellationError() }
+                if board.denied {
+                    reporter.report(.localNetworkDenied)
+                } else if let earliest = board.earliestSeen(), !board.wasReached,
+                          earliest.duration(to: .now) >= unreachableAfter {
+                    reporter.report(.phoneUnreachable)
+                } else if failedNames.isEmpty {
+                    reporter.report(.waitingForPhone)
+                }
+                if !board.visibleNames.isEmpty, board.visibleNames.isSubset(of: failedNames) {
+                    try await Task.sleep(for: retryDelay)
+                } else {
+                    guard await iterator.next() != nil else { throw CancellationError() }
+                }
                 continue
             }
             reporter.report(.connecting)
@@ -78,16 +94,27 @@ public struct PairingSearch: PairingSearching {
                                                              policy: .recordAny, timeout: connectTimeout)
                 reporter.report(.verifying)
                 board.reached()
-                return try await exchange.run(over: connection.channel, certificateSHA256: connection.certificateSHA256)
-            } catch let failure as PairingFailure where !Self.isRetryable(failure) {
-                throw failure
-            } catch is CancellationError {
-                throw CancellationError()
-            } catch {
+                let result = try await exchange.run(over: connection.channel,
+                                                    certificateSHA256: connection.certificateSHA256)
+                return result.withLAN(host: connection.host, port: connection.port)
+            } catch let failure as PairingFailure where Self.isRetryable(failure) {
+                // Window closed / dropped: keep trying this instance; do not blacklist it as a ghost.
                 if !board.wasReached, seenSince.duration(to: .now) >= unreachableAfter {
                     reporter.report(.phoneUnreachable)
                 }
                 try await Task.sleep(for: retryDelay)
+            } catch let failure as PairingFailure {
+                throw failure
+            } catch is CancellationError {
+                throw CancellationError()
+            } catch {
+                failedNames.insert(phone.name)
+                if !board.wasReached, seenSince.duration(to: .now) >= unreachableAfter {
+                    reporter.report(.phoneUnreachable)
+                }
+                if board.nextAttempt(excluding: failedNames) == nil {
+                    try await Task.sleep(for: retryDelay)
+                }
             }
         }
     }
@@ -147,7 +174,9 @@ public struct PairingSearch: PairingSearching {
 final class PhoneBoard: @unchecked Sendable {
     private let lock = NSLock()
     private let matches: @Sendable (DiscoveredPhone) -> Bool
-    private var phones: [DiscoveredPhone] = []
+    /// Every protocol-v1 phone currently browsed (including ghosts and non-matching TXT).
+    private var visible: [DiscoveredPhone] = []
+    private var matching: [DiscoveredPhone] = []
     private var firstSeen: [String: ContinuousClock.Instant] = [:]
     private var isDenied = false
     private var reachedOnce = false
@@ -162,8 +191,9 @@ final class PhoneBoard: @unchecked Sendable {
         defer { lock.unlock() }
         switch event {
         case .results(let all):
-            phones = all.filter(matches)
-            let names = Set(phones.map(\.name))
+            visible = all.filter(\.speaksProtocolV1)
+            matching = visible.filter(matches)
+            let names = Set(visible.map(\.name))
             firstSeen = firstSeen.filter { names.contains($0.key) }
             for name in names where firstSeen[name] == nil { firstSeen[name] = .now }
         case .state(let state):
@@ -171,11 +201,41 @@ final class PhoneBoard: @unchecked Sendable {
         }
     }
 
-    /// The matching instance seen first, with the time it appeared.
-    func candidate() -> (DiscoveredPhone, ContinuousClock.Instant)? {
+    /// Next phone to try: TXT match first, then any other v1 instance (stale Bonjour ghosts often match TXT but
+    /// never resolve; the live advertiser may briefly lack `pr`/`pm` in the Mac's cache).
+    func nextAttempt(excluding: Set<String>) -> (DiscoveredPhone, ContinuousClock.Instant, Bool)? {
         lock.lock()
         defer { lock.unlock() }
-        return phones.compactMap { phone in firstSeen[phone.name].map { (phone, $0) } }.min { $0.1 < $1.1 }
+        if let match = Self.pick(matching, excluding: excluding, firstSeen: firstSeen, newest: false) {
+            return (match.0, match.1, false)
+        }
+        if let fallback = Self.pick(visible, excluding: excluding, firstSeen: firstSeen, newest: true) {
+            return (fallback.0, fallback.1, true)
+        }
+        return nil
+    }
+
+    private static func pick(_ phones: [DiscoveredPhone], excluding: Set<String>,
+                             firstSeen: [String: ContinuousClock.Instant],
+                             newest: Bool) -> (DiscoveredPhone, ContinuousClock.Instant)? {
+        let ranked = phones.filter { !excluding.contains($0.name) }
+            .compactMap { phone in firstSeen[phone.name].map { (phone, $0) } }
+        return newest ? ranked.max { $0.1 < $1.1 } : ranked.min { $0.1 < $1.1 }
+    }
+
+    /// Names of every protocol-v1 instance currently browsed.
+    var visibleNames: Set<String> {
+        lock.lock()
+        defer { lock.unlock() }
+        return Set(visible.map(\.name))
+    }
+
+    /// When the first matching or visible instance appeared (for the E3 unreachable grace).
+    func earliestSeen() -> ContinuousClock.Instant? {
+        lock.lock()
+        defer { lock.unlock() }
+        let names = Set(matching.map(\.name)).union(visible.map(\.name))
+        return firstSeen.filter { names.contains($0.key) }.values.min()
     }
 
     var denied: Bool {

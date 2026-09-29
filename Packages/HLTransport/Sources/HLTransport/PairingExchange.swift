@@ -63,7 +63,9 @@ public struct PairingExchange: Sendable {
 
     /// API 3 logic 3: `mac` → `device_id` matches `ik_sig_pub` → (LAN) `tls_sha256` is this connection's certificate.
     func checkOffer(_ offer: PairOfferData, clientNonce: Data, certificateSHA256: Data?) async throws -> AcceptedOffer {
-        guard let fields = OfferFields(offer) else { throw PairingRefusal.authFailed(.malformed) }
+        guard let fields = OfferFields(offer) else {
+            throw PairingRefusal.authFailed(.malformed)
+        }
         let secret: Data
         switch credential {
         case .qr(let pairingSecret, _):
@@ -80,7 +82,9 @@ public struct PairingExchange: Sendable {
                                   dhPublicKey: fields.dhKey, name: offer.name)
         guard let transcript = try? PairingAuthDerivation.offerTranscript(client: client, server: server,
                                                                           tlsSHA256: fields.tlsSHA256)
-        else { throw PairingRefusal.authFailed(.malformed) }
+        else {
+            throw PairingRefusal.authFailed(.malformed)
+        }
         let authKey = PairingAuthDerivation.authKey(secret: secret, clientNonce: clientNonce, serverNonce: fields.nonce)
         let expected = PairingAuthDerivation.offerMac(authKey: authKey, transcript: transcript)
         guard HMACSHA256.constantTimeEquals(expected, fields.mac) else {
@@ -96,7 +100,9 @@ public struct PairingExchange: Sendable {
         guard let prk = try? PairingKeyDerivation.prk(ownDHPrivateKey: identity.dhPrivateKey, peerDHPublicKey: fields.dhKey,
                                                       pairingSecret: secret, ownDeviceId: identity.deviceId,
                                                       peerDeviceId: offer.deviceId)
-        else { throw PairingRefusal.authFailed(.malformed) }
+        else {
+            throw PairingRefusal.authFailed(.malformed)
+        }
         return AcceptedOffer(offer: offer, fields: fields, authKey: authKey, transcript: transcript, prk: prk)
     }
 }

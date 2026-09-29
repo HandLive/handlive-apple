@@ -168,6 +168,36 @@ struct PairingSearchTests {
         }
     }
 
+    @Test("QR: a stale Bonjour instance that times out is skipped so the live match can pair")
+    func skipsUnreachableStaleInstance() async throws {
+        let phone = FakePairingPhone(window: .qr(secret: secret, clientDHKey: identity.dhPublicKey))
+        let connector = FakePairingConnector([.unreachable, .phone(phone)])
+        let discovery = FakeDiscovery()
+        let hint = PairingAuthDerivation.pairingRequestHint(clientDHPublicKey: identity.dhPublicKey)
+        let ghost = Self.instance("HL-ghost", txt: ["pr": hint])
+        let live = Self.instance("HL-live", txt: ["pr": hint])
+        discovery.publish(.results([ghost, live]))
+        let result = try await search(connector, discovery: discovery).run(
+            identity: identity, credential: .qr(secret: secret), offerTimeout: .seconds(5)) { _ in }
+        #expect(result.phoneDeviceId == phone.deviceId)
+        #expect(connector.targets == [.service(ghost.endpoint), .service(live.endpoint)])
+    }
+
+    @Test("QR: when only a ghost matches TXT, fall back to any protocol-v1 phone that answers /v1/pair")
+    func fallsBackToResolvablePhoneWithoutTxtMatch() async throws {
+        let phone = FakePairingPhone(window: .qr(secret: secret, clientDHKey: identity.dhPublicKey))
+        let connector = FakePairingConnector([.unreachable, .phone(phone)])
+        let discovery = FakeDiscovery()
+        let hint = PairingAuthDerivation.pairingRequestHint(clientDHPublicKey: identity.dhPublicKey)
+        let ghost = Self.instance("HL-ghost", txt: ["pr": hint])
+        let live = Self.instance("HL-live", txt: [:]) // Mac cache often lacks `pr` while the window is open
+        discovery.publish(.results([ghost, live]))
+        let result = try await search(connector, discovery: discovery).run(
+            identity: identity, credential: .qr(secret: secret), offerTimeout: .seconds(5)) { _ in }
+        #expect(result.phoneDeviceId == phone.deviceId)
+        #expect(connector.targets == [.service(ghost.endpoint), .service(live.endpoint)])
+    }
+
     @Test("E3: the window is visible but unreachable for the grace period; local network denied is reported")
     func unreachableAndDenied() async throws {
         let discovery = FakeDiscovery()

@@ -33,12 +33,14 @@ extension IOSAppModel: PairingHost {
         guard let store else { throw IOSPairingError.notReady }
         let account = SecretAccount.pairKey(pairId: result.pairId)
         try secrets.save(result.prk, account: account)
-        let record = PairedDeviceRecord(
+        var record = PairedDeviceRecord(
             pairId: result.pairId, peerDeviceId: result.phoneDeviceId, peerName: result.phoneName,
             peerModel: result.phoneModel, peerSigningPublicKey: result.phoneSigningPublicKey,
             peerKeyAgreementPublicKey: result.phoneDHPublicKey, peerCertificateSHA256: result.certificateSHA256,
             attestation: result.attestation, signatureSelf: result.signatureSelf, signaturePeer: result.signaturePeer,
             createdAt: result.createdAt)
+        record.lastHost = result.lanHost
+        record.lastPort = result.lanPort
         do {
             try store.upsert(record)
         } catch {
