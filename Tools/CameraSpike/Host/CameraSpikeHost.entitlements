@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Restricted: needs a provisioning profile with the System Extension capability (CAM-01 special requirements). -->
+	<key>com.apple.developer.system-extension.install</key>
+	<true/>
+	<!-- Hardened runtime (required for notarization): camera and microphone access for the self-checks. -->
+	<key>com.apple.security.device.camera</key>
+	<true/>
+	<key>com.apple.security.device.audio-input</key>
+	<true/>
+</dict>
+</plist>

@@ -1,0 +1,6 @@
+#!/bin/sh
+# postinstall of HandLiveSpikeMic.pkg, run as root by Installer (C9): restart Core Audio so that it loads the
+# plug-in just copied to /Library/Audio/Plug-Ins/HAL. launchd starts coreaudiod again by itself; sound on the Mac
+# stops for about a second.
+/usr/bin/killall coreaudiod 2>/dev/null || true
+exit 0
