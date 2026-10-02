@@ -110,10 +110,12 @@ struct PhoneDetailsView: View {
         device.peerCapability?.features.call?.enabled == true
     }
 
-    /// A permission of a later feature (camera…), neither SMS, contacts nor calls.
+    /// A permission of a later feature (camera…), neither SMS, contacts nor calls. Notification access serves calls from
+    /// other apps, which only the Mac shows, so it is no problem here.
     static func hasOwnPhase(_ permission: String, callsOnPhone: Bool = false) -> Bool {
         !SmsPermissions.isSms(permission) && !SmsPermissions.matches(permission, SmsPermissions.contacts)
             && !CallPermissions.isCall(permission, callsOnPhone: callsOnPhone)
+            && !CallPermissions.matches(permission, CallPermissions.notificationListener)
     }
 
     private func reason(_ text: String) -> some View {

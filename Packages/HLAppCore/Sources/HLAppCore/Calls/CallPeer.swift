@@ -39,6 +39,9 @@ public enum CallPermissions {
     public static let contacts = "READ_CONTACTS"
     /// `ANSWER_PHONE_CALLS`: answer, decline and end (CALL-02 E3).
     public static let answer = "ANSWER_PHONE_CALLS"
+    /// Notification access, the special access the phone reads other apps' call notifications with (CALL-05): without
+    /// it only calls from other apps are off.
+    public static let notificationListener = "NOTIFICATION_LISTENER"
 
     /// Whether `permission` names `name`, in either form.
     public static func matches(_ permission: String, _ name: String) -> Bool {

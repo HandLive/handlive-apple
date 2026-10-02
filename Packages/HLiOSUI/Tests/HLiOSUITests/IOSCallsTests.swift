@@ -191,4 +191,21 @@ struct IOSCallsTests {
         #expect(model.callsFeatureReason == L10n.Pairing.reasonOffOnDevice(deviceName: model.device.name))
         #expect(model.device.capability(settings: model.settings).features.call?.enabled == false)
     }
+
+    @Test("Calls from other apps are for the Mac: iPhone and iPad say app_calls false and ignore an app_call message")
+    func appCallsAreMacOnly() throws {
+        let stub = StubIOSCallNotifications()
+        let model = try ready(stub)
+        #expect(model.device.capability(settings: model.settings).features.call?.appCalls == false)
+        let data = AppCallData(callId: IOSCallSamples.callId, app: AppCallApp(package: "org.telegram.messenger",
+                                                                              label: "Telegram"),
+                               caller: "Nguyễn Văn A", state: .ringing,
+                               controls: AppCallControls(answer: true, decline: true), startedAt: 1_727_150_400_123)
+        let envelope = IncomingEnvelope(id: HLUUID.v7(), type: .callEvent, ts: 100,
+                                        body: .json(Payload(op: CallEventOp.appCall.rawValue,
+                                                            data: try HLJSON.convert(from: data))))
+        model.calls.linkEvent(.message(envelope))
+        #expect(model.calls.controller.call == nil && model.calls.banner == nil)
+        #expect(stub.removedIncoming.isEmpty && stub.removedAll == 0)
+    }
 }

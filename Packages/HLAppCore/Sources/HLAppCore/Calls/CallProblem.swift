@@ -41,4 +41,15 @@ public enum CallProblem: Equatable, Sendable {
         default: self = .commandNotSent
         }
     }
+
+    /// The problem an error `ack` of `call_event/action` names for an app call (CALL-05): the call is not there
+    /// (`CALL_NOT_FOUND`), the feature is off on the phone (`FEATURE_DISABLED`), anything else did not go through.
+    /// `CALL_APP_ACTION_UNAVAILABLE` is not a problem line: the control is withdrawn until the next `app_call`.
+    public init(appCallError error: AckError) {
+        switch error.code {
+        case .callNotFound: self = .callEnded
+        case .featureDisabled: self = .featureOffOnPhone
+        default: self = .commandNotSent
+        }
+    }
 }

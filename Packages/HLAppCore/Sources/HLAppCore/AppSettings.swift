@@ -19,6 +19,7 @@ public enum SettingsKey: String, CaseIterable, Sendable {
     case smsPeerCanSend = "sms.peer_can_send"
     case callNotify = "call.notify"
     case callRingtone = "call.ringtone"
+    case callAppCalls = "call.app_calls"
     case callQuickReplies = "call.quick_replies"
     case callAudioAllowOpusFallback = "call_audio.allow_opus_fallback"
     case callAudioPhoneBluetoothAddress = "call_audio.phone_bt_address"
@@ -42,7 +43,8 @@ public final class AppSettings: @unchecked Sendable {
         SettingsKey.clipSendImages.rawValue: true, SettingsKey.clipBlockSensitive.rawValue: true,
         SettingsKey.clipAutoClearSeconds.rawValue: 60, SettingsKey.smsNotify.rawValue: true,
         SettingsKey.smsPreview.rawValue: true, SettingsKey.callNotify.rawValue: true,
-        SettingsKey.callRingtone.rawValue: true, SettingsKey.featureCallAudio.rawValue: false,
+        SettingsKey.callRingtone.rawValue: true, SettingsKey.callAppCalls.rawValue: true,
+        SettingsKey.featureCallAudio.rawValue: false,
         SettingsKey.callAudioAllowOpusFallback.rawValue: true, SettingsKey.callAudioPhoneBluetoothAddress.rawValue: "",
         SettingsKey.featureCamera.rawValue: false, SettingsKey.cameraDefaultCamera.rawValue: "front",
         SettingsKey.cameraDefaultQuality.rawValue: "auto", SettingsKey.cameraUsbBoost.rawValue: true,
@@ -130,6 +132,13 @@ public final class AppSettings: @unchecked Sendable {
     public var callRingtone: Bool {
         get { bool(.callRingtone) }
         set { set(newValue, .callRingtone) }
+    }
+
+    /// `call.app_calls`: calls from other apps on the phone (CALL-05). The Mac advertises it in its capability; iPhone and
+    /// iPad never show them.
+    public var callAppCalls: Bool {
+        get { bool(.callAppCalls) }
+        set { set(newValue, .callAppCalls) }
     }
 
     /// `call.quick_replies` (CALL-02 field 8, Mac): at most 6 templates of 160 characters. `nil` until the first use,

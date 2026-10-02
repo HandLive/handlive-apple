@@ -54,7 +54,9 @@ public struct LocalDevice: Sendable, Equatable {
 
     /// Capability of this device (0.7.2) from its settings: what the app implements — clipboard, SMS, calls and the
     /// relay switch; absent features count as off, so the phone sends nothing else. iPhone and iPad add `sms.notify` and
-    /// `call.notify`, which decide whether the phone pushes new messages and calls (SET-02 fields 8 and 11).
+    /// `call.notify`, which decide whether the phone pushes new messages and calls (SET-02 fields 8 and 11). The Mac
+    /// reports `features.call.app_calls` = `feature.call` ∧ `call.app_calls`; iPhone and iPad always say `false`
+    /// (CALL-05, 0.7.2).
     public func capability(settings: AppSettings) -> CapabilityData {
         let mimes = settings.sendImages ? ClipboardLimits.mimes : [ClipboardLimits.textMime]
         let clipboard = ClipboardFeature(enabled: settings.clipboardEnabled, autoSend: true,
@@ -62,7 +64,8 @@ public struct LocalDevice: Sendable, Equatable {
                                          maxImageBytes: ClipboardLimits.maxImageBytes, mimes: mimes)
         let mobile = platform == .ios || platform == .ipados
         let sms = SmsFeature(enabled: settings.smsEnabled, notify: mobile ? settings.smsNotify : nil)
-        let call = CallFeature(enabled: settings.callsEnabled, notify: mobile ? settings.callNotify : nil)
+        let call = CallFeature(enabled: settings.callsEnabled, notify: mobile ? settings.callNotify : nil,
+                               appCalls: !mobile && settings.callsEnabled && settings.callAppCalls)
         return CapabilityData(appVersion: appVersion, platform: platform, osVersion: osVersion, model: model,
                               features: Features(clipboard: clipboard, sms: sms, call: call,
                                                  relay: RelayFeature(enabled: settings.relayEnabled)))

@@ -110,14 +110,43 @@ struct LocalCapabilityTests {
     func calls() {
         let settings = AppSettings(defaults: freshDefaults())
         let mac = LocalDevice(appVersion: "1.0.0 (100)", osVersion: "15.6", model: "Mac15,3", name: "Mac", platform: .macos)
-        #expect(mac.capability(settings: settings).features.call == CallFeature(enabled: true))
+        #expect(mac.capability(settings: settings).features.call == CallFeature(enabled: true, appCalls: true))
         let phone = LocalDevice(appVersion: "1.0.0 (100)", osVersion: "18.6", model: "iPhone16,1", name: "iPhone",
                                 platform: .ios)
-        #expect(phone.capability(settings: settings).features.call == CallFeature(enabled: true, notify: true))
+        #expect(phone.capability(settings: settings).features.call
+            == CallFeature(enabled: true, notify: true, appCalls: false))
         settings.callNotify = false
         settings.callsEnabled = false
-        #expect(phone.capability(settings: settings).features.call == CallFeature(enabled: false, notify: false))
+        #expect(phone.capability(settings: settings).features.call
+            == CallFeature(enabled: false, notify: false, appCalls: false))
         #expect(settings.callRingtone && settings.quickReplies == nil)
+    }
+
+    @Test("Calls from other apps: call.app_calls drives the Mac's app_calls, on by default; iPhone and iPad say false")
+    func appCalls() {
+        let settings = AppSettings(defaults: freshDefaults())
+        let mac = LocalDevice(appVersion: "1.0.0 (100)", osVersion: "15.6", model: "Mac15,3", name: "Mac", platform: .macos)
+        #expect(settings.callAppCalls && SettingsKey.callAppCalls.rawValue == "call.app_calls")
+        #expect(mac.capability(settings: settings).features.call?.appCalls == true)
+        settings.callAppCalls = false
+        #expect(mac.capability(settings: settings).features.call?.appCalls == false)
+        // 0.7.2: the Mac says `feature.call` ∧ `call.app_calls`, so the Calls switch off turns app calls off too.
+        settings.callAppCalls = true
+        settings.callsEnabled = false
+        #expect(mac.capability(settings: settings).features.call == CallFeature(enabled: false, appCalls: false))
+        settings.callAppCalls = false
+        #expect(mac.capability(settings: settings).features.call?.appCalls == false)
+        settings.callsEnabled = true
+        settings.callAppCalls = true
+        #expect(mac.capability(settings: settings).features.call == CallFeature(enabled: true, appCalls: true))
+        for platform in [CapabilityData.Platform.ios, .ipados] {
+            let mobile = LocalDevice(appVersion: "1.0.0 (100)", osVersion: "18.6", model: "iPad14,1", name: "iPad",
+                                     platform: platform)
+            settings.callAppCalls = true // whatever the stored value, a mobile device cannot show them
+            #expect(mobile.capability(settings: settings).features.call?.appCalls == false)
+        }
+        settings.removeAll()
+        #expect(settings.callAppCalls) // Delete All HandLive Data: back to the default
     }
 
     @Test("sms.peer_can_send keeps each pair's copy for the extension; Delete All removes it")

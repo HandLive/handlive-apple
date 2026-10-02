@@ -45,9 +45,7 @@ extension CallController {
             finish(callId: callId, problem: .commandNotSent)
             return .failed(.commandNotSent)
         }
-        var fields = [("call", callId), ("env", ack.re), ("peer", benchPeer), ("ok", ack.ok ? "true" : "false")]
-        if let code = ack.error?.code { fields.append(("code", code.rawValue)) }
-        BenchLog.event("call_action_ack_received", fields: fields)
+        CallActionSender.logAck(ack, callId: callId, benchPeer: benchPeer)
         return ack.ok ? accepted(callId: callId) : refused(ack, command: command, callId: callId)
     }
 
@@ -80,9 +78,7 @@ extension CallController {
         guard let ack = await send(CallActionRequest(callId: callId, action: .reject), within: deadline) else {
             return .failed(.commandNotSent)
         }
-        var fields = [("call", callId), ("env", ack.re), ("peer", benchPeer), ("ok", ack.ok ? "true" : "false")]
-        if let code = ack.error?.code { fields.append(("code", code.rawValue)) }
-        BenchLog.event("call_action_ack_received", fields: fields)
+        CallActionSender.logAck(ack, callId: callId, benchPeer: benchPeer)
         guard !ack.ok else { return .accepted }
         guard let error = ack.error else { return .failed(.commandNotSent) }
         let problem = CallProblem(error: error, command: .reject(reply: nil))
@@ -92,29 +88,7 @@ extension CallController {
 
     /// One `ack` wait of `window` from the click; the same envelope `id` whenever a session is there.
     private func send(_ request: CallActionRequest, within window: Duration) async -> Ack? {
-        let id = HLUUID.v7()
-        let deadline = ContinuousClock.now.advanced(by: window)
-        var attempt = 0
-        while true {
-            let remaining = ContinuousClock.now.duration(to: deadline)
-            guard remaining > .zero else { return nil }
-            guard let peer else {
-                try? await Task.sleep(for: min(.milliseconds(100), remaining))
-                continue
-            }
-            attempt += 1
-            BenchLog.event("call_action_sent", ["call": request.callId, "env": id, "peer": benchPeer,
-                                                "action": request.action.rawValue,
-                                                "via": peer.route == .lan ? "lan" : "relay", "attempt": String(attempt)])
-            do {
-                return try await peer.request(.action, data: request, id: id, timeout: remaining)
-            } catch SessionError.timedOut {
-                return nil
-            } catch {
-                // The session ended while waiting: the same `id` goes again once a session is back (CALL-02 step 4).
-                try? await Task.sleep(for: min(.milliseconds(100), remaining))
-            }
-        }
+        await CallActionSender.send(request, via: { [weak self] in self?.peer }, benchPeer: benchPeer, within: window)
     }
 
     /// After a successful `ack`: at most `stateWait` for the `state` that carries the result, then the buttons unlock
