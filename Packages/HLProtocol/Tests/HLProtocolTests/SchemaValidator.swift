@@ -2,14 +2,14 @@ import Foundation
 
 /// Bộ kiểm JSON Schema draft 2020-12 rút gọn — chỉ đúng các từ khóa `shared/schemas/` đang dùng:
 /// `$ref` (tương đối giữa file + JSON pointer), `type`, `enum`, `const`, `required`, `properties`,
-/// `additionalProperties`, `maxProperties`, `items`, `maxItems`, `uniqueItems`, `minimum`, `maximum`, `minLength`,
+/// `additionalProperties`, `maxProperties`, `items`, `maxItems`, `uniqueItems`, `minimum`, `maximum`, `minLength`, `maxLength`,
 /// `pattern`, `allOf`, `anyOf`, `oneOf`, `not`, `if`/`then`/`else`. Từ khóa lạ → báo lỗi để không bỏ sót ràng buộc.
 struct SchemaValidator {
     private static let annotations: Set<String> = ["$schema", "$id", "$defs", "title", "description"]
     private static let supported: Set<String> = [
         "$ref", "type", "enum", "const", "required", "properties", "additionalProperties", "maxProperties", "items",
-        "maxItems", "uniqueItems", "minimum", "maximum", "minLength", "pattern", "allOf", "anyOf", "oneOf", "not", "if",
-        "then", "else"
+        "maxItems", "uniqueItems", "minimum", "maximum", "minLength", "maxLength", "pattern", "allOf", "anyOf", "oneOf",
+        "not", "if", "then", "else"
     ]
 
     private let documents: [String: Any]
@@ -82,6 +82,9 @@ struct SchemaValidator {
         if let text = value as? String {
             if let min = schema["minLength"] as? Int, text.unicodeScalars.count < min {
                 errors.append("\(path): ngắn hơn minLength")
+            }
+            if let max = schema["maxLength"] as? Int, text.unicodeScalars.count > max {
+                errors.append("\(path): dài hơn maxLength")
             }
             if let pattern = schema["pattern"] as? String,
                text.range(of: pattern, options: .regularExpression) == nil {

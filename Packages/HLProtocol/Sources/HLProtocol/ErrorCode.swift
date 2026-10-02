@@ -34,6 +34,7 @@ public enum ErrorCode: String, Codable, CaseIterable, Sendable, LenientStringEnu
     case smsCursorInvalid = "SMS_CURSOR_INVALID"
     case callNotFound = "CALL_NOT_FOUND"
     case callActionNotAllowed = "CALL_ACTION_NOT_ALLOWED"
+    case callAppActionUnavailable = "CALL_APP_ACTION_UNAVAILABLE"
     case callRouteFailed = "CALL_ROUTE_FAILED"
     case callBtNotConnected = "CALL_BT_NOT_CONNECTED"
     case callConsentRequired = "CALL_CONSENT_REQUIRED"

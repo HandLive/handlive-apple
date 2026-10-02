@@ -95,15 +95,18 @@ public struct CallFeature: Codable, Equatable, Sendable {
     public var canEnd: Bool?
     public var callerId: Bool?
     public var notify: Bool?
+    /// Calls from other apps (CALL-05): in effect for a session when both sides report `true`; iPhone and iPad `false`.
+    public var appCalls: Bool?
 
     /// `can_answer`, `can_end` and `caller_id` come only from the phone; `notify` only from iPhone and iPad.
     public init(enabled: Bool, canAnswer: Bool? = nil, canEnd: Bool? = nil, callerId: Bool? = nil,
-                notify: Bool? = nil) {
+                notify: Bool? = nil, appCalls: Bool? = nil) {
         self.enabled = enabled
         self.canAnswer = canAnswer
         self.canEnd = canEnd
         self.callerId = callerId
         self.notify = notify
+        self.appCalls = appCalls
     }
 
     enum CodingKeys: String, CodingKey {
@@ -112,6 +115,7 @@ public struct CallFeature: Codable, Equatable, Sendable {
         case canEnd = "can_end"
         case callerId = "caller_id"
         case notify
+        case appCalls = "app_calls"
     }
 }
 

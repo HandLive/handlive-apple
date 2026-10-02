@@ -1,9 +1,10 @@
 // `data` of the `call_event` ops `state` and `action` (06-call-control.md: CALL-01 API 1, CALL-02 API 1,
-// CALL-03 API 1). The call log ops are in CallLogMessages.swift.
+// CALL-03 API 1). The call log ops are in CallLogMessages.swift, the op `app_call` in AppCallMessages.swift.
 
 /// `op` names of `type = call_event` (0.7.1).
 public enum CallEventOp: String, Sendable {
     case state, action
+    case appCall = "app_call"
     case hfpStatus = "hfp_status"
     case logSync = "log_sync"
     case logNew = "log_new"
