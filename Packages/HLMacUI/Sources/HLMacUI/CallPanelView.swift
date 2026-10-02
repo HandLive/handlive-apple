@@ -24,6 +24,8 @@ struct CallPanelView: View {
             .padding(HLSpacing.space16)
             .frame(width: CallPanelController.width, alignment: .leading)
             .fixedSize(horizontal: false, vertical: true)
+        } else if let appCall = model.appCall {
+            AppCallPanelView(model: model, call: appCall) // a call of another app (CALL-05)
         }
     }
 

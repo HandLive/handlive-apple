@@ -182,10 +182,12 @@ struct MissingPermissionsSection: View {
         CallPermissions.isCall(permission, callsOnPhone: callsOnPhone)
     }
 
-    /// A permission of a later feature (camera…), neither SMS, contacts nor calls.
+    /// A permission of a later feature (camera…), neither SMS, contacts nor calls. Notification access belongs to calls
+    /// from other apps: its reason is on that row of Settings › Calls, not here.
     static func hasOwnPhase(_ permission: String, callsOnPhone: Bool = false) -> Bool {
         !SmsPermissions.isSms(permission) && !SmsPermissions.matches(permission, SmsPermissions.contacts)
             && !isCall(permission, callsOnPhone: callsOnPhone)
+            && !CallPermissions.matches(permission, CallPermissions.notificationListener)
     }
 
     private func reason(_ text: String) -> some View {

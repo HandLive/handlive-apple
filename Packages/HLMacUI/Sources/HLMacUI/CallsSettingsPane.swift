@@ -6,7 +6,9 @@ import SwiftUI
 
 /// Settings › Calls (2-patterns/04-cai-dat.md; SET-02 fields 10–12 and 33, CALL-04 field 11): the Calls switch with
 /// its reason when calls can't work, the Call Notifications and Ring on Mac checkboxes (with the Focus hint), when the
-/// call log last synced, and the Quick Replies list. Take Calls on Mac joins with Phase 4.
+/// call log last synced, and the Quick Replies list. Calls from Other Apps (CALL-05, SET-02 field 38) is a checkbox under
+/// the Calls switch, with its footer and the phone's reason when the phone cannot send them. Take Calls on Mac joins with
+/// Phase 4.
 struct CallsSettingsPane: View {
     @ObservedObject var model: AppModel
     @ObservedObject var calls: MacCalls
@@ -26,9 +28,10 @@ struct CallsSettingsPane: View {
                                                                   set: { calls.setCallNotify($0) }))
                     Toggle(L10n.Settings.callRingtone, isOn: Binding(get: { calls.callRingtone },
                                                                     set: { calls.setCallRingtone($0) }))
-                    if calls.callRingtone, !calls.focusAuthorized {
+                    if calls.callRingtone, calls.focusAvailable, !calls.focusAuthorized {
                         GuidanceRow(text: L10n.Settings.focusPermissionHint, pane: .focus)
                     }
+                    appCallsOption
                 }
                 .toggleStyle(.checkbox)
                 .padding(.leading, HLSpacing.space20)
@@ -41,6 +44,20 @@ struct CallsSettingsPane: View {
         }
         .formStyle(.grouped)
         .onAppear { calls.refreshFocus() }
+    }
+
+    /// "Calls from Other Apps": the checkbox, what it does, and why it does nothing when the phone lacks Notification
+    /// access or turned it off.
+    @ViewBuilder
+    private var appCallsOption: some View {
+        Toggle(L10n.Settings.callAppCalls, isOn: Binding(get: { calls.callAppCalls },
+                                                        set: { calls.setCallAppCalls($0) }))
+        Text(L10n.Settings.callAppCallsFooter).hlTextStyle(.macFootnote).foregroundStyle(.secondary)
+        if let reason = model.appCallsFeatureReason {
+            Label(reason, systemImage: "info.circle")
+                .hlTextStyle(.macFootnote)
+                .foregroundStyle(HLColorToken.textOrange.color)
+        }
     }
 }
 

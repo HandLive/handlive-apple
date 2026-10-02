@@ -200,7 +200,7 @@
       }
     },
     "call.answer" : {
-      "comment" : "Round Answer button of the Mac call panel (call-accept-fill, on the right, key Return; also its accessibility label), the HL_CALL_ANSWER action of the Mac incoming-call notification and the Answer item of the ringing call in the menu bar menu (also after Ignore); only when controls.answer = true (CALL-01 fields 6, 15, CALL-02 field 1)",
+      "comment" : "Round Answer button of the Mac call panel (call-accept-fill, on the right, key Return; also its accessibility label), the HL_CALL_ANSWER action of the Mac incoming-call notification and the Answer item of the ringing call in the menu bar menu (also after Ignore); only when controls.answer = true (CALL-01 fields 6, 15, CALL-02 field 1); also the Answer button of the app-call panel when controls.answer = true (CALL-05 field 3)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -236,7 +236,7 @@
       }
     },
     "call.answer_on_phone" : {
-      "comment" : "Mac call panel: takes the place of call.answer, next to call.answer_on_mac, when call audio is in effect; answers with the audio staying on the phone (CALL-01 field 6, CALL-02 field 2)",
+      "comment" : "Mac call panel: takes the place of call.answer, next to call.answer_on_mac, when call audio is in effect; answers with the audio staying on the phone (CALL-01 field 6, CALL-02 field 2); in the app-call panel it replaces call.answer while call audio is in effect, without call.answer_on_mac, since an app call's audio stays on the phone (CALL-05 field 3)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -289,6 +289,42 @@
         }
       }
     },
+    "call.app_incoming_title" : {
+      "comment" : "Title of the Mac call panel, incoming and in-call, for a call from another app on the phone; {app_name} = app.label of call_event/app_call, the app's name as the phone reports it (never translated), e.g. “Telegram Call” (CALL-05 field 1)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ Call"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuộc gọi %1$@"
+          }
+        }
+      }
+    },
+    "call.app_tap_to_answer_hint" : {
+      "comment" : "Line of the Mac app-call panel after Answer succeeded with answer_mode = tap (no background-start exemption on the phone): it replaces the Answer button until the call state changes; Decline stays (CALL-05 field 6, E7)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap the notification on your phone to answer."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chạm vào thông báo trên điện thoại để nghe."
+          }
+        }
+      }
+    },
     "call.audio_on_mac" : {
       "comment" : "In-call Mac call panel: the call audio plays on this Mac (audio_on = mac) (CALL-03 field 4)",
       "extractionState" : "manual",
@@ -308,7 +344,7 @@
       }
     },
     "call.audio_on_phone" : {
-      "comment" : "In-call Mac call panel: the call audio plays on the phone (audio_on = phone) (CALL-03 field 4)",
+      "comment" : "In-call Mac call panel: the call audio plays on the phone (audio_on = phone) (CALL-03 field 4); always shown in the in-call app-call panel, whose audio stays on the phone (CALL-05 field 8)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -398,7 +434,7 @@
       }
     },
     "call.decline" : {
-      "comment" : "Round Decline button of the Mac call panel (call-decline-fill, on the left, key ⌘⌫; also its accessibility label) and of the iPhone/iPad banner, the HL_CALL_REJECT action of the incoming-call notification (destructive; iOS asks to unlock first) and the Decline item of the ringing call in the Mac menu bar menu; only when controls.reject = true (CALL-01 fields 7, 15, API 6, CALL-02 fields 3, 4)",
+      "comment" : "Round Decline button of the Mac call panel (call-decline-fill, on the left, key ⌘⌫; also its accessibility label) and of the iPhone/iPad banner, the HL_CALL_REJECT action of the incoming-call notification (destructive; iOS asks to unlock first) and the Decline item of the ringing call in the Mac menu bar menu; only when controls.reject = true (CALL-01 fields 7, 15, API 6, CALL-02 fields 3, 4); also the Decline button of the app-call panel when controls.decline = true (CALL-05 field 4)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -524,7 +560,7 @@
       }
     },
     "call.end" : {
-      "comment" : "Red round End button of the in-call Mac call panel (phone.down.fill; also its accessibility label); shown when waiting = false and controls.end = true or the Mac has a Bluetooth HFP link (CALL-03 field 5)",
+      "comment" : "Red round End button of the in-call Mac call panel (phone.down.fill; also its accessibility label); shown when waiting = false and controls.end = true or the Mac has a Bluetooth HFP link (CALL-03 field 5); also the End button of the in-call app-call panel when controls.end = true (CALL-05 field 9)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -614,7 +650,7 @@
       }
     },
     "call.ignore" : {
-      "comment" : "Text button of the ringing Mac call panel (key Esc): closes the panel and silences the ringtone on the Mac only; the call keeps ringing on the phone and stays in the menu bar menu (CALL-01 field 9)",
+      "comment" : "Text button of the ringing Mac call panel (key Esc): closes the panel and silences the ringtone on the Mac only; the call keeps ringing on the phone and stays in the menu bar menu (CALL-01 field 9); also in the incoming app-call panel (CALL-05 field 5)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -1172,7 +1208,7 @@
       }
     },
     "call.unknown_caller" : {
-      "comment" : "Shown instead of the caller's number when it is unknown (presentation = unknown, for example READ_CALL_LOG missing on the phone, then with call.caller_id_permission_hint), for a waiting caller without number and name (CALL-01 fields 3, 5, E2), and as the missed-call notification title without the call log, flow A (CALL-04 field 8, API 4)",
+      "comment" : "Shown instead of the caller's number when it is unknown (presentation = unknown, for example READ_CALL_LOG missing on the phone, then with call.caller_id_permission_hint), for a waiting caller without number and name (CALL-01 fields 3, 5, E2), and as the missed-call notification title without the call log, flow A (CALL-04 field 8, API 4); also the caller line of the app-call panel when caller is null (CALL-05 field 2)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -3525,6 +3561,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chặn nội dung nhạy cảm"
+          }
+        }
+      }
+    },
+    "settings.call_app_calls" : {
+      "comment" : "Option for call.app_calls under Calls (SET-02 field 38, CALL-05 field 13): switch on the Android Settings tab, checkbox in the Mac Calls pane shown dimmed while Calls is off; also the Android feature card name (SET-01 field 10) and the name of the Android notification channel hl_app_call of the tap-to-answer notification (CALL-05 API 5)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Calls from Other Apps"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuộc gọi từ ứng dụng khác"
+          }
+        }
+      }
+    },
+    "settings.call_app_calls_footer" : {
+      "comment" : "Footer under Calls from Other Apps (SET-02 field 38, CALL-05 field 13)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show calls from apps like Telegram on your Mac. Audio stays on your phone."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hiện cuộc gọi từ các ứng dụng như Telegram trên Mac. Âm thanh vẫn ở trên điện thoại."
           }
         }
       }

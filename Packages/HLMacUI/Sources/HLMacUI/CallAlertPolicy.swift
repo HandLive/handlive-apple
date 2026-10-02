@@ -18,7 +18,7 @@ public struct CallAlert: Equatable, Sendable {
     ///   - notify: `call.notify` (field 13); off → only the menu bar menu (E3).
     ///   - ringtone: `call.ringtone` (field 14).
     ///   - focus: the Focus status: on → no panel, no ringing, a time-sensitive notification (E4); not readable → the
-    ///     panel without ringing and a passive notification, as with Focus off.
+    ///     panel without ringing and a passive notification, as with Focus off; unavailable to this build → as Focus off.
     ///   - answeredHere: the call was answered from this Mac (its notification during a Focus): the in-call panel
     ///     opens anyway (CALL-01 API 7 "Response").
     public static func of(_ call: ActiveCall?, notify: Bool, ringtone: Bool, focus: FocusState,
@@ -27,11 +27,28 @@ public struct CallAlert: Equatable, Sendable {
         switch call.phase {
         case .ringing:
             if focus == .on { return CallAlert(panel: false, ring: false, notification: .timeSensitive) }
-            let ring = ringtone && focus == .off && !call.ignored
+            let ring = ringtone && focus.allowsRinging && !call.ignored
             return CallAlert(panel: !call.ignored, ring: ring, notification: .passive)
         case .waiting, .inCall, .ended:
             // The in-call panel follows the call; a Focus keeps it away unless the call was answered here.
             return CallAlert(panel: (focus != .on || answeredHere) && !call.ignored, ring: false, notification: nil)
+        }
+    }
+
+    /// How the Mac alerts a call of another app (CALL-05), like a cellular call without the notification: the panel and
+    /// the ringtone follow `call.notify`, `call.ringtone` and the Focus status; a Focus on hides the call (it stays on the
+    /// phone), and an answered call keeps its in-call panel only when answered from this Mac.
+    public static func of(_ call: AppCall?, notify: Bool, ringtone: Bool, focus: FocusState,
+                          answeredHere: Bool = false) -> CallAlert {
+        guard let call, notify, !call.ignored else { return .none }
+        switch call.phase {
+        case .ringing, .waiting:
+            guard focus != .on else { return .none }
+            return CallAlert(panel: true, ring: ringtone && focus.allowsRinging, notification: nil)
+        case .inCall:
+            return CallAlert(panel: focus != .on || answeredHere, ring: false, notification: nil)
+        case .ended:
+            return .none // the panel closes when the call ends
         }
     }
 
@@ -43,4 +60,10 @@ public struct CallAlert: Equatable, Sendable {
         case .active?, nil: "none"
         }
     }
+}
+
+extension FocusState {
+    /// The Mac's own ringtone may play: no Focus is on, or this build cannot read the Focus status at all (CALL-01 API 5
+    /// logic 3).
+    var allowsRinging: Bool { self == .off || self == .unavailable }
 }

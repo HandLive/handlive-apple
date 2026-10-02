@@ -38,4 +38,16 @@ extension AppModel {
         }
         return nil
     }
+
+    /// Why calls from other apps do not reach this Mac while they are on here (CALL-05), or `nil`: the phone lacks
+    /// Notification access, or turned them off. Cellular calls are unaffected, so nothing is said while calls are off.
+    public var appCallsFeatureReason: String? {
+        guard let device = pairedDevice, calls.callsEnabled, calls.callAppCalls,
+              let capability = device.peerCapability, capability.features.call?.enabled == true,
+              capability.features.call?.appCalls == false else { return nil }
+        if CallPermissions.missing(CallPermissions.notificationListener, in: capability.permissionsMissing ?? []) {
+            return L10n.Pairing.reasonMissingPermission
+        }
+        return L10n.Pairing.reasonOffOnDevice(deviceName: device.peerName)
+    }
 }

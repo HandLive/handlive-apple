@@ -3,6 +3,7 @@ import HLAppCore
 import HLCallNotifications
 import HLProtocol
 import HLTransport
+import OSLog
 @testable import HLMacUI
 
 /// The Mac's call surfaces recorded instead of shown: panel, ringtone, Focus and notifications.
@@ -13,9 +14,10 @@ final class CallStubs {
     let focus = StubFocus()
     let notifier = StubCallNotifier()
 
-    func make(settings: AppSettings, controller: CallController = CallController()) -> MacCalls {
+    func make(settings: AppSettings, controller: CallController = CallController(),
+              appCalls: AppCallController = AppCallController()) -> MacCalls {
         MacCalls(settings: settings, presenter: presenter, ringtone: ringtone, focus: focus, notifier: notifier,
-                 controller: controller)
+                 controller: controller, appCalls: appCalls)
     }
 }
 
@@ -23,17 +25,20 @@ final class CallStubs {
 final class StubCallPresenter: CallPanelPresenting {
     private(set) var isShown = false
     private(set) var shownCallId: String?
+    private(set) var shownContent: CallPanelContent?
     private(set) var announcements: [String] = []
 
-    func show(callId: String, announce: String?) {
+    func show(callId: String, content: CallPanelContent, announce: String?) {
         isShown = true
         shownCallId = callId
+        shownContent = content
         if let announce { announcements.append(announce) }
     }
 
     func hide() {
         isShown = false
         shownCallId = nil
+        shownContent = nil
     }
 }
 
@@ -56,6 +61,7 @@ final class StubRingtone: RingtonePlaying {
 final class StubFocus: FocusReading {
     var state = FocusState.off
     var isAuthorized = true
+    var isAvailable = true
     private(set) var requests = 0
 
     func requestAuthorization() async -> Bool {
@@ -149,10 +155,50 @@ enum MacCallSamples {
                       endedAt: 1_727_150_425_000, endReason: .missed, controls: .none)
     }
 
-    static func capability(callLog: Bool = true) -> CapabilityData {
+    static func capability(callLog: Bool = true, appCalls: Bool? = true, missing: [String]? = nil) -> CapabilityData {
         CapabilityData(appVersion: "1.0.0 (100)", platform: .android, osVersion: "15", model: "Pixel 8",
                        features: Features(sms: SmsFeature(enabled: true, canSend: true),
                                           call: CallFeature(enabled: true, canAnswer: true, canEnd: true,
-                                                            callerId: callLog)))
+                                                            callerId: callLog, appCalls: appCalls)),
+                       permissionsMissing: missing)
+    }
+}
+
+/// App calls (CALL-05) as the phone sends them.
+enum MacAppCallSamples {
+    static let callId = "0192f3f0-aaaa-7c2d-8e3f-4a5b6c7d8e90"
+    static let startedAt: Int64 = 1_727_150_400_123
+    static let telegram = AppCallApp(package: "org.telegram.messenger", label: "Telegram")
+
+    static func ringing(caller: String? = "Nguyễn Văn A", mode: AppCallAnswerMode = .direct,
+                        controls: AppCallControls = AppCallControls(answer: true, decline: true)) -> AppCallData {
+        AppCallData(callId: callId, app: telegram, caller: caller, state: .ringing, controls: controls,
+                    answerMode: mode, startedAt: startedAt)
+    }
+
+    static func ongoing(controls: AppCallControls = AppCallControls(end: true)) -> AppCallData {
+        AppCallData(callId: callId, app: telegram, caller: "Nguyễn Văn A", state: .ongoing, controls: controls,
+                    startedAt: startedAt, answeredAt: startedAt + 5000)
+    }
+
+    static func ended(reason: AppCallEndReason, answeredAt: Int64? = nil) -> AppCallData {
+        AppCallData(callId: callId, app: telegram, caller: "Nguyễn Văn A", state: .ended, controls: .none,
+                    startedAt: startedAt, answeredAt: answeredAt, endedAt: startedAt + 25_000, endReason: reason)
+    }
+
+    /// The envelope the session delivers for `data`.
+    static func envelope(_ data: AppCallData, ts: Int64) throws -> IncomingEnvelope {
+        IncomingEnvelope(id: HLUUID.v7(), type: .callEvent, ts: ts,
+                         body: .json(Payload(op: "app_call", data: try HLJSON.convert(from: data))))
+    }
+}
+
+/// The `HLBENCH/1` lines this test process logged since `start`: debug builds write them to the unified log, which the
+/// process can read back (shared/tools/bench/README.md).
+enum BenchLines {
+    static func since(_ start: Date) throws -> [String] {
+        let store = try OSLogStore(scope: .currentProcessIdentifier)
+        let entries = try store.getEntries(at: store.position(date: start.addingTimeInterval(-1)))
+        return entries.compactMap { $0 as? OSLogEntryLog }.filter { $0.category == "bench" }.map(\.composedMessage)
     }
 }

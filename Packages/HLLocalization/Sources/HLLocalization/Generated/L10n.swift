@@ -49,6 +49,12 @@ public enum L10n {
         public static var answerTooltip: String { L10nLookup.string("call.answer_tooltip") }
         /// Answering…
         public static var answering: String { L10nLookup.string("call.answering") }
+        /// {app_name} Call
+        public static func appIncomingTitle(appName: String) -> String {
+            L10nLookup.format("call.app_incoming_title", appName)
+        }
+        /// Tap the notification on your phone to answer.
+        public static var appTapToAnswerHint: String { L10nLookup.string("call.app_tap_to_answer_hint") }
         /// Audio: Mac
         public static var audioOnMac: String { L10nLookup.string("call.audio_on_mac") }
         /// Audio: Phone
@@ -475,6 +481,10 @@ public enum L10n {
         public static var autoClearFooter: String { L10nLookup.string("settings.auto_clear_footer") }
         /// Block Sensitive Content
         public static var blockSensitive: String { L10nLookup.string("settings.block_sensitive") }
+        /// Calls from Other Apps
+        public static var callAppCalls: String { L10nLookup.string("settings.call_app_calls") }
+        /// Show calls from apps like Telegram on your Mac. Audio stays on your phone.
+        public static var callAppCallsFooter: String { L10nLookup.string("settings.call_app_calls_footer") }
         /// Last synced: {time}
         public static func callLogLastSync(time: String) -> String {
             L10nLookup.format("settings.call_log_last_sync", time)

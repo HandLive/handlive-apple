@@ -53,6 +53,19 @@ struct AppModelCallsTests {
         #expect(unknown.notifier.incoming[MacCallSamples.callId] == .passive)
     }
 
+    @Test("A build that cannot ask for the Focus status rings like Focus off and hides the Focus hint")
+    func focusUnavailable() throws {
+        let stubs = CallStubs()
+        stubs.focus.state = .unavailable
+        stubs.focus.isAuthorized = false
+        stubs.focus.isAvailable = false
+        let model = try ready(stubs)
+        #expect(!model.calls.focusAvailable && !model.calls.focusAuthorized)
+        model.calls.controller.apply(MacCallSamples.ringing(), envelopeTs: 100)
+        #expect(stubs.presenter.isShown && stubs.ringtone.isPlaying)
+        #expect(stubs.notifier.incoming[MacCallSamples.callId] == .passive)
+    }
+
     @Test("Call notifications off: no panel, no ringing, no notification — only the menu (E3); Ring on Mac off: silent")
     func notifyOff() throws {
         let stubs = CallStubs()

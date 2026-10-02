@@ -11,8 +11,12 @@ extension MacCalls {
         let alert = CallAlert.of(call, notify: settings.callNotify, ringtone: settings.callRingtone, focus: focusState,
                                  answeredHere: call.map { answeredHere.contains($0.callId) } ?? false)
         ringingCall = call?.phase == .ringing ? call : nil
-        updatePanel(call, alert: alert)
-        updateRingtone(call, alert: alert)
+        if call == nil {
+            showAppCall(currentAppCall) // no cellular call: the panel is the app call's, or closes
+        } else {
+            updatePanel(call, alert: alert)
+            updateRingtone(call, alert: alert)
+        }
         updateNotification(call, alert: alert)
         if let call, call.phase == .ringing, lastAlert?.callId != call.callId || lastAlert?.alert != alert {
             lastAlert = (call.callId, alert)
@@ -20,23 +24,25 @@ extension MacCalls {
                                           "panel": alert.panel ? "true" : "false", "ring": alert.ring ? "true" : "false",
                                           "level": alert.benchLevel])
         }
-        if call == nil { answeredHere.removeAll() }
+        if call == nil { answeredHere.formIntersection(currentAppCall.map { [$0.callId] } ?? []) }
     }
 
     private func updatePanel(_ call: ActiveCall?, alert: CallAlert) {
         guard let call, alert.panel else {
             presenter.hide()
             panel.call = nil
+            panel.appCall = nil
             panel.composing = false
             return
         }
+        panel.appCall = nil // the cellular call has the panel; an app call waits for it
         let newCall = panel.call?.callId != call.callId || !presenter.isShown
         panel.call = call
         panel.canReplyBySms = smsCanSend()
         panel.quickReplies = quickReplies
         // VoiceOver reads "Incoming call from …" when the panel comes up for a ringing call (special requirements).
         let announce = newCall && call.phase == .ringing ? CallNames.incomingAnnouncement(call.caller) : nil
-        presenter.show(callId: call.callId, announce: announce)
+        presenter.show(callId: call.callId, content: .cellular, announce: announce)
     }
 
     /// Loops while the panel rings a call, stops when the call leaves `ringing`, a button is clicked, or after 60 s
@@ -60,9 +66,10 @@ extension MacCalls {
         notifiedCallId = call.callId
     }
 
-    /// "Ignore" (field 9): the panel closes and the Mac stops ringing; the phone keeps ringing and the menu keeps the
-    /// call.
+    /// "Ignore" on the cellular call's panel (field 9): the panel closes and the Mac stops ringing; the phone keeps
+    /// ringing and the menu keeps the call. It ignores only the call that panel shows, never an app call.
     func ignore() {
+        guard let callId = panel.call?.callId, controller.call?.callId == callId else { return }
         ringtone.stop()
         controller.ignore()
     }

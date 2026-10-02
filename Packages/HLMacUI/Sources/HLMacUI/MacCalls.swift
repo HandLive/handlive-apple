@@ -17,9 +17,13 @@ public final class MacCalls: ObservableObject {
     @Published public internal(set) var callsEnabled: Bool
     @Published public internal(set) var callNotify: Bool
     @Published public internal(set) var callRingtone: Bool
+    /// `call.app_calls` (CALL-05): calls from other apps on the phone.
+    @Published public internal(set) var callAppCalls: Bool
     @Published public internal(set) var quickReplies: [String] = []
     /// HandLive may read the Focus status; without it "Ring on Mac" cannot ring (CALL-01 API 5 logic 3).
     @Published public internal(set) var focusAuthorized = false
+    /// This build can ask for the Focus status; without it the Focus hint is hidden and "Ring on Mac" rings.
+    @Published public internal(set) var focusAvailable = false
     /// Unseen missed calls: the Calls item of the Messages window (CALL-04 field 7).
     @Published public internal(set) var missedBadge = 0
     /// The call list, over the encrypted database; `nil` without it.
@@ -30,6 +34,8 @@ public final class MacCalls: ObservableObject {
     @Published public internal(set) var recentMissed: [MissedCall] = []
 
     public let controller: CallController
+    /// Calls of other apps on the phone (CALL-05), apart from the cellular call's controller.
+    public let appCalls: AppCallController
     public let panel = CallPanelModel()
     let presenter: any CallPanelPresenting
     let ringtone: any RingtonePlaying
@@ -40,6 +46,9 @@ public final class MacCalls: ObservableObject {
     var logStore: CallLogStore?
     var pruning: Task<Void, Never>?
     var subscription: AnyCancellable?
+    var appCallSubscription: AnyCancellable?
+    /// The app call the controller wants shown, kept here because the controller publishes before it stores it.
+    var currentAppCall: AppCall?
     var pairId: String?
     /// Calls answered from this Mac: their in-call panel shows even during a Focus.
     var answeredHere: Set<String> = []
@@ -57,27 +66,41 @@ public final class MacCalls: ObservableObject {
 
     public init(settings: AppSettings, presenter: (any CallPanelPresenting)? = nil,
                 ringtone: any RingtonePlaying = SystemRingtone(), focus: any FocusReading = SystemFocusStatus(),
-                notifier: any CallNotifying = UserNotificationCalls(), controller: CallController = CallController()) {
+                notifier: any CallNotifying = UserNotificationCalls(), controller: CallController = CallController(),
+                appCalls: AppCallController = AppCallController()) {
         self.settings = settings
         self.controller = controller
+        self.appCalls = appCalls
         self.ringtone = ringtone
         self.focus = focus
         self.notifier = notifier
         callsEnabled = settings.callsEnabled
         callNotify = settings.callNotify
         callRingtone = settings.callRingtone
+        callAppCalls = settings.callAppCalls
         self.presenter = presenter ?? CallPanelController(model: panel)
         focusAuthorized = focus.isAuthorized
+        focusAvailable = focus.isAvailable
         controller.enabledHere = { [weak self] in self?.settings.callsEnabled ?? false }
         controller.onEvent = { [weak self] event in self?.handle(event) }
-        panel.answer = { [weak self] in self?.command(.answer(.phone), from: .panel) }
-        panel.decline = { [weak self] in self?.command(.reject(reply: nil), from: .panel) }
-        panel.reply = { [weak self] text in self?.command(.reject(reply: text), from: .panel) }
+        appCalls.enabledHere = { [weak self] in
+            guard let settings = self?.settings else { return false }
+            return settings.callsEnabled && settings.callAppCalls
+        }
+        panel.answer = { [weak self] in self?.panelCommand(.answer(.phone)) }
+        panel.decline = { [weak self] in self?.panelCommand(.reject(reply: nil)) }
+        panel.reply = { [weak self] text in self?.panelCommand(.reject(reply: text)) }
         panel.ignore = { [weak self] in self?.ignore() }
-        panel.end = { [weak self] in self?.command(.end, from: .panel) }
+        panel.end = { [weak self] in self?.panelCommand(.end) }
+        panel.appCommand = { [weak self] command, callId in self?.appCommand(command, for: callId, from: .panel) }
+        panel.appIgnore = { [weak self] callId in self?.ignoreAppCall(callId) }
         subscription = controller.$call.dropFirst().sink { [weak self] call in
             // The controller publishes on the main actor; the panel must follow at once (≤ 300 ms, CALL-01).
             MainActor.assumeIsolated { self?.callChanged(call) }
+        }
+        appCallSubscription = appCalls.$call.dropFirst().sink { [weak self] call in
+            // An app call's panel comes up as soon as its message arrives (AC1, ≤ 400 ms end to end).
+            MainActor.assumeIsolated { self?.appCallChanged(call) }
         }
     }
 
@@ -106,6 +129,7 @@ public final class MacCalls: ObservableObject {
     func setPair(_ record: PairedDeviceRecord?) {
         pairId = record?.pairId
         controller.setPair(record?.pairId, phoneDeviceId: record?.peerDeviceId, capability: record?.peerCapability)
+        appCalls.setPair(record?.pairId, phoneDeviceId: record?.peerDeviceId, capability: record?.peerCapability)
         logEngine?.setPair(record?.pairId, capability: record?.peerCapability)
         list?.setPair(record?.pairId)
         panel.phoneName = record?.peerName ?? ""
@@ -119,18 +143,22 @@ public final class MacCalls: ObservableObject {
         case .connected(let session, let details):
             let peer = SessionCallPeer(session: session)
             controller.connected(peer: peer, capability: details.peerCapability)
+            appCalls.connected(peer: peer, capability: details.peerCapability)
             logEngine?.connected(peer: peer, capability: details.peerCapability)
             panel.callerIdHint = CallPermissions.missing(CallPermissions.callLog,
                                                          in: details.peerCapability.permissionsMissing ?? [])
         case .capabilityUpdated(let capability):
             controller.capabilityUpdated(capability)
+            appCalls.capabilityUpdated(capability)
             logEngine?.capabilityUpdated(capability)
             panel.callerIdHint = CallPermissions.missing(CallPermissions.callLog, in: capability.permissionsMissing ?? [])
         case .disconnected:
             controller.disconnected()
+            appCalls.disconnected()
             logEngine?.disconnected()
         case .message(let envelope) where envelope.type == .callEvent:
             controller.receive(envelope)
+            appCalls.receive(envelope)
             logEngine?.receive(envelope)
         default:
             break
@@ -150,6 +178,7 @@ public final class MacCalls: ObservableObject {
         pruning?.cancel()
         pruning = nil
         controller.setPair(nil)
+        appCalls.setPair(nil)
         logEngine?.disconnected()
         logEngine = nil
         logStore = nil
@@ -165,6 +194,7 @@ public final class MacCalls: ObservableObject {
         callsEnabled = settings.callsEnabled
         callNotify = settings.callNotify
         callRingtone = settings.callRingtone
+        callAppCalls = settings.callAppCalls
         missedBadge = 0
         answeredHere.removeAll()
         ringDone.removeAll()

@@ -5,25 +5,35 @@ import HLCalls
 import HLProtocol
 
 extension MacCalls {
-    /// Answer, Decline, Decline with Message… and End from the panel, the menu or a notification (CALL-02, CALL-03).
-    /// The ringing stops at the first click.
-    func command(_ command: CallCommand, from source: CallActionSource) {
-        guard let call = controller.call else { return }
-        ringDone.insert(call.callId)
+    /// Answer, Decline, Decline with Message… and End of the phone's cellular call from its panel, the menu or a
+    /// notification (CALL-02, CALL-03), for the `callId` that UI shows: a call that is gone or was replaced gets nothing,
+    /// and a call of another app never does (its panel names its own `call_id`, `appCommand`). The ringing stops at the
+    /// first click.
+    func command(_ command: CallCommand, for callId: String?, from source: CallActionSource) {
+        guard let callId, controller.call?.callId == callId else { return }
+        ringDone.insert(callId)
         ringtone.stop()
-        if case .answer = command { answeredHere.insert(call.callId) }
-        Task { await controller.perform(command, from: source) }
+        if case .answer = command { answeredHere.insert(callId) }
+        Task {
+            guard controller.call?.callId == callId else { return } // replaced before the task ran
+            await controller.perform(command, from: source)
+        }
+    }
+
+    /// A button of the cellular call's panel: for the call that panel shows, none while it shows an app call.
+    func panelCommand(_ command: CallCommand) {
+        self.command(command, for: panel.call?.callId, from: .panel)
     }
 
     /// A response to one of HandLive's call notifications; the actions run in the running app without opening a
-    /// window (CALL-01 API 7 logic 4, CALL-04 API 4).
+    /// window (CALL-01 API 7 logic 4, CALL-04 API 4). Only cellular calls have notifications.
     public func handleNotification(_ response: CallNotificationResponse) {
         switch response {
         case .answer(_, let callId), .reject(_, let callId, _), .openIncoming(_, let callId):
             guard controller.call?.callId == callId else { return }
             switch response {
-            case .answer: command(.answer(.phone), from: .notification)
-            case .reject: command(.reject(reply: nil), from: .notification)
+            case .answer: command(.answer(.phone), for: callId, from: .notification)
+            case .reject: command(.reject(reply: nil), for: callId, from: .notification)
             default: controller.showAgain() // the panel comes back unless a Focus is still on
             }
         case .message(_, let entryId, _, let number, let subId, let text):
@@ -82,6 +92,7 @@ extension MacCalls {
         callsEnabled = enabled
         capabilityChanged()
         controller.settingChanged()
+        appCalls.settingChanged() // app calls need the Calls switch too
         if !enabled { notifier.removeAllCalls() }
     }
 

@@ -26,6 +26,10 @@
 	<string>Trả lời cuộc gọi</string>
 	<key>call.answering</key>
 	<string>Đang trả lời…</string>
+	<key>call.app_incoming_title</key>
+	<string>Cuộc gọi %1$@</string>
+	<key>call.app_tap_to_answer_hint</key>
+	<string>Chạm vào thông báo trên điện thoại để nghe.</string>
 	<key>call.audio_on_mac</key>
 	<string>Âm thanh: Mac</string>
 	<key>call.audio_on_phone</key>
@@ -386,6 +390,10 @@
 	<string>Chỉ xóa nội dung nhận từ thiết bị khác, và chỉ khi bạn chưa sao chép gì mới.</string>
 	<key>settings.block_sensitive</key>
 	<string>Chặn nội dung nhạy cảm</string>
+	<key>settings.call_app_calls</key>
+	<string>Cuộc gọi từ ứng dụng khác</string>
+	<key>settings.call_app_calls_footer</key>
+	<string>Hiện cuộc gọi từ các ứng dụng như Telegram trên Mac. Âm thanh vẫn ở trên điện thoại.</string>
 	<key>settings.call_log_last_sync</key>
 	<string>Lần đồng bộ cuối: %1$@</string>
 	<key>settings.call_notify</key>

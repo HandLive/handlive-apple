@@ -6,6 +6,9 @@ import HLProtocol
 @MainActor
 public final class CallPanelModel: ObservableObject {
     @Published public internal(set) var call: ActiveCall?
+    /// A call of another app on the phone (CALL-05): shown only while there is no cellular `call`; the panel has room
+    /// for one call at a time.
+    @Published public internal(set) var appCall: AppCall?
     /// `call.quick_replies` for "Decline with Message…" (CALL-02 field 6).
     @Published public internal(set) var quickReplies: [String] = []
     /// "Decline with Message…" is offered: SMS is in effect and the phone can send (CALL-01 field 8).
@@ -18,11 +21,16 @@ public final class CallPanelModel: ObservableObject {
     @Published public var composing = false
     @Published public var customText = ""
 
+    /// The buttons of the cellular `call`: they act on that call only, never on an app call.
     var answer: () -> Void = {}
     var decline: () -> Void = {}
     var reply: (String) -> Void = { _ in }
     var ignore: () -> Void = {}
     var end: () -> Void = {}
+    /// The buttons of an app call's panel (CALL-05), for the `call_id` that panel shows: they never reach the cellular
+    /// call, and a call that is gone gets nothing.
+    var appCommand: (_ command: CallCommand, _ callId: String) -> Void = { _, _ in }
+    var appIgnore: (_ callId: String) -> Void = { _ in }
 
     public init() {}
 

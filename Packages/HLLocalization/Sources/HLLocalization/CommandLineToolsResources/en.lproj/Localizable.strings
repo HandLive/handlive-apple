@@ -26,6 +26,10 @@
 	<string>Answer the call</string>
 	<key>call.answering</key>
 	<string>Answering…</string>
+	<key>call.app_incoming_title</key>
+	<string>%1$@ Call</string>
+	<key>call.app_tap_to_answer_hint</key>
+	<string>Tap the notification on your phone to answer.</string>
 	<key>call.audio_on_mac</key>
 	<string>Audio: Mac</string>
 	<key>call.audio_on_phone</key>
@@ -386,6 +390,10 @@
 	<string>Clears only content received from other devices, and only if you haven't copied anything new.</string>
 	<key>settings.block_sensitive</key>
 	<string>Block Sensitive Content</string>
+	<key>settings.call_app_calls</key>
+	<string>Calls from Other Apps</string>
+	<key>settings.call_app_calls_footer</key>
+	<string>Show calls from apps like Telegram on your Mac. Audio stays on your phone.</string>
 	<key>settings.call_log_last_sync</key>
 	<string>Last synced: %1$@</string>
 	<key>settings.call_notify</key>

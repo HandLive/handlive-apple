@@ -5,12 +5,27 @@ import HLDesignSystem
 import HLTransport
 import SwiftUI
 
+/// What the call panel shows: the phone's cellular call, or a call of another app (CALL-05).
+public enum CallPanelContent: Sendable {
+    case cellular, app
+
+    /// The bench line of the panel coming up (shared/tools/bench/README.md): `call_panel_shown` for a cellular call,
+    /// `app_call_panel_shown` for a call of another app.
+    var shownEvent: String {
+        switch self {
+        case .cellular: "call_panel_shown"
+        case .app: "app_call_panel_shown"
+        }
+    }
+}
+
 /// Shows and hides the call panel; tests use a stub.
 @MainActor
 public protocol CallPanelPresenting: AnyObject {
     var isShown: Bool { get }
-    /// Shows the panel (or keeps it) for `call`; `announce` reads "Incoming call from …" with VoiceOver.
-    func show(callId: String, announce: String?)
+    /// Shows the panel (or keeps it) for the call `callId`, a cellular call or an app call (`content`); `announce`
+    /// reads "Incoming call from …" with VoiceOver.
+    func show(callId: String, content: CallPanelContent, announce: String?)
     func hide()
 }
 
@@ -37,14 +52,14 @@ public final class CallPanelController: CallPanelPresenting {
 
     public var isShown: Bool { panel?.isVisible == true }
 
-    public func show(callId: String, announce: String?) {
+    public func show(callId: String, content: CallPanelContent, announce: String?) {
         let panel = panel ?? makePanel()
         self.panel = panel
         if shownCallId != callId || !panel.isVisible {
             shownCallId = callId
             place(panel)
             present(panel)
-            BenchLog.event("call_panel_shown", ["call": callId])
+            BenchLog.event(content.shownEvent, ["call": callId])
             if let announce {
                 NSAccessibility.post(element: panel, notification: .announcementRequested,
                                      userInfo: [.announcement: announce,

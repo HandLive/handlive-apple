@@ -4,7 +4,7 @@ import HLLocalization
 import SwiftUI
 
 /// The ringing call in the menu bar menu (MenuBarMenu README: also after "Ignore" and while a Focus hides the panel):
-/// the caller, then "Answer" and "Decline" as `controls` allow.
+/// the caller, then "Answer" and "Decline" as `controls` allow, for this call only: once it is gone they do nothing.
 struct RingingCallItems: View {
     let call: ActiveCall
     @ObservedObject var calls: MacCalls
@@ -13,11 +13,11 @@ struct RingingCallItems: View {
         Divider()
         Text(CallNames.title(call.caller))
         if call.state.controls.answer {
-            Button(L10n.Call.answer) { calls.command(.answer(.phone), from: .menu) }
+            Button(L10n.Call.answer) { calls.command(.answer(.phone), for: call.callId, from: .menu) }
                 .disabled(call.command != nil)
         }
         if call.state.controls.reject {
-            Button(L10n.Call.decline) { calls.command(.reject(reply: nil), from: .menu) }
+            Button(L10n.Call.decline) { calls.command(.reject(reply: nil), for: call.callId, from: .menu) }
                 .disabled(call.command != nil)
         }
     }
