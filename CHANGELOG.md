@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- Calls from other apps on the Mac (CALL-05): decode `call_event/app_call`, the `features.call.app_calls` capability
+  (the Mac reports `call.app_calls`, iPhone and iPad report `false`), `AppCallController` (latest version per
+  `call_id`, Answer, Decline and End as `call_event/action`, `CALL_APP_ACTION_UNAVAILABLE`, `CALL_NOT_FOUND` and
+  `FEATURE_DISABLED` handling), the call panel with the app's name, the tap-to-answer hint and "Audio: Phone", and the
+  Calls from Other Apps checkbox in Settings › Calls.
+
 ## [2026-09-30]
 
 ### Fixed
