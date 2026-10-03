@@ -134,9 +134,13 @@ jobs:
             scheme="$pkg"; case "$pkg" in HLSMS|HLCalls) scheme="$pkg-Package" ;; esac
             # Run in the background and kill it if it stalls, so a hanging test fails *this* package (named) in minutes
             # instead of stranding the whole step.
+            # Run serially: several call/session suites coordinate real-time async reconnection and are correct but
+            # not safe to run concurrently (they race for the MainActor under parallel execution). The product logic
+            # is unchanged; only the test scheduling is.
             (cd "apple/Packages/$pkg" && xcodebuild test \
               -scheme "$scheme" \
               -destination 'platform=macOS' \
+              -parallel-testing-enabled NO \
               -derivedDataPath "$DERIVED_DATA/$pkg") &
             xpid=$!
             (sleep 720; kill -9 "$xpid" 2>/dev/null) &
