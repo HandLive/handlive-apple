@@ -122,6 +122,9 @@ jobs:
       # Chạy xcodebuild trong thư mục package (không cần .xcodeproj): scheme tự sinh của package
       # một product cùng tên có luôn test target.
       - name: xcodebuild test (every package)
+        # Insurance against a hanging test: without this a stuck test runs until the 90-min job timeout. A per-package
+        # watchdog below fails fast and names the package; this step cap is the backstop.
+        timeout-minutes: 30
         run: |
           set -euo pipefail
           for pkg in HLProtocol HLCrypto HLTransport HLDesignSystem HLLocalization HLAppCore HLSMS HLSMSUI HLCalls HLMacUI HLiOSUI; do
@@ -129,10 +132,23 @@ jobs:
             # A package with several products (HLSMS: HLSMS + HLSMSNotifications; HLCalls: HLCalls, HLCallNotifications,
             # HLCallsUI) runs its tests in "<name>-Package".
             scheme="$pkg"; case "$pkg" in HLSMS|HLCalls) scheme="$pkg-Package" ;; esac
+            # Run in the background and kill it if it stalls, so a hanging test fails *this* package (named) in minutes
+            # instead of stranding the whole step.
             (cd "apple/Packages/$pkg" && xcodebuild test \
               -scheme "$scheme" \
               -destination 'platform=macOS' \
-              -derivedDataPath "$DERIVED_DATA/$pkg")
+              -derivedDataPath "$DERIVED_DATA/$pkg") &
+            xpid=$!
+            (sleep 720; kill -9 "$xpid" 2>/dev/null) &
+            watchdog=$!
+            if wait "$xpid"; then
+              kill "$watchdog" 2>/dev/null || true
+            else
+              status=$?
+              kill "$watchdog" 2>/dev/null || true
+              echo "::error::xcodebuild test $pkg failed or exceeded 720s (exit $status) — a failing or hanging test"
+              exit 1
+            fi
             echo "::endgroup::"
           done
 
