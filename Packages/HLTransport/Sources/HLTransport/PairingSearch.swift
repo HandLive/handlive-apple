@@ -43,6 +43,9 @@ public struct PairingSearch: PairingSearching {
         self.connector = connector
     }
 
+    // The search is a small state machine (match vs fallback, retry, rendezvous, give up); its branch count is
+    // essential, not accidental, so the loop body is kept together rather than scattered across more helpers.
+    // swiftlint:disable:next cyclomatic_complexity
     public func run(identity: PairingIdentity, credential: PairingCredential, offerTimeout: Duration,
                     progress: @escaping @Sendable (PairingProgress) -> Void) async throws -> PairingResult {
         let board = PhoneBoard(matching: Self.matcher(identity: identity, credential: credential),
@@ -69,28 +72,12 @@ public struct PairingSearch: PairingSearching {
             // Keep failures for every instance still visible (matching or not); ghosts often lose `pr` briefly.
             failedNames = failedNames.intersection(board.visibleNames)
             // Prefer TXT match; if every match is a ghost, try any protocol-v1 phone (exchange rejects wrong peers).
-            guard let (phone, seenSince, viaFallback) = board.nextAttempt(excluding: failedNames) else {
+            guard let (phone, seenSince) = board.nextAttempt(excluding: failedNames) else {
                 if let result = try await Self.pairThroughRendezvous(credential, board: board, exchange: exchange,
-                                                                      reporter: reporter) {
+                                                                     reporter: reporter) {
                     return result
                 }
-                if board.denied {
-                    reporter.report(.localNetworkDenied)
-                } else if let earliest = board.earliestSeen(), !board.wasReached,
-                          earliest.duration(to: .now) >= unreachableAfter {
-                    reporter.report(.phoneUnreachable)
-                } else if failedNames.isEmpty {
-                    reporter.report(.waitingForPhone)
-                }
-                if !board.visibleNames.isEmpty, board.visibleNames.isSubset(of: failedNames) {
-                    // Every visible instance failed to connect (a transient drop, not a protocol failure). Wait, then
-                    // clear the blacklist so they are retried while they stay visible, instead of spinning forever
-                    // (PAIR-01 A2: the search keeps trying the window until it pairs or the caller's window closes).
-                    try await Task.sleep(for: retryDelay)
-                    failedNames.removeAll()
-                } else {
-                    guard await iterator.next() != nil else { throw CancellationError() }
-                }
+                try await waitForChange(board: board, failedNames: &failedNames, iterator: &iterator, reporter: reporter)
                 continue
             }
             reporter.report(.connecting)
@@ -121,6 +108,29 @@ public struct PairingSearch: PairingSearching {
                     try await Task.sleep(for: retryDelay)
                 }
             }
+        }
+    }
+
+    /// No instance is ready to try right now: report the right status and wait — for the next browse change, or, when
+    /// every visible instance has failed to connect, for `retryDelay` before clearing the blacklist so they are retried
+    /// while they stay visible (PAIR-01 A2: the search keeps trying the window until it pairs or the caller's window
+    /// closes).
+    private func waitForChange(board: PhoneBoard, failedNames: inout Set<String>,
+                               iterator: inout AsyncStream<Void>.AsyncIterator,
+                               reporter: ProgressReporter) async throws {
+        if board.denied {
+            reporter.report(.localNetworkDenied)
+        } else if let earliest = board.earliestSeen(), !board.wasReached,
+                  earliest.duration(to: .now) >= unreachableAfter {
+            reporter.report(.phoneUnreachable)
+        } else if failedNames.isEmpty {
+            reporter.report(.waitingForPhone)
+        }
+        if !board.visibleNames.isEmpty, board.visibleNames.isSubset(of: failedNames) {
+            try await Task.sleep(for: retryDelay)
+            failedNames.removeAll()
+        } else {
+            guard await iterator.next() != nil else { throw CancellationError() }
         }
     }
 
@@ -185,134 +195,5 @@ public struct PairingSearch: PairingSearching {
         case .pin:
             return { $0.speaksProtocolV1 && $0.txt["pm"] == nil }
         }
-    }
-}
-
-/// Latest browse results and when each matching instance was first seen; whether the relay rendezvous is ready.
-final class PhoneBoard: @unchecked Sendable {
-    private let lock = NSLock()
-    private let matches: @Sendable (DiscoveredPhone) -> Bool
-    /// Whether a non-matching instance may still be the target (its TXT hint is absent, not wrong).
-    private let canFallBack: @Sendable (DiscoveredPhone) -> Bool
-    /// Every protocol-v1 phone currently browsed (including ghosts and non-matching TXT).
-    private var visible: [DiscoveredPhone] = []
-    private var matching: [DiscoveredPhone] = []
-    private var firstSeen: [String: ContinuousClock.Instant] = [:]
-    private var isDenied = false
-    private var reachedOnce = false
-    private var rendezvousState = 0 // 0 waiting, 1 phone joined, 2 used up
-
-    init(matching: @escaping @Sendable (DiscoveredPhone) -> Bool,
-         fallbackEligible: @escaping @Sendable (DiscoveredPhone) -> Bool) {
-        matches = matching
-        canFallBack = fallbackEligible
-    }
-
-    func apply(_ event: DiscoveryEvent) {
-        lock.lock()
-        defer { lock.unlock() }
-        switch event {
-        case .results(let all):
-            visible = all.filter(\.speaksProtocolV1)
-            matching = visible.filter(matches)
-            let names = Set(visible.map(\.name))
-            firstSeen = firstSeen.filter { names.contains($0.key) }
-            for name in names where firstSeen[name] == nil { firstSeen[name] = .now }
-        case .state(let state):
-            isDenied = state == .localNetworkDenied
-        }
-    }
-
-    /// Next phone to try: TXT match first, then any other v1 instance (stale Bonjour ghosts often match TXT but
-    /// never resolve; the live advertiser may briefly lack `pr`/`pm` in the Mac's cache).
-    func nextAttempt(excluding: Set<String>) -> (DiscoveredPhone, ContinuousClock.Instant, Bool)? {
-        lock.lock()
-        defer { lock.unlock() }
-        if let match = Self.pick(matching, excluding: excluding, firstSeen: firstSeen, newest: false) {
-            return (match.0, match.1, false)
-        }
-        if let fallback = Self.pick(visible.filter(canFallBack), excluding: excluding, firstSeen: firstSeen, newest: true) {
-            return (fallback.0, fallback.1, true)
-        }
-        return nil
-    }
-
-    private static func pick(_ phones: [DiscoveredPhone], excluding: Set<String>,
-                             firstSeen: [String: ContinuousClock.Instant],
-                             newest: Bool) -> (DiscoveredPhone, ContinuousClock.Instant)? {
-        let ranked = phones.filter { !excluding.contains($0.name) }
-            .compactMap { phone in firstSeen[phone.name].map { (phone, $0) } }
-        return newest ? ranked.max { $0.1 < $1.1 } : ranked.min { $0.1 < $1.1 }
-    }
-
-    /// Names of every protocol-v1 instance currently browsed.
-    var visibleNames: Set<String> {
-        lock.lock()
-        defer { lock.unlock() }
-        return Set(visible.map(\.name))
-    }
-
-    /// When the first matching or visible instance appeared (for the E3 unreachable grace).
-    func earliestSeen() -> ContinuousClock.Instant? {
-        lock.lock()
-        defer { lock.unlock() }
-        let names = Set(matching.map(\.name)).union(visible.map(\.name))
-        return firstSeen.filter { names.contains($0.key) }.values.min()
-    }
-
-    var denied: Bool {
-        lock.lock()
-        defer { lock.unlock() }
-        return isDenied
-    }
-
-    var rendezvousReady: Bool {
-        lock.lock()
-        defer { lock.unlock() }
-        return rendezvousState == 1
-    }
-
-    func markRendezvousReady() {
-        lock.lock()
-        if rendezvousState == 0 { rendezvousState = 1 }
-        lock.unlock()
-    }
-
-    func rendezvousSpent() {
-        lock.lock()
-        rendezvousState = 2
-        lock.unlock()
-    }
-
-    /// A connection reached the phone once, so the window is not unreachable (E3).
-    func reached() {
-        lock.lock()
-        reachedOnce = true
-        lock.unlock()
-    }
-
-    var wasReached: Bool {
-        lock.lock()
-        defer { lock.unlock() }
-        return reachedOnce
-    }
-}
-
-/// Reports a progress value only when it changes.
-final class ProgressReporter: @unchecked Sendable {
-    private let lock = NSLock()
-    private let sink: @Sendable (PairingProgress) -> Void
-    private var last: PairingProgress?
-
-    init(_ sink: @escaping @Sendable (PairingProgress) -> Void) {
-        self.sink = sink
-    }
-
-    func report(_ value: PairingProgress) {
-        lock.lock()
-        let changed = last != value
-        last = value
-        lock.unlock()
-        if changed { sink(value) }
     }
 }
