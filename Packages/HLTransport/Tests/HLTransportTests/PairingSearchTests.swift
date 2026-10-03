@@ -180,7 +180,10 @@ struct PairingSearchTests {
         let result = try await search(connector, discovery: discovery).run(
             identity: identity, credential: .qr(secret: secret), offerTimeout: .seconds(5)) { _ in }
         #expect(result.phoneDeviceId == phone.deviceId)
-        #expect(connector.targets == [.service(ghost.endpoint), .service(live.endpoint)])
+        // Both matching instances are tried; the order between two seen at once is unspecified (firstSeen follows
+        // Set-iteration order), so compare as a set.
+        #expect(connector.attemptCount == 2)
+        #expect(Set(connector.targets) == [.service(ghost.endpoint), .service(live.endpoint)])
     }
 
     @Test("QR: when only a ghost matches TXT, fall back to any protocol-v1 phone that answers /v1/pair")
