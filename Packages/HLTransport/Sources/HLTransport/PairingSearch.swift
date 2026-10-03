@@ -45,7 +45,8 @@ public struct PairingSearch: PairingSearching {
 
     public func run(identity: PairingIdentity, credential: PairingCredential, offerTimeout: Duration,
                     progress: @escaping @Sendable (PairingProgress) -> Void) async throws -> PairingResult {
-        let board = PhoneBoard(matching: Self.matcher(identity: identity, credential: credential))
+        let board = PhoneBoard(matching: Self.matcher(identity: identity, credential: credential),
+                               fallbackEligible: Self.fallbackEligible(credential: credential))
         let (changes, notify) = AsyncStream.makeStream(of: Void.self, bufferingPolicy: .bufferingNewest(1))
         let watcher = Task { [discovery] in
             for await event in discovery.events() {
@@ -82,7 +83,11 @@ public struct PairingSearch: PairingSearching {
                     reporter.report(.waitingForPhone)
                 }
                 if !board.visibleNames.isEmpty, board.visibleNames.isSubset(of: failedNames) {
+                    // Every visible instance failed to connect (a transient drop, not a protocol failure). Wait, then
+                    // clear the blacklist so they are retried while they stay visible, instead of spinning forever
+                    // (PAIR-01 A2: the search keeps trying the window until it pairs or the caller's window closes).
                     try await Task.sleep(for: retryDelay)
+                    failedNames.removeAll()
                 } else {
                     guard await iterator.next() != nil else { throw CancellationError() }
                 }
@@ -168,12 +173,27 @@ public struct PairingSearch: PairingSearching {
             return { $0.speaksProtocolV1 && $0.pinPairingOpen }
         }
     }
+
+    /// Whether a non-matching instance may still be the target so the search may fall back to it: only when the
+    /// relevant TXT hint is *absent* (the live advertiser's `pr`/`pm` is briefly missing from the Mac's cache). An
+    /// instance that advertises a *different* `pr`, or a `pm` that is not `1`, is another device/state and is skipped
+    /// (PAIR-01 A2): connecting to it would leak the pairing attempt to the wrong phone.
+    static func fallbackEligible(credential: PairingCredential) -> @Sendable (DiscoveredPhone) -> Bool {
+        switch credential {
+        case .qr:
+            return { $0.speaksProtocolV1 && $0.pairingKeyHash == nil }
+        case .pin:
+            return { $0.speaksProtocolV1 && $0.txt["pm"] == nil }
+        }
+    }
 }
 
 /// Latest browse results and when each matching instance was first seen; whether the relay rendezvous is ready.
 final class PhoneBoard: @unchecked Sendable {
     private let lock = NSLock()
     private let matches: @Sendable (DiscoveredPhone) -> Bool
+    /// Whether a non-matching instance may still be the target (its TXT hint is absent, not wrong).
+    private let canFallBack: @Sendable (DiscoveredPhone) -> Bool
     /// Every protocol-v1 phone currently browsed (including ghosts and non-matching TXT).
     private var visible: [DiscoveredPhone] = []
     private var matching: [DiscoveredPhone] = []
@@ -182,8 +202,10 @@ final class PhoneBoard: @unchecked Sendable {
     private var reachedOnce = false
     private var rendezvousState = 0 // 0 waiting, 1 phone joined, 2 used up
 
-    init(matching: @escaping @Sendable (DiscoveredPhone) -> Bool) {
+    init(matching: @escaping @Sendable (DiscoveredPhone) -> Bool,
+         fallbackEligible: @escaping @Sendable (DiscoveredPhone) -> Bool) {
         matches = matching
+        canFallBack = fallbackEligible
     }
 
     func apply(_ event: DiscoveryEvent) {
@@ -209,7 +231,7 @@ final class PhoneBoard: @unchecked Sendable {
         if let match = Self.pick(matching, excluding: excluding, firstSeen: firstSeen, newest: false) {
             return (match.0, match.1, false)
         }
-        if let fallback = Self.pick(visible, excluding: excluding, firstSeen: firstSeen, newest: true) {
+        if let fallback = Self.pick(visible.filter(canFallBack), excluding: excluding, firstSeen: firstSeen, newest: true) {
             return (fallback.0, fallback.1, true)
         }
         return nil
