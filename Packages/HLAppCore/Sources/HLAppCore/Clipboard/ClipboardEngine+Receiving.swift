@@ -105,7 +105,9 @@ extension ClipboardEngine {
 
     private func write(_ content: ClipContent, push: ClipboardPushData, requestId: String) {
         // Never trust the sender's sanitizing: the HTML is cleaned again before it reaches the clipboard.
-        let html = push.html.map(HtmlClipSanitizer.sanitize).flatMap { $0.isEmpty ? nil : $0 }
+        // Escaping can grow the output past the limit: the text then goes alone, still acknowledged applied.
+        let html = push.html.map(HtmlClipSanitizer.sanitize)
+            .flatMap { $0.isEmpty || $0.utf8.count > ClipboardConstants.maxHtmlBytes ? nil : $0 }
         guard let count = access.write(content, html: html, clipId: push.clipId, sensitive: push.sensitive) else {
             ledger.record(push.clipId, .rejected, now: now())
             reply(requestId, .rejected(.internal, clipId: push.clipId))

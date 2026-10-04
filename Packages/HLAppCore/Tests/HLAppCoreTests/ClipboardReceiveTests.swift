@@ -33,6 +33,19 @@ struct ClipboardReceiveTests {
         #expect(harness.engine.lastReceived?.html == "<p>Hi <b>Lan</b></p>")
     }
 
+    @Test("HTML that grows past CLIP_MAX_HTML when sanitized is dropped, the text is still written and applied")
+    func dropsHtmlThatEscapingMakesTooLong() async throws {
+        let harness = ClipboardHarness()
+        let quotes = String(repeating: "\"", count: 40_000) // 6 bytes each as `&quot;`
+        let html = "<a href='https://e.com/\(quotes)'>x</a>"
+        #expect(html.utf8.count <= ClipboardConstants.maxHtmlBytes)
+        let push = ClipboardHarness.textPush("x", html: html)
+        let ack = try #require(await harness.reply(to: harness.receive(push)))
+        #expect(ack.ok && ack.clipboardData?.status == .applied)
+        #expect(harness.pasteboard.writes == [FakePasteboard.Write(content: .text("x"), clipId: push.clipId, sensitive: false)])
+        #expect(!harness.pasteboard.types.contains(PasteboardTypeID.html))
+    }
+
     @Test("html with an image, with a transfer, or longer than CLIP_MAX_HTML is BAD_REQUEST and writes nothing")
     func rejectsMisplacedHtml() async {
         let harness = ClipboardHarness()
