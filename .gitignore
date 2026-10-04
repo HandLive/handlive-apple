@@ -3,6 +3,8 @@
 
 # Sinh bởi XcodeGen (xcodegen generate); HandLive.xcworkspace thì commit
 *.xcodeproj
+# Test schemes written by Tools/make-test-scheme.sh
+HandLive.xcworkspace/xcshareddata/xcschemes/HLTests-*.xcscheme
 xcuserdata/
 DerivedData/
 .build/
