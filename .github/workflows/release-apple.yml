@@ -9,14 +9,23 @@
 #   A tag older than the login-keychain support (v0.1.0-beta.1) publishes no Mac app without those secrets.
 # Runs on a pushed tag v*, or by hand for an existing tag: publish=false keeps the files as workflow artifacts only; a
 # file already attached is never replaced unless replace=true.
-# Two stages: "build" runs xcodegen/xcodebuild and the packages with read-only rights and no secret but the optional
-# HANDLIVE_REPOS_TOKEN that reads the hub and handlive-shared; "release" runs Apple's signing and notarization tools
-# and gh, with the secrets (environment "release") and write access, and launches the built app only in a step
-# without secrets, after the signing keychain is gone.
+#
+# Three jobs, split so that the job that RUNS built code never holds a secret:
+#   sign    (environment "release", contents: read) builds with xcodegen/xcodebuild, signs the Mac app (ad hoc, or
+#           Developer ID + notarization with the secrets), packs the IPA and the DMG and writes their SHA-256. It is the
+#           only job that reads the signing and notarization secrets, each one only in the env of the step that needs it.
+#   launch  (no environment, permissions: {}, no reference to the secrets context) downloads the packed files and checks
+#           them read-only: the IPA is a sound archive with the app inside, the DMG mounts and its app stays up for 10 s.
+#           This is the only place the built app is executed.
+#   publish (environment "release", contents: write) needs sign and launch, checks every file against its SHA-256 and
+#           attaches them to the Release. It runs no built code and checks out no code.
+# The files travel between the jobs as the workflow artifact build-<platform>-<version> (unchanged names); publish keeps
+# the final set as apple-<version>.
 # MARKETING_VERSION in project.yml must equal the tag's version core (v0.1.0-beta.1 → 0.1.0). The hub and
 # handlive-shared are checked out at the same tag (push their tags first); one without it falls back to main with a
 # warning.
-# macOS secrets (docs/deployment-guide.md, Release builds), all or none: APPLE_TEAM_ID,
+# macOS secrets (docs/deployment-guide.md, Release builds), all or none, environment secrets of "release" read by the
+# sign job only: APPLE_TEAM_ID,
 # APPLE_DEVELOPER_ID_P12_BASE64 + APPLE_DEVELOPER_ID_P12_PASSWORD (the "Developer ID Application" certificate with its
 # private key), APPLE_MAC_PROFILE_BASE64 (Developer ID provisioning profile of app.handlive.mac with Keychain Sharing,
 # Communication Notifications and Time Sensitive Notifications), APPLE_NOTARY_KEY_P8_BASE64 + APPLE_NOTARY_KEY_ID +
@@ -41,6 +50,7 @@ on:
         type: boolean
         default: false
 
+# Every job states its own rights; this default is the floor.
 permissions:
   contents: read
 
@@ -52,10 +62,15 @@ env:
   TAG: ${{ inputs.tag || github.ref_name }}
 
 jobs:
-  build:
-    name: build ${{ matrix.platform }}
+  sign:
+    name: sign ${{ matrix.platform }}
     runs-on: macos-15
     timeout-minutes: 60
+    # The environment holds the macOS secrets (only tags v* and main may use it). No step of this job launches the
+    # built app: that is the launch job.
+    environment: release
+    permissions:
+      contents: read
     strategy:
       matrix:
         platform: [ios, macos]
@@ -166,94 +181,10 @@ jobs:
           cp -R "$DERIVED_DATA/Build/Products/Release-iphoneos/HandLive.app" "$work/Payload/"
           (cd "$work" && zip -qry "$RUNNER_TEMP/out/HandLive-$VERSION-ios-unsigned.ipa" Payload)
 
-      # Universal (arm64 + x86_64) and unsigned; with Developer ID the release job signs this very build. Zipped with
-      # ditto so the framework's symbolic links survive the artifact.
-      # Without Developer ID it ships signed ad hoc (no entitlements, no hardened runtime), which seals the bundle so
-      # macOS offers Open Anyway instead of calling it damaged; the app then uses the login keychain (0.6.1). That
-      # copy is signed, launched and packed here, in the job without write access or signing secrets.
-      - name: Build Mac app (Release, universal, unsigned) and the ad-hoc signed DMG
-        if: matrix.platform == 'macos'
-        working-directory: apple
-        env:
-          VERSION: ${{ steps.tag.outputs.version }}
-        run: |
-          xcodebuild build \
-            -project HandLive.xcodeproj \
-            -scheme HandLive \
-            -configuration Release \
-            -destination 'generic/platform=macOS' \
-            -derivedDataPath "$DERIVED_DATA" \
-            CODE_SIGNING_ALLOWED=NO
-          mkdir -p "$RUNNER_TEMP/out"
-          ditto -c -k --keepParent "$DERIVED_DATA/Build/Products/Release/HandLive.app" "$RUNNER_TEMP/out/HandLive-unsigned.app.zip"
-          # An ad-hoc signed build works only once the app falls back to the login keychain (0.6.1).
-          if ! grep -q processCanUseDataProtectionKeychain Packages/HLCrypto/Sources/HLCrypto/KeychainSecretStore.swift; then
-            exit 0
-          fi
-          app="$RUNNER_TEMP/adhoc/HandLive.app"
-          mkdir -p "$RUNNER_TEMP/adhoc"
-          ditto "$DERIVED_DATA/Build/Products/Release/HandLive.app" "$app"
-          codesign --force --deep --sign - "$app"
-          codesign --verify --deep --strict --verbose=2 "$app"
-          "$app/Contents/MacOS/HandLive" > "$RUNNER_TEMP/launch.log" 2>&1 &
-          pid=$!
-          sleep 10
-          if ! kill -0 "$pid" 2> /dev/null; then
-            cat "$RUNNER_TEMP/launch.log"; echo "::error::The ad-hoc signed Mac app quit at launch"; exit 1
-          fi
-          kill "$pid"
-          stage="$RUNNER_TEMP/dmg"
-          mkdir -p "$stage"
-          ditto "$app" "$stage/HandLive.app"
-          ln -s /Applications "$stage/Applications"
-          hdiutil create -volname "HandLive $VERSION" -srcfolder "$stage" -ov -format UDZO \
-            "$RUNNER_TEMP/out/HandLive-$VERSION-macos-unsigned.dmg"
-
-      - name: Keep the build for the release job
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: build-${{ matrix.platform }}-${{ steps.tag.outputs.version }}
-          path: ${{ runner.temp }}/out/
-          if-no-files-found: error
-          retention-days: 7
-
-  release:
-    name: sign, notarize and publish
-    needs: build
-    runs-on: macos-15
-    timeout-minutes: 60
-    environment: release
-    permissions:
-      contents: write # create the Release and upload its assets
-    env:
-      VERSION: ${{ needs.build.outputs.version }}
-      PUBLISH: ${{ github.event_name == 'push' || inputs.publish }}
-      REPLACE: ${{ inputs.replace || false }}
-    steps:
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
-        with:
-          pattern: build-*-${{ needs.build.outputs.version }}
-          path: ${{ runner.temp }}/in
-          merge-multiple: true
-
-      # Only the entitlements file: the release job builds nothing from the repository and runs only the signed app,
-      # after the signing keychain and the notary key are gone.
-      - name: Entitlements of the tag
-        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
-        with:
-          path: apple
-          ref: refs/tags/${{ env.TAG }}
-          sparse-checkout: macOS/HandLive.entitlements
-          sparse-checkout-cone-mode: false
-          persist-credentials: false
-
-      - name: iOS IPA
-        run: |
-          mkdir -p "$RUNNER_TEMP/out"
-          mv "$RUNNER_TEMP/in/HandLive-$VERSION-ios-unsigned.ipa" "$RUNNER_TEMP/out/"
-
+      # Which macOS path: all seven secrets set means Developer ID, none means ad hoc, anything else stops here.
       - name: macOS signing secrets
         id: secrets
+        if: matrix.platform == 'macos'
         env:
           TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           P12: ${{ secrets.APPLE_DEVELOPER_ID_P12_BASE64 }}
@@ -276,20 +207,57 @@ jobs:
             echo "signed=true" >> "$GITHUB_OUTPUT"
           fi
 
-      # Without Developer ID: the ad-hoc signed DMG the build job made and launched.
-      - name: Unsigned Mac DMG
-        if: steps.secrets.outputs.signed == 'false'
+      # Universal (arm64 + x86_64) and unsigned; the steps below sign this very build. Zipped with ditto so the
+      # framework's symbolic links survive. The zip stays out of the files that are published.
+      - name: Build Mac app (Release, universal, unsigned)
+        if: matrix.platform == 'macos'
+        working-directory: apple
         run: |
-          dmg="HandLive-$VERSION-macos-unsigned.dmg"
-          if [ ! -e "$RUNNER_TEMP/in/$dmg" ]; then
+          xcodebuild build \
+            -project HandLive.xcodeproj \
+            -scheme HandLive \
+            -configuration Release \
+            -destination 'generic/platform=macOS' \
+            -derivedDataPath "$DERIVED_DATA" \
+            CODE_SIGNING_ALLOWED=NO
+          mkdir -p "$RUNNER_TEMP/in" "$RUNNER_TEMP/out"
+          ditto -c -k --keepParent "$DERIVED_DATA/Build/Products/Release/HandLive.app" "$RUNNER_TEMP/in/HandLive-unsigned.app.zip"
+
+      # Without Developer ID it ships signed ad hoc (no entitlements, no hardened runtime), which seals the bundle so
+      # macOS offers Open Anyway instead of calling it damaged; the app then uses the login keychain (0.6.1). The
+      # launch job runs it; this job only signs and packs it.
+      - name: Ad-hoc signed Mac DMG
+        if: matrix.platform == 'macos' && steps.secrets.outputs.signed == 'false'
+        working-directory: apple
+        env:
+          VERSION: ${{ steps.tag.outputs.version }}
+        run: |
+          # An ad-hoc signed build works only once the app falls back to the login keychain (0.6.1).
+          if ! grep -q processCanUseDataProtectionKeychain Packages/HLCrypto/Sources/HLCrypto/KeychainSecretStore.swift; then
             echo "::notice title=macOS not published::$TAG predates the login-keychain fallback: its Mac app runs only signed with Developer ID (docs/deployment-guide.md, Release builds)."
             exit 0
           fi
-          mv "$RUNNER_TEMP/in/$dmg" "$RUNNER_TEMP/out/"
+          app="$RUNNER_TEMP/adhoc/HandLive.app"
+          mkdir -p "$RUNNER_TEMP/adhoc"
+          ditto -x -k "$RUNNER_TEMP/in/HandLive-unsigned.app.zip" "$RUNNER_TEMP/adhoc"
+          codesign --force --deep --sign - "$app"
+          codesign --verify --deep --strict --verbose=2 "$app"
+          stage="$RUNNER_TEMP/dmg"
+          mkdir -p "$stage"
+          ditto "$app" "$stage/HandLive.app"
+          ln -s /Applications "$stage/Applications"
+          hdiutil create -volname "HandLive $VERSION" -srcfolder "$stage" -ov -format UDZO \
+            "$RUNNER_TEMP/out/HandLive-$VERSION-macos-unsigned.dmg"
 
+      # ---------------------------------------------------------------------------------------------------------
+      # PLACEHOLDER: Developer ID signing and notarization. These steps run only with all seven secrets (the
+      # secrets step above); each reads its secrets in its own env. Anything new that needs a secret goes between
+      # this marker and the "Remove the release keychain" step, and nothing in between may execute the built app:
+      # the launch job does that, without secrets, from the DMG these steps write to $RUNNER_TEMP/out.
+      # ---------------------------------------------------------------------------------------------------------
       - name: Developer ID certificate and provisioning profile
         id: identity
-        if: steps.secrets.outputs.signed == 'true'
+        if: matrix.platform == 'macos' && steps.secrets.outputs.signed == 'true'
         env:
           TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           P12: ${{ secrets.APPLE_DEVELOPER_ID_P12_BASE64 }}
@@ -354,7 +322,7 @@ jobs:
       # once the app uses those resources.
       - name: Sign the Mac app
         id: signed
-        if: steps.secrets.outputs.signed == 'true'
+        if: matrix.platform == 'macos' && steps.secrets.outputs.signed == 'true'
         env:
           TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           KEYCHAIN: ${{ steps.identity.outputs.keychain }}
@@ -393,8 +361,9 @@ jobs:
       # The signed app goes into a DMG signed with the same identity; notarizing the DMG covers the app inside, and
       # the ticket is stapled to the DMG.
       - name: Signed Mac DMG, notarized and stapled
-        if: steps.secrets.outputs.signed == 'true'
+        if: matrix.platform == 'macos' && steps.secrets.outputs.signed == 'true'
         env:
+          VERSION: ${{ steps.tag.outputs.version }}
           NOTARY_KEY: ${{ secrets.APPLE_NOTARY_KEY_P8_BASE64 }}
           NOTARY_KEY_ID: ${{ secrets.APPLE_NOTARY_KEY_ID }}
           NOTARY_ISSUER: ${{ secrets.APPLE_NOTARY_ISSUER_ID }}
@@ -426,36 +395,135 @@ jobs:
           spctl --assess --type execute --verbose=2 "$APP"
 
       - name: Remove the release keychain
-        if: always() && steps.identity.outputs.keychain != ''
+        if: always() && matrix.platform == 'macos' && steps.identity.outputs.keychain != ''
         env:
           KEYCHAIN: ${{ steps.identity.outputs.keychain }}
         run: security delete-keychain "$KEYCHAIN"
 
-      # The system kills an app whose entitlements its profile does not grant: it must still run after 10 s. Built
-      # code runs only here, with the signing keychain and the notary key gone and no secret in its environment.
-      - name: The signed Mac app launches
-        if: steps.secrets.outputs.signed == 'true'
-        env:
-          APP: ${{ steps.signed.outputs.app }}
+      # SHA-256 of every file this leg made; publish checks them again after the files crossed the jobs.
+      - name: Checksums
+        working-directory: ${{ runner.temp }}
         run: |
-          "$APP/Contents/MacOS/HandLive" > "$RUNNER_TEMP/launch.log" 2>&1 &
+          mkdir -p out
+          cd out
+          for file in *; do
+            [ -e "$file" ] || continue
+            shasum -a 256 "$file" > "$file.sha256"
+          done
+          ls -l
+
+      - name: Keep the files for the launch and publish jobs
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: build-${{ matrix.platform }}-${{ steps.tag.outputs.version }}
+          path: ${{ runner.temp }}/out/
+          # A tag older than the login-keychain fallback has no Mac file without Developer ID.
+          if-no-files-found: ignore
+          retention-days: 7
+
+  # Runs the built code and nothing else: no environment, no secret, no token rights, no repository checkout.
+  launch:
+    name: launch the built apps
+    needs: sign
+    runs-on: macos-15
+    timeout-minutes: 15
+    permissions: {}
+    env:
+      VERSION: ${{ needs.sign.outputs.version }}
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: build-*-${{ needs.sign.outputs.version }}
+          path: ${{ runner.temp }}/in
+          merge-multiple: true
+
+      - name: Files match their SHA-256
+        working-directory: ${{ runner.temp }}/in
+        run: |
+          shopt -s nullglob
+          sums=(*.sha256)
+          if [ "${#sums[@]}" = 0 ]; then
+            echo "::error::No file from the sign job"; exit 1
+          fi
+          for sum in "${sums[@]}"; do shasum -a 256 -c "$sum"; done
+
+      - name: The IPA is an archive with the app inside
+        run: |
+          ipa="$RUNNER_TEMP/in/HandLive-$VERSION-ios-unsigned.ipa"
+          if [ ! -e "$ipa" ]; then
+            echo "::error::$(basename "$ipa") is missing"; exit 1
+          fi
+          unzip -tq "$ipa"
+          unzip -l "$ipa" | grep -q 'Payload/HandLive.app/Info.plist'
+
+      # The system kills an app whose entitlements its profile does not grant: it must still run after 10 s. The DMG
+      # is the ad-hoc signed one or, with Developer ID, the notarized one.
+      - name: The Mac app launches
+        run: |
+          shopt -s nullglob
+          dmgs=("$RUNNER_TEMP"/in/HandLive-"$VERSION"-macos*.dmg)
+          if [ "${#dmgs[@]}" = 0 ]; then
+            echo "::notice title=macOS not launched::no Mac DMG for $TAG"; exit 0
+          fi
+          if [ "${#dmgs[@]}" != 1 ]; then
+            echo "::error::Expected one Mac DMG, found ${#dmgs[@]}"; exit 1
+          fi
+          mount="$RUNNER_TEMP/dmg-mount"
+          mkdir -p "$mount" "$RUNNER_TEMP/launch"
+          hdiutil attach "${dmgs[0]}" -readonly -nobrowse -mountpoint "$mount"
+          ditto "$mount/HandLive.app" "$RUNNER_TEMP/launch/HandLive.app"
+          hdiutil detach "$mount"
+          codesign --verify --deep --strict --verbose=2 "$RUNNER_TEMP/launch/HandLive.app"
+          "$RUNNER_TEMP/launch/HandLive.app/Contents/MacOS/HandLive" > "$RUNNER_TEMP/launch.log" 2>&1 &
           pid=$!
           sleep 10
           if ! kill -0 "$pid" 2> /dev/null; then
-            cat "$RUNNER_TEMP/launch.log"; echo "::error::The signed Mac app quit at launch"; exit 1
+            cat "$RUNNER_TEMP/launch.log"; echo "::error::The Mac app quit at launch"; exit 1
           fi
           kill "$pid"
 
+  # Writes the Release; runs no built code and checks nothing out.
+  publish:
+    name: publish
+    needs: [sign, launch]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: release
+    permissions:
+      contents: write # create the Release and upload its assets
+    env:
+      VERSION: ${{ needs.sign.outputs.version }}
+      PUBLISH: ${{ github.event_name == 'push' || inputs.publish }}
+      REPLACE: ${{ inputs.replace || false }}
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: build-*-${{ needs.sign.outputs.version }}
+          path: ${{ runner.temp }}/out
+          merge-multiple: true
+
+      # The files crossed two jobs: each must still match the SHA-256 the sign job wrote, and every file needs one.
       - name: Checksums
+        working-directory: ${{ runner.temp }}/out
         run: |
-          cd "$RUNNER_TEMP/out"
-          for file in *; do shasum -a 256 "$file" > "$file.sha256"; done
+          shopt -s nullglob
+          if [ ! -e "HandLive-$VERSION-ios-unsigned.ipa" ]; then
+            echo "::error::HandLive-$VERSION-ios-unsigned.ipa is missing"; exit 1
+          fi
+          for file in *; do
+            [[ "$file" == *.sha256 ]] && continue
+            [ -e "$file.sha256" ] || { echo "::error::$file has no SHA-256 file"; exit 1; }
+          done
+          for sum in *.sha256; do
+            [ -e "${sum%.sha256}" ] || { echo "::error::$sum without its file"; exit 1; }
+            sha256sum --check --strict "$sum"
+          done
           ls -l
 
       - name: Keep the files as workflow artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: apple-${{ needs.build.outputs.version }}
+          name: apple-${{ needs.sign.outputs.version }}
           path: ${{ runner.temp }}/out/
           retention-days: 14
 
