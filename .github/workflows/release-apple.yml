@@ -142,7 +142,8 @@ jobs:
         working-directory: apple
         run: |
           ThirdParty/SQLCipher/fetch.sh
-          xcodegen="$(Tools/fetch-xcodegen.sh "$RUNNER_TEMP/xcodegen")"
+          # The script of the workflow's own commit: an older tag (v0.1.0-beta.1) predates it.
+          xcodegen="$(git show "$GITHUB_SHA:Tools/fetch-xcodegen.sh" | sh -s -- "$RUNNER_TEMP/xcodegen")"
           xcodebuild -version
           "$xcodegen" --version
           "$xcodegen" generate
