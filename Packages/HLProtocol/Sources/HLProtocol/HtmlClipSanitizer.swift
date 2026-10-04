@@ -76,7 +76,7 @@ public enum HtmlClipSanitizer {
         var end = bytes.count
         while start < end, isSpace(bytes[start]) { start += 1 }
         while end > start, isSpace(bytes[end - 1]) { end -= 1 }
-        return String(decoding: bytes[start..<end], as: UTF8.self)
+        return string(bytes[start..<end])
     }
 
     /// `<!-- … -->` removed; an unclosed comment stays as it is.
