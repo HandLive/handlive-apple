@@ -16,10 +16,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
-- CI (`ci-apple`): four parallel lanes (core tests, feature tests + Mac app, iOS app, SwiftLint + dev tools) instead
-  of one serial job. `Tools/make-test-scheme.sh` writes a shared test scheme into `HandLive.xcworkspace`, so a lane
-  builds the packages it tests once rather than once per package (2,869 compile units → 283 and 649); the Mac app
-  reuses that build; the apps build for arm64 only; the DerivedData cache, which never avoided a rebuild, is gone.
+- CI (`ci-apple`): four parallel lanes (core tests, feature tests + Mac app, iOS app, tools) instead of one serial
+  job, ~3 min instead of ~17. `Tools/make-test-scheme.sh` writes a shared test scheme into `HandLive.xcworkspace`, so
+  a lane builds the packages it tests once rather than once per package (2,869 compile units → 283 and 649); the Mac
+  app reuses that build; the DerivedData cache, which never avoided a rebuild, is gone. The tools lane keeps what the
+  per-package builds used to guarantee: `Tools/check_package_imports.py` fails an import outside a target's declared
+  dependencies, and the Mac app compiles once more for Intel (x86_64) beside the arm64 builds; it also runs SwiftLint
+  and builds the dev tools. A pull request from a `main` or `feat/**` branch of this repository skips the macOS lanes,
+  which the push run of the same commit already covers.
 
 ### Fixed
 

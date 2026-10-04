@@ -56,8 +56,16 @@ jobs:
     # Four lanes on parallel macOS runners. A test lane builds the packages it needs ONCE through a shared scheme of
     # HandLive.xcworkspace (Tools/make-test-scheme.sh), not once per package; the Mac app then reuses the features
     # lane's build. No DerivedData cache: a fresh checkout changes every source's mtime, so a restored cache rebuilt
-    # everything anyway and only cost its restore and save (~2 min). The apps build for arm64 only (compile check).
+    # everything anyway and only cost its restore and save (~2 min). The features and ios lanes build the apps for
+    # arm64; the tools lane compiles the Mac app for Intel (x86_64) once more, so neither architecture goes unchecked.
     name: ${{ matrix.name }}
+    # A pull request from a branch of this repository that the push trigger covers (main, feat/**) already has the
+    # push run of the same commit, shown on the pull request: skip the macOS lanes there so the two runs do not take
+    # eight of the five concurrent macOS runners. Fork pull requests and other branches still run here.
+    if: >-
+      github.event_name != 'pull_request'
+      || github.event.pull_request.head.repo.full_name != github.repository
+      || !(github.head_ref == 'main' || startsWith(github.head_ref, 'feat/'))
     runs-on: macos-15
     timeout-minutes: 45
     strategy:
@@ -71,7 +79,7 @@ jobs:
           - lane: ios
             name: build iOS app + Notification Service Extension
           - lane: tools
-            name: swiftlint + build dev tools
+            name: swiftlint + package imports + Intel Mac build + dev tools
     env:
       DERIVED_DATA: ${{ github.workspace }}/.ci-derived-data
       HOMEBREW_NO_AUTO_UPDATE: "1"
@@ -163,7 +171,7 @@ jobs:
             -derivedDataPath "$DERIVED_DATA"
 
       - name: xcodegen generate
-        if: (matrix.lane == 'features' || matrix.lane == 'ios') && !cancelled()
+        if: (matrix.lane == 'features' || matrix.lane == 'ios' || matrix.lane == 'tools') && !cancelled()
         working-directory: apple
         run: |
           brew install xcodegen
@@ -193,22 +201,42 @@ jobs:
             ARCHS=arm64 \
             CODE_SIGNING_ALLOWED=NO
 
-      - name: swiftlint lint --strict
+      # The shared test schemes put every module in one products directory, where an import outside a target's
+      # declared dependencies may still compile; this keeps that a deterministic failure.
+      - name: Package imports stay within declared dependencies
         if: matrix.lane == 'tools'
+        working-directory: apple
+        run: python3 Tools/check_package_imports.py
+
+      - name: swiftlint lint --strict
+        if: matrix.lane == 'tools' && !cancelled()
         working-directory: apple
         run: |
           brew install swiftlint
           swiftlint lint --strict
 
+      - name: Build Mac app for Intel (unsigned, x86_64 compile check)
+        if: matrix.lane == 'tools' && !cancelled()
+        working-directory: apple
+        run: |
+          xcodebuild build \
+            -workspace HandLive.xcworkspace \
+            -scheme HandLive \
+            -destination 'generic/platform=macOS' \
+            -derivedDataPath "$DERIVED_DATA" \
+            ARCHS=x86_64 \
+            ONLY_ACTIVE_ARCH=NO \
+            CODE_SIGNING_ALLOWED=NO
+
       # The headless dev client (apple/Tools/HandLiveDevClient) is not part of the apps: built only, so it keeps
       # compiling against the packages.
       - name: swift build dev client
-        if: matrix.lane == 'tools'
+        if: matrix.lane == 'tools' && !cancelled()
         working-directory: apple/Tools/HandLiveDevClient
         run: swift build
 
       # The HFP spike probe (apple/Tools/HFPSpike) runs by hand with a real phone: built only.
       - name: swift build HFP spike
-        if: matrix.lane == 'tools'
+        if: matrix.lane == 'tools' && !cancelled()
         working-directory: apple/Tools/HFPSpike
         run: swift build
