@@ -136,8 +136,7 @@ struct CallLogSyncRows: View {
 
     var body: some View {
         if let time = list.lastSyncAt {
-            Text(L10n.Settings.callLogLastSync(time: RelativeDateTimeFormatter().localizedString(
-                for: Date(timeIntervalSince1970: TimeInterval(time) / 1000), relativeTo: Date())))
+            Text(L10n.Settings.callLogLastSync(time: HLRelativeTime.past(milliseconds: time)))
                 .font(.footnote)
                 .foregroundStyle(Color.secondary)
         }
@@ -173,8 +172,7 @@ struct MessagesSettingsSection: View {
                 GroupedActionRow(L10n.Settings.resyncSms) { confirmingResync = true }
                     .disabled(!model.canResyncSms)
                 if let time = messages.lastSyncAt {
-                    Text(L10n.Settings.smsLastSync(time: RelativeDateTimeFormatter().localizedString(
-                        for: Date(timeIntervalSince1970: TimeInterval(time) / 1000), relativeTo: Date())))
+                    Text(L10n.Settings.smsLastSync(time: HLRelativeTime.past(milliseconds: time)))
                         .font(.footnote)
                         .foregroundStyle(Color.secondary)
                 }

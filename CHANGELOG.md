@@ -39,6 +39,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- Settings on iPhone/iPad and the Mac: "Last synced" read "in 0 seconds" ("sau 0 giây nữa") right after a sync, since the
+  numeric relative formatter prints any gap under a second that way. `HLRelativeTime` reads "now" under a minute (or for
+  a future moment), as on Android.
 - Mac and iPhone/iPad: a pair store or SMS database the current `db_key` cannot open (keys recreated after the Keychain
   lost them, or a build signed by another team) no longer leaves the app looking unpaired while every new pair fails to
   save and SMS stays off. `PairedDeviceStore.open` and `SmsDatabase.open` leave such a file where it is and use a

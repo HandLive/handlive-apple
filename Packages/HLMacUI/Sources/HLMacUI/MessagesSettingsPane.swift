@@ -66,8 +66,8 @@ struct SmsSyncSection: View {
         }
     }
 
-    /// "5 minutes ago" in the display language (SMS-01 field 4).
+    /// "5 minutes ago" in the display language (SMS-01 field 4); "now" under a minute, never "in 0 seconds".
     static func relative(_ ms: Int64, now: Date = Date()) -> String {
-        RelativeDateTimeFormatter().localizedString(for: Date(timeIntervalSince1970: TimeInterval(ms) / 1000), relativeTo: now)
+        HLRelativeTime.past(milliseconds: ms, now: now)
     }
 }

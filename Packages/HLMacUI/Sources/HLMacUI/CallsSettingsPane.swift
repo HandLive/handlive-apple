@@ -69,7 +69,8 @@ struct CallLogSyncSection: View {
         if list.lastSyncAt != nil || list.status == .permissionMissing {
             Section {
                 if let time = list.lastSyncAt {
-                    Text(L10n.Settings.callLogLastSync(time: SmsSyncSection.relative(time))).foregroundStyle(Color.secondary)
+                    Text(L10n.Settings.callLogLastSync(time: HLRelativeTime.past(milliseconds: time)))
+                        .foregroundStyle(Color.secondary)
                 }
                 if list.status == .permissionMissing {
                     Label(L10n.Call.callLogPermissionHint, systemImage: "info.circle")
