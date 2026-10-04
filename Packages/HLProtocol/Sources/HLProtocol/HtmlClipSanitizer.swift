@@ -1,11 +1,14 @@
 import Foundation
 
+// One algorithm kept in one file so it reads against the reference sanitizer top to bottom.
+// swiftlint:disable file_length
+
 /// The HTML sanitizer every platform runs on the `html` of a text clip (CLIP-01 API 5 `html`): the same algorithm as
 /// the reference in `shared/tools/vectors/build_clipboard_html_vectors.py`, proven equal by `clipboard-html.json`.
 ///
-/// Comments go; tag and attribute names are case-insensitive and output tags are lowercase; scripts, styles, frames
+/// Comments (and `<!…>` / `<?…>` bogus comments) go; tag and attribute names are case-insensitive and output tags are lowercase; scripts, styles, frames
 /// and the like go with their content; a fixed set of tags stays with its allowed attributes only; any other tag is
-/// unwrapped (the tag goes, its content stays). The work is done on UTF-8 bytes: every piece of syntax is ASCII, so a
+/// unwrapped (the tag goes, its content stays). A `<` in text that did not complete a tag becomes `&lt;`. The work is done on UTF-8 bytes: every piece of syntax is ASCII, so a
 /// multi-byte character is never split.
 public enum HtmlClipSanitizer {
     private static let dropContent: Set<String> = [
@@ -28,11 +31,11 @@ public enum HtmlClipSanitizer {
 
     /// The sanitized form of `html`; the size limit (`CLIP_MAX_HTML`) is measured on this output.
     public static func sanitize(_ html: String) -> String {
-        let text = removeComments(Array(html.utf8))
+        let text = removeBogusComments(removeComments(Array(html.utf8)))
         var out: [UInt8] = []
         var pos = 0
         while let tag = nextTag(in: text, from: pos) {
-            out.append(contentsOf: text[pos..<tag.start])
+            appendText(text[pos..<tag.start], to: &out)
             pos = tag.end
             if dropContent.contains(tag.name) {
                 if !tag.closing { pos = closeTagEnd(of: tag.name, in: text, from: pos) ?? text.count }
@@ -45,7 +48,7 @@ public enum HtmlClipSanitizer {
                 out.append(contentsOf: Array(open.utf8))
             }
         }
-        out.append(contentsOf: text[pos...])
+        appendText(text[pos...], to: &out)
         return string(out)
     }
 
@@ -79,16 +82,45 @@ public enum HtmlClipSanitizer {
         return string(bytes[start..<end])
     }
 
-    /// `<!-- … -->` removed; an unclosed comment stays as it is.
+    /// `<!-- … -->` removed; an unclosed comment runs to the end of the input, as in HTML.
     private static func removeComments(_ bytes: [UInt8]) -> [UInt8] {
         var out: [UInt8] = []
         var pos = 0
-        while let open = find([60, 33, 45, 45], in: bytes, from: pos), let close = find([45, 45, 62], in: bytes, from: open + 4) {
+        while let open = find([60, 33, 45, 45], in: bytes, from: pos) {
             out.append(contentsOf: bytes[pos..<open])
+            guard let close = find([45, 45, 62], in: bytes, from: open + 4) else { return out }
             pos = close + 3
         }
         out.append(contentsOf: bytes[pos...])
         return out
+    }
+
+    /// `<!…>` that is not a comment (doctype, CDATA) and `<?…>` removed up to and including the next `>`, or to the
+    /// end of the input when there is none.
+    private static func removeBogusComments(_ bytes: [UInt8]) -> [UInt8] {
+        var out: [UInt8] = []
+        var index = 0
+        while index < bytes.count {
+            let bogus = bytes[index] == 60 && index + 1 < bytes.count && (bytes[index + 1] == 33 || bytes[index + 1] == 63)
+            guard bogus else {
+                out.append(bytes[index])
+                index += 1
+                continue
+            }
+            guard let close = bytes[(index + 2)...].firstIndex(of: 62) else { return out }
+            index = close + 1
+        }
+        return out
+    }
+
+    /// Text between tags: copied as is, except a `<` followed by `/` or an ASCII letter (it did not complete a tag, so
+    /// the receiving parser would close it at the next `>`) becomes `&lt;`.
+    private static func appendText(_ segment: ArraySlice<UInt8>, to out: inout [UInt8]) {
+        for index in segment.indices {
+            let opensTag = segment[index] == 60 && index + 1 < segment.endIndex
+                && (segment[index + 1] == 47 || isLetter(segment[index + 1]))
+            if opensTag { out.append(contentsOf: Array("&lt;".utf8)) } else { out.append(segment[index]) }
+        }
     }
 
     private static func find(_ needle: [UInt8], in bytes: [UInt8], from: Int) -> Int? {
@@ -133,7 +165,7 @@ public enum HtmlClipSanitizer {
         return nil
     }
 
-    /// End of the first `</name>` (case-insensitive, spaces allowed before `>`) at or after `from`.
+    /// End of the first `</name>` (ASCII case-insensitive only, spaces allowed before `>`) at or after `from`.
     private static func closeTagEnd(of name: String, in bytes: [UInt8], from: Int) -> Int? {
         let wanted = Array(name.utf8)
         var index = from
@@ -166,13 +198,11 @@ public enum HtmlClipSanitizer {
             var nameEnd = index + 1
             while nameEnd < bytes.endIndex, isNameByte(bytes[nameEnd]) { nameEnd += 1 }
             let name = string(bytes[index..<nameEnd]).lowercased()
-            var valueStart = nameEnd
-            while valueStart < bytes.endIndex, isSpace(bytes[valueStart]) { valueStart += 1 }
+            var valueStart = skipSpaces(in: bytes, from: nameEnd)
             var raw: String?
             var end = nameEnd
             if valueStart < bytes.endIndex, bytes[valueStart] == 61 {
-                valueStart += 1
-                while valueStart < bytes.endIndex, isSpace(bytes[valueStart]) { valueStart += 1 }
+                valueStart = skipSpaces(in: bytes, from: valueStart + 1)
                 if let valueEnd = valueEnd(in: bytes, from: valueStart) {
                     raw = string(bytes[valueStart..<valueEnd])
                     end = valueEnd
@@ -182,6 +212,12 @@ public enum HtmlClipSanitizer {
             index = end
         }
         return result
+    }
+
+    private static func skipSpaces(in bytes: ArraySlice<UInt8>, from: Int) -> Int {
+        var index = from
+        while index < bytes.endIndex, isSpace(bytes[index]) { index += 1 }
+        return index
     }
 
     private static func isNameByte(_ byte: UInt8) -> Bool {

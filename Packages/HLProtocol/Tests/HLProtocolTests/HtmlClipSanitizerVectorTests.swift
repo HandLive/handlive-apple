@@ -24,7 +24,8 @@ struct HtmlClipSanitizerVectorTests {
         let all = try cases()
         #expect(all.count >= 30)
         for item in all {
-            #expect(HtmlClipSanitizer.sanitize(item.input) == item.output, "\(item.name)")
+            // Swift String equality is canonical equivalence, not bytes: compare the UTF-8 bytes.
+            #expect(Array(HtmlClipSanitizer.sanitize(item.input).utf8) == Array(item.output.utf8), "\(item.name)")
         }
     }
 
@@ -39,6 +40,23 @@ struct HtmlClipSanitizerVectorTests {
         #expect(!output.contains("onclick"))
         #expect(!output.contains("onload"))
         #expect(HtmlClipSanitizer.sanitize(hostile) == "<a>a</a><p>k</p>")
+    }
+
+    @Test("Đầu vào có dấu ngoặc nhọn hở và mXSS không để lại thẻ hay thuộc tính hoạt động")
+    func unbalancedAndMutationInputsLeaveNothingActive() {
+        let inputs = [
+            "<img src=x onerror=alert(1) \"<p>a</p>",
+            "<p><style><img src=\"</style><img src=x onerror=alert(1)//\"></p>"
+        ]
+        for input in inputs {
+            let output = HtmlClipSanitizer.sanitize(input).lowercased()
+            #expect(!output.contains("<img"), "\(input)")
+            #expect(!output.contains("<script"), "\(input)")
+            // `onerror=` may survive only as escaped text, never inside a tag.
+            for part in output.components(separatedBy: "<").dropFirst() {
+                #expect(!part.prefix { $0 != ">" }.contains("onerror="), "\(input)")
+            }
+        }
     }
 
     @Test("Ký tự nhiều byte đi qua nguyên vẹn")
