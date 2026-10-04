@@ -59,6 +59,7 @@ struct AppModelAccountTests {
         #expect(await model.deleteAllData(evenIfOffline: true) == .deleted)
         #expect(model.pairedDevice == nil && !model.setupCompleted && model.phase == .ready)
         #expect(try secrets.load(account: SecretAccount.pairKey(pairId: pairId)) == nil)
+        #expect(secrets.everyKeychainDeletions == 1) // both keychains (SET-02 API 7 logic 6), not just this build's
         #expect(model.deviceId != nil && model.deviceId != oldDevice) // a fresh install's keys (SET-03)
         #expect(sms.removedEverything == 1)
         #expect(!FileManager.default.fileExists(atPath: model.pairStoreURL.path))
