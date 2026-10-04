@@ -49,6 +49,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   key's file the older one gives way (one generation). Delete All removes both slots. The SQLCipher format is pinned
   with `PRAGMA cipher_compatibility = 4` (SET-03 API 1 logic 5).
 
+### Security
+
+- Release workflow: the signed Mac app is launched only after the signing keychain and the notary key are gone, in a
+  step without secrets; the ad-hoc signed DMG is signed, launched and packed in the build job, which has no write
+  access, so the release job runs no code of the repository while it holds the secrets.
+- CI and the release workflow generate the Xcode project with XcodeGen 2.46.0 from its GitHub release, checked against
+  its SHA-256 (`Tools/fetch-xcodegen.sh`), instead of Homebrew's current formula.
+
 ## [2026-09-30]
 
 ### Fixed

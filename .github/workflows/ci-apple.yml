@@ -174,8 +174,8 @@ jobs:
         if: (matrix.lane == 'features' || matrix.lane == 'ios' || matrix.lane == 'tools') && !cancelled()
         working-directory: apple
         run: |
-          brew install xcodegen
-          xcodegen generate
+          xcodegen="$(Tools/fetch-xcodegen.sh "$RUNNER_TEMP/xcodegen")"
+          "$xcodegen" generate
 
       - name: Build Mac app (unsigned, arm64; reuses the packages the tests built)
         if: matrix.lane == 'features' && !cancelled() # still a compile check when a test failed

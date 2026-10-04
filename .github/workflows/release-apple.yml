@@ -9,8 +9,10 @@
 #   A tag older than the login-keychain support (v0.1.0-beta.1) publishes no Mac app without those secrets.
 # Runs on a pushed tag v*, or by hand for an existing tag: publish=false keeps the files as workflow artifacts only; a
 # file already attached is never replaced unless replace=true.
-# Two stages: "build" runs xcodegen/xcodebuild and the packages with read-only rights and no secret; "release" only
-# runs Apple's signing and notarization tools and gh, with the secrets (environment "release") and write access.
+# Two stages: "build" runs xcodegen/xcodebuild and the packages with read-only rights and no secret but the optional
+# HANDLIVE_REPOS_TOKEN that reads the hub and handlive-shared; "release" runs Apple's signing and notarization tools
+# and gh, with the secrets (environment "release") and write access, and launches the built app only in a step
+# without secrets, after the signing keychain is gone.
 # MARKETING_VERSION in project.yml must equal the tag's version core (v0.1.0-beta.1 → 0.1.0). The hub and
 # handlive-shared are checked out at the same tag (push their tags first); one without it falls back to main with a
 # warning.
@@ -140,10 +142,10 @@ jobs:
         working-directory: apple
         run: |
           ThirdParty/SQLCipher/fetch.sh
-          brew install xcodegen
+          xcodegen="$(Tools/fetch-xcodegen.sh "$RUNNER_TEMP/xcodegen")"
           xcodebuild -version
-          xcodegen --version
-          xcodegen generate
+          "$xcodegen" --version
+          "$xcodegen" generate
 
       - name: Build iOS app for devices (Release, unsigned) and package the IPA
         if: matrix.platform == 'ios'
@@ -163,11 +165,16 @@ jobs:
           cp -R "$DERIVED_DATA/Build/Products/Release-iphoneos/HandLive.app" "$work/Payload/"
           (cd "$work" && zip -qry "$RUNNER_TEMP/out/HandLive-$VERSION-ios-unsigned.ipa" Payload)
 
-      # Universal (arm64 + x86_64) and unsigned; the release job signs this very build. Zipped with ditto so the
-      # framework's symbolic links survive the artifact.
-      - name: Build Mac app (Release, universal, unsigned)
+      # Universal (arm64 + x86_64) and unsigned; with Developer ID the release job signs this very build. Zipped with
+      # ditto so the framework's symbolic links survive the artifact.
+      # Without Developer ID it ships signed ad hoc (no entitlements, no hardened runtime), which seals the bundle so
+      # macOS offers Open Anyway instead of calling it damaged; the app then uses the login keychain (0.6.1). That
+      # copy is signed, launched and packed here, in the job without write access or signing secrets.
+      - name: Build Mac app (Release, universal, unsigned) and the ad-hoc signed DMG
         if: matrix.platform == 'macos'
         working-directory: apple
+        env:
+          VERSION: ${{ steps.tag.outputs.version }}
         run: |
           xcodebuild build \
             -project HandLive.xcodeproj \
@@ -179,9 +186,27 @@ jobs:
           mkdir -p "$RUNNER_TEMP/out"
           ditto -c -k --keepParent "$DERIVED_DATA/Build/Products/Release/HandLive.app" "$RUNNER_TEMP/out/HandLive-unsigned.app.zip"
           # An ad-hoc signed build works only once the app falls back to the login keychain (0.6.1).
-          if grep -q processCanUseDataProtectionKeychain Packages/HLCrypto/Sources/HLCrypto/KeychainSecretStore.swift; then
-            touch "$RUNNER_TEMP/out/unsigned-mac-supported"
+          if ! grep -q processCanUseDataProtectionKeychain Packages/HLCrypto/Sources/HLCrypto/KeychainSecretStore.swift; then
+            exit 0
           fi
+          app="$RUNNER_TEMP/adhoc/HandLive.app"
+          mkdir -p "$RUNNER_TEMP/adhoc"
+          ditto "$DERIVED_DATA/Build/Products/Release/HandLive.app" "$app"
+          codesign --force --deep --sign - "$app"
+          codesign --verify --deep --strict --verbose=2 "$app"
+          "$app/Contents/MacOS/HandLive" > "$RUNNER_TEMP/launch.log" 2>&1 &
+          pid=$!
+          sleep 10
+          if ! kill -0 "$pid" 2> /dev/null; then
+            cat "$RUNNER_TEMP/launch.log"; echo "::error::The ad-hoc signed Mac app quit at launch"; exit 1
+          fi
+          kill "$pid"
+          stage="$RUNNER_TEMP/dmg"
+          mkdir -p "$stage"
+          ditto "$app" "$stage/HandLive.app"
+          ln -s /Applications "$stage/Applications"
+          hdiutil create -volname "HandLive $VERSION" -srcfolder "$stage" -ov -format UDZO \
+            "$RUNNER_TEMP/out/HandLive-$VERSION-macos-unsigned.dmg"
 
       - name: Keep the build for the release job
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -210,7 +235,8 @@ jobs:
           path: ${{ runner.temp }}/in
           merge-multiple: true
 
-      # Only the entitlements file: the release job builds and runs nothing from the repository.
+      # Only the entitlements file: the release job builds nothing from the repository and runs only the signed app,
+      # after the signing keychain and the notary key are gone.
       - name: Entitlements of the tag
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
@@ -249,33 +275,16 @@ jobs:
             echo "signed=true" >> "$GITHUB_OUTPUT"
           fi
 
-      # Without Developer ID: signed ad hoc (no entitlements, no hardened runtime), which seals the bundle so macOS
-      # offers Open Anyway instead of calling it damaged. The app then uses the login keychain (0.6.1).
+      # Without Developer ID: the ad-hoc signed DMG the build job made and launched.
       - name: Unsigned Mac DMG
         if: steps.secrets.outputs.signed == 'false'
         run: |
-          if [ ! -e "$RUNNER_TEMP/in/unsigned-mac-supported" ]; then
+          dmg="HandLive-$VERSION-macos-unsigned.dmg"
+          if [ ! -e "$RUNNER_TEMP/in/$dmg" ]; then
             echo "::notice title=macOS not published::$TAG predates the login-keychain fallback: its Mac app runs only signed with Developer ID (docs/deployment-guide.md, Release builds)."
             exit 0
           fi
-          mkdir -p "$RUNNER_TEMP/mac"
-          ditto -x -k "$RUNNER_TEMP/in/HandLive-unsigned.app.zip" "$RUNNER_TEMP/mac"
-          app="$RUNNER_TEMP/mac/HandLive.app"
-          codesign --force --deep --sign - "$app"
-          codesign --verify --deep --strict --verbose=2 "$app"
-          "$app/Contents/MacOS/HandLive" > "$RUNNER_TEMP/launch.log" 2>&1 &
-          pid=$!
-          sleep 10
-          if ! kill -0 "$pid" 2> /dev/null; then
-            cat "$RUNNER_TEMP/launch.log"; echo "::error::The ad-hoc signed Mac app quit at launch"; exit 1
-          fi
-          kill "$pid"
-          stage="$RUNNER_TEMP/dmg"
-          mkdir -p "$stage"
-          ditto "$app" "$stage/HandLive.app"
-          ln -s /Applications "$stage/Applications"
-          hdiutil create -volname "HandLive $VERSION" -srcfolder "$stage" -ov -format UDZO \
-            "$RUNNER_TEMP/out/HandLive-$VERSION-macos-unsigned.dmg"
+          mv "$RUNNER_TEMP/in/$dmg" "$RUNNER_TEMP/out/"
 
       - name: Developer ID certificate and provisioning profile
         id: identity
@@ -414,7 +423,20 @@ jobs:
           xcrun stapler staple "$dmg"
           spctl --assess --type open --context context:primary-signature --verbose=2 "$dmg"
           spctl --assess --type execute --verbose=2 "$APP"
-          # The system kills an app whose entitlements its profile does not grant: it must still run after 10 s.
+
+      - name: Remove the release keychain
+        if: always() && steps.identity.outputs.keychain != ''
+        env:
+          KEYCHAIN: ${{ steps.identity.outputs.keychain }}
+        run: security delete-keychain "$KEYCHAIN"
+
+      # The system kills an app whose entitlements its profile does not grant: it must still run after 10 s. Built
+      # code runs only here, with the signing keychain and the notary key gone and no secret in its environment.
+      - name: The signed Mac app launches
+        if: steps.secrets.outputs.signed == 'true'
+        env:
+          APP: ${{ steps.signed.outputs.app }}
+        run: |
           "$APP/Contents/MacOS/HandLive" > "$RUNNER_TEMP/launch.log" 2>&1 &
           pid=$!
           sleep 10
@@ -422,12 +444,6 @@ jobs:
             cat "$RUNNER_TEMP/launch.log"; echo "::error::The signed Mac app quit at launch"; exit 1
           fi
           kill "$pid"
-
-      - name: Remove the release keychain
-        if: always() && steps.identity.outputs.keychain != ''
-        env:
-          KEYCHAIN: ${{ steps.identity.outputs.keychain }}
-        run: security delete-keychain "$KEYCHAIN"
 
       - name: Checksums
         run: |

@@ -55,6 +55,7 @@ Change the catalog in `../shared` (docs first), then run the generator; never ed
 
 ```sh
 cd apple && xcodegen generate     # creates HandLive.xcodeproj (not committed, listed in .gitignore)
+# CI and releases use the pinned, checksum-verified XcodeGen: xcodegen="$(Tools/fetch-xcodegen.sh /tmp/xcodegen)"
 open HandLive.xcworkspace
 ```
 
