@@ -63,9 +63,11 @@ open HandLive.xcworkspace
 Test dùng swift-testing (`import Testing`) và đọc thẳng `shared/test-vectors/*.json`, `shared/schemas/*.json` theo đường dẫn tương đối tới gốc workspace (thư mục cha chứa `apple/`, `shared/` và `docs/` của kho hub).
 
 ```sh
-# Có Xcode (CI): dùng Testing đi kèm Xcode
+# Có Xcode: dùng Testing đi kèm Xcode
 cd apple/Packages/HLCrypto && swift test
-xcodebuild test -workspace apple/HandLive.xcworkspace -scheme HLCrypto -destination 'platform=macOS'
+# Mọi package với một lần build các package dùng chung (CI chạy HLTests-core và HLTests-features ở hai lane song song)
+cd apple && Tools/make-test-scheme.sh HLTests-all all
+xcodebuild test -workspace HandLive.xcworkspace -scheme HLTests-all -destination 'platform=macOS' -parallel-testing-enabled NO
 
 # Chỉ có Command Line Tools: kéo gói swift-testing (release/6.2) và dùng bản .lproj thay String Catalog.
 # Package có SwiftUI (HLDesignSystem, HLSMSUI, HLCalls, HLMacUI, HLiOSUI) cần SDK macOS 26 khi máy cài SDK mới hơn.

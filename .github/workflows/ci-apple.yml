@@ -163,14 +163,14 @@ jobs:
             -derivedDataPath "$DERIVED_DATA"
 
       - name: xcodegen generate
-        if: matrix.lane == 'features' || matrix.lane == 'ios'
+        if: (matrix.lane == 'features' || matrix.lane == 'ios') && !cancelled()
         working-directory: apple
         run: |
           brew install xcodegen
           xcodegen generate
 
       - name: Build Mac app (unsigned, arm64; reuses the packages the tests built)
-        if: matrix.lane == 'features'
+        if: matrix.lane == 'features' && !cancelled() # still a compile check when a test failed
         working-directory: apple
         run: |
           xcodebuild build \

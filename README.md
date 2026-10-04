@@ -63,9 +63,11 @@ open HandLive.xcworkspace
 Tests use swift-testing (`import Testing`) and read `shared/test-vectors/*.json` and `shared/schemas/*.json` through paths relative to the workspace root (the parent directory holding `apple/`, `shared/` and the hub's `docs/`).
 
 ```sh
-# With Xcode (CI): uses the Testing module bundled with Xcode
+# With Xcode: uses the Testing module bundled with Xcode
 cd apple/Packages/HLCrypto && swift test
-xcodebuild test -workspace apple/HandLive.xcworkspace -scheme HLCrypto -destination 'platform=macOS'
+# Every package with one build of the shared ones (CI runs HLTests-core and HLTests-features in parallel lanes)
+cd apple && Tools/make-test-scheme.sh HLTests-all all
+xcodebuild test -workspace HandLive.xcworkspace -scheme HLTests-all -destination 'platform=macOS' -parallel-testing-enabled NO
 
 # Command Line Tools only: pulls the swift-testing package (release/6.2) and uses the .lproj fallback of the
 # String Catalogs. SwiftUI packages (HLDesignSystem, HLSMSUI, HLCalls, HLMacUI, HLiOSUI) need the macOS 26 SDK when a
