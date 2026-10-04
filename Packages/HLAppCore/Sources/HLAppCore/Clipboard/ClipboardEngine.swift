@@ -116,6 +116,7 @@ public final class ClipboardEngine {
         guard count != ownWrite?.changeCount, settings.clipboardEnabled else { return }
         BenchLog.event("copy_detected")
         guard readingAllowed() else {
+            BenchLog.event("clip_read_failed", ["reason": "paste_access", "stage": "poll", "source": "auto"])
             if !pasteGuideShown {
                 pasteGuideShown = true
                 onNotice(.pasteAccessNeeded)
