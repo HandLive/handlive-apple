@@ -52,6 +52,59 @@ public final class PairedDeviceStore: @unchecked Sendable {
         try mutate { $0.removeAll { $0.pairId == pairId } }
     }
 
+    /// SET-03 API 1 logic 5: the store this `db_key` can use. A file whose tag does not verify under the key was sealed
+    /// with a key this install does not have (the keys were recreated after the Keychain lost them, or a build signed by
+    /// another team reads another keychain access group); using it would make every new pair fail to save. So the
+    /// second slot `<file>.alt` is used instead, and the other key's file stays where it is: switching back to the
+    /// build that wrote it finds its pairs again. When both slots hold another key's file, the one modified longest ago
+    /// gives way (one generation is kept). Any other error keeps `fileURL` and changes no slot.
+    public static func open(fileURL: URL, databaseKey: Data) -> PairedDeviceStore {
+        let main = PairedDeviceStore(fileURL: fileURL, databaseKey: databaseKey)
+        let alt = PairedDeviceStore(fileURL: altURL(for: fileURL), databaseKey: databaseKey)
+        switch (main.slotState(), alt.slotState()) {
+        case (.opens, _), (.unreadable, _), (.otherKey, .unreadable): return main
+        case (.absent, .opens), (.otherKey, .opens), (.otherKey, .absent): return alt
+        case (.absent, _): return main
+        case (.otherKey, .otherKey):
+            let older = main.modified < alt.modified ? main : alt
+            try? FileManager.default.removeItem(at: older.fileURL)
+            return older
+        }
+    }
+
+    /// The second slot of SET-03 API 1 logic 5: `paired-devices.bin.alt`.
+    public static func altURL(for fileURL: URL) -> URL {
+        fileURL.deletingLastPathComponent().appendingPathComponent(fileURL.lastPathComponent + ".alt")
+    }
+
+    /// SET-02 API 7: deletes both slots; missing files count as deleted.
+    public static func deleteFiles(at fileURL: URL) throws {
+        for file in [fileURL, altURL(for: fileURL)] where FileManager.default.fileExists(atPath: file.path) {
+            try FileManager.default.removeItem(at: file)
+        }
+    }
+
+    private enum SlotState {
+        case opens, absent, otherKey, unreadable
+    }
+
+    private func slotState() -> SlotState {
+        guard FileManager.default.fileExists(atPath: fileURL.path) else { return .absent }
+        do {
+            _ = try all()
+            return .opens
+        } catch CryptoError.authenticationFailed {
+            return .otherKey
+        } catch {
+            return .unreadable
+        }
+    }
+
+    private var modified: Date {
+        let attributes = try? FileManager.default.attributesOfItem(atPath: fileURL.path)
+        return attributes?[.modificationDate] as? Date ?? .distantPast
+    }
+
     private func mutate(_ change: (inout [PairedDeviceRecord]) -> Void) throws {
         lock.lock()
         defer { lock.unlock() }

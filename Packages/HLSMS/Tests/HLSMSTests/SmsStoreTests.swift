@@ -28,6 +28,66 @@ struct SmsStoreTests {
         #expect(throws: SmsDatabaseError.invalidKey) { _ = try SmsDatabase(url: database.url, key: Data(count: 16)) }
     }
 
+    @Test("SET-03 API 1 logic 5: a database sealed with another db_key stays; this key uses the second slot")
+    func usesSecondSlotBesideAnotherKey() async throws {
+        let first = try SmsFixtures.database()
+        try await SmsStore(database: first).applySyncPage(page(threads: 1), pairId: pairId, now: 1)
+        try first.pool.close()
+        let url = first.url
+        func open(_ byte: UInt8) throws -> SmsDatabase {
+            try SmsDatabase.open(url: url, key: byte == 0 ? SmsFixtures.key : Data(repeating: byte, count: 32))
+        }
+        let second = try open(9)
+        #expect(second.url == SmsDatabase.altURL(for: url))
+        #expect(try await threadCount(second) == 0)
+        try await SmsStore(database: second).applySyncPage(page(threads: 2), pairId: pairId, now: 1)
+        try second.pool.close()
+        let back = try open(0)
+        #expect(back.url == url)
+        #expect(try await threadCount(back) == 1) // the first key's data never moved
+        try back.pool.close()
+        let secondAgain = try open(9)
+        #expect(try await threadCount(secondAgain) == 2)
+        try secondAgain.pool.close()
+        // A third key: both slots hold another key's database, so the one modified longest ago gives way.
+        for suffix in ["", "-wal", "-shm"] where FileManager.default.fileExists(atPath: url.path + suffix) {
+            try FileManager.default.setAttributes([.modificationDate: Date(timeIntervalSince1970: 1)],
+                                                  ofItemAtPath: url.path + suffix)
+        }
+        let third = try open(10)
+        #expect(third.url == url)
+        #expect(try await threadCount(third) == 0)
+        try third.pool.close()
+        let secondKept = try open(9)
+        #expect(try await threadCount(secondKept) == 2)
+        try secondKept.pool.close()
+        try SmsDatabase.removeFiles(at: url) // SET-02 API 7: both slots
+        #expect(!FileManager.default.fileExists(atPath: url.path))
+        #expect(!FileManager.default.fileExists(atPath: SmsDatabase.altURL(for: url).path))
+        #expect(throws: SmsDatabaseError.invalidKey) { _ = try SmsDatabase.open(url: url, key: Data(count: 16)) }
+    }
+
+    @Test("SET-03 API 1 logic 5: an error other than the key (a file it may not read) changes no slot")
+    func keepsSlotsOnOtherErrors() throws {
+        let database = try SmsFixtures.database()
+        try database.pool.close()
+        let path = database.url.path
+        try FileManager.default.setAttributes([.posixPermissions: 0], ofItemAtPath: path)
+        defer { try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: path) }
+        #expect(throws: (any Error).self) { _ = try SmsDatabase.open(url: database.url, key: SmsFixtures.key) }
+        #expect(FileManager.default.fileExists(atPath: path))
+        #expect(!FileManager.default.fileExists(atPath: SmsDatabase.altURL(for: database.url).path))
+    }
+
+    private func page(threads: Int64) -> SmsSyncAckData {
+        SmsSyncAckData(threads: (1...threads).map { SmsFixtures.thread($0, lastTs: 10) }, messages: [], cursor: "c1",
+                       hasMore: false, unread: [])
+    }
+
+    private func threadCount(_ database: SmsDatabase) async throws -> Int? {
+        try await database.pool.read { try Int.fetchOne($0, sql: "SELECT COUNT(*) FROM sms_thread") }
+    }
+
     @Test("The database also holds the call log of 0.9.3 with its index and type check")
     func callLogTable() async throws {
         let database = try SmsFixtures.database()

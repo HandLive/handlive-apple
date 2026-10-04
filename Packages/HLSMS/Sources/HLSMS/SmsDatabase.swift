@@ -33,6 +33,9 @@ public final class SmsDatabase: Sendable {
         let hexKey = key.map { String(format: "%02x", $0) }.joined()
         configuration.prepareDatabase { db in
             try db.execute(sql: "PRAGMA key = \"x'\(hexKey)'\"")
+            // Pin the SQLCipher 4 format: a library update with other defaults must not read the file as
+            // SQLITE_NOTADB, which would leave the user's database for the second slot (SET-03 API 1 logic 5).
+            try db.execute(sql: "PRAGMA cipher_compatibility = 4")
             guard try String.fetchOne(db, sql: "PRAGMA cipher_version") != nil else {
                 throw SmsDatabaseError.encryptionUnavailable
             }
@@ -42,6 +45,61 @@ public final class SmsDatabase: Sendable {
         try Self.migrator.migrate(pool)
     }
 
+    /// SET-03 API 1 logic 5: opens the database this `db_key` can use. When SQLCipher finds no database under the key
+    /// at `url` (`SQLITE_NOTADB`: sealed with a `db_key` this install does not have, or its first page is damaged), or
+    /// `url` holds no database, the second slot `<url>.alt` is used when it opens with the key or holds none (a new
+    /// empty database, which syncs again from the phone); the other key's database stays where it is, so switching back
+    /// to the build that wrote it finds its data again. When both slots hold another key's database, the one modified
+    /// longest ago gives way (one generation is kept). Every other error is thrown and changes no slot.
+    public static func open(url: URL, key: Data) throws -> SmsDatabase {
+        let alt = altURL(for: url)
+        guard exists(url) else {
+            if exists(alt), let database = try? SmsDatabase(url: alt, key: key) { return database }
+            try removeSet(at: url) // a -wal or -shm without its database holds nothing worth keeping
+            return try SmsDatabase(url: url, key: key)
+        }
+        do {
+            return try SmsDatabase(url: url, key: key)
+        } catch let error as DatabaseError where error.resultCode == .SQLITE_NOTADB {
+            guard exists(alt) else {
+                try removeSet(at: alt)
+                return try SmsDatabase(url: alt, key: key)
+            }
+            do {
+                return try SmsDatabase(url: alt, key: key)
+            } catch let altError as DatabaseError where altError.resultCode == .SQLITE_NOTADB {
+                let older = modified(url) < modified(alt) ? url : alt
+                try removeSet(at: older)
+                return try SmsDatabase(url: older, key: key)
+            }
+        }
+    }
+
+    /// The second slot of SET-03 API 1 logic 5: `handlive.sqlite.alt`, with its `-wal` and `-shm` beside it.
+    public static func altURL(for url: URL) -> URL {
+        URL(fileURLWithPath: url.path + ".alt")
+    }
+
+    private static let suffixes = ["-wal", "-shm", ""] // the database file last: never a -wal left without it
+
+    private static func exists(_ url: URL) -> Bool {
+        FileManager.default.fileExists(atPath: url.path)
+    }
+
+    /// The latest modification of a database's files: with WAL, the database file itself changes only at checkpoints.
+    private static func modified(_ url: URL) -> Date {
+        suffixes.compactMap { suffix in
+            let attributes = try? FileManager.default.attributesOfItem(atPath: url.path + suffix)
+            return attributes?[.modificationDate] as? Date
+        }.max() ?? .distantPast
+    }
+
+    private static func removeSet(at url: URL) throws {
+        for suffix in suffixes where exists(URL(fileURLWithPath: url.path + suffix)) {
+            try FileManager.default.removeItem(at: URL(fileURLWithPath: url.path + suffix))
+        }
+    }
+
     /// `<Application Support>/<bundle id>/handlive.sqlite`: the Mac's data folder, and on iOS the app's own container
     /// (the Notification Service Extension never opens the database, so it stays out of the shared App Group).
     public static func defaultURL(bundleIdentifier: String) -> URL {
@@ -49,19 +107,19 @@ public final class SmsDatabase: Sendable {
         return support.appendingPathComponent(bundleIdentifier, isDirectory: true).appendingPathComponent(fileName)
     }
 
-    /// Closes the pool and deletes the file with its `-wal` and `-shm` companions (SET-02 API 7). The files go even
-    /// when a connection cannot close: `db_key` is deleted first, so what is left cannot be read anyway.
+    /// Closes the pool and deletes the file with its `-wal` and `-shm` companions (SET-02 API 7; `removeFiles` deletes
+    /// both slots). The files go even when a connection cannot close: `db_key` is deleted first, so what is left cannot
+    /// be read anyway.
     public func deleteFiles() throws {
         try? pool.close()
-        try Self.removeFiles(at: url)
+        try Self.removeSet(at: url)
     }
 
-    /// Deletes a database's files without opening it (no key, or it could not be opened); missing files are fine.
+    /// Deletes a database's files without opening it (no key, or it could not be opened), both slots of SET-03 API 1
+    /// logic 5; missing files are fine.
     public static func removeFiles(at url: URL) throws {
-        for suffix in ["", "-wal", "-shm"] {
-            let file = URL(fileURLWithPath: url.path + suffix)
-            if FileManager.default.fileExists(atPath: file.path) { try FileManager.default.removeItem(at: file) }
-        }
+        try removeSet(at: url)
+        try removeSet(at: altURL(for: url))
     }
 
     static var migrator: DatabaseMigrator {
