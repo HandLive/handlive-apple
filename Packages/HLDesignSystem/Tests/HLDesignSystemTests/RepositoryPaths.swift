@@ -10,6 +10,7 @@ enum RepositoryPaths {
     static let typographyDoc = repositoryRoot.appendingPathComponent("docs/design-system/1-foundations/03-kieu-chu.md")
     static let generatorScript = packageRoot.appendingPathComponent("Scripts/generate-design-tokens.py")
     static let colorCatalog = packageRoot.appendingPathComponent("Sources/HLDesignSystem/Resources/Colors.xcassets")
+    static let imageCatalog = packageRoot.appendingPathComponent("Sources/HLDesignSystem/Resources/Images.xcassets")
     /// Catalog của target app macOS (màu nhấn toàn app).
     static let appAssetCatalog = packageRoot
         .deletingLastPathComponent().deletingLastPathComponent()
