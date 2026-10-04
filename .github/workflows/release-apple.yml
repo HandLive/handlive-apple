@@ -3,9 +3,10 @@
 # - iOS/iPadOS: HandLive-<version>-ios-unsigned.ipa, a Release build for devices with its Notification Service
 #   Extension, not signed: sideloading tools re-sign it with the installer's own Apple ID. App Store/TestFlight
 #   distribution needs the paid Apple Developer Program team.
-# - macOS: HandLive-<version>-macos.zip, the universal app signed with Developer ID, hardened runtime, notarized and
-#   stapled. An unsigned Mac app cannot open its data-protection Keychain (errSecMissingEntitlement), so without the
-#   signing secrets below the Mac app is only compiled and nothing is published for it.
+# - macOS: HandLive-<version>-macos-unsigned.dmg, the universal app signed ad hoc: the user allows it once in System
+#   Settings › Privacy & Security › Open Anyway, and it keeps its keys in the login keychain (0.6.1). With the signing
+#   secrets below it is HandLive-<version>-macos.dmg instead: Developer ID, hardened runtime, notarized and stapled.
+#   A tag older than the login-keychain support (v0.1.0-beta.1) publishes no Mac app without those secrets.
 # Runs on a pushed tag v*, or by hand for an existing tag: publish=false keeps the files as workflow artifacts only; a
 # file already attached is never replaced unless replace=true.
 # Two stages: "build" runs xcodegen/xcodebuild and the packages with read-only rights and no secret; "release" only
@@ -177,6 +178,10 @@ jobs:
             CODE_SIGNING_ALLOWED=NO
           mkdir -p "$RUNNER_TEMP/out"
           ditto -c -k --keepParent "$DERIVED_DATA/Build/Products/Release/HandLive.app" "$RUNNER_TEMP/out/HandLive-unsigned.app.zip"
+          # An ad-hoc signed build works only once the app falls back to the login keychain (0.6.1).
+          if grep -q processCanUseDataProtectionKeychain Packages/HLCrypto/Sources/HLCrypto/KeychainSecretStore.swift; then
+            touch "$RUNNER_TEMP/out/unsigned-mac-supported"
+          fi
 
       - name: Keep the build for the release job
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -237,13 +242,40 @@ jobs:
           done
           if [ "$set" = 0 ]; then
             echo "signed=false" >> "$GITHUB_OUTPUT"
-            echo "::notice title=macOS not published::No Developer ID secrets: the Mac app was only compiled. An unsigned Mac app cannot open its Keychain; see docs/deployment-guide.md, Release builds."
           elif [ "$set" != 7 ]; then
             echo "::error::Only $set of the 7 macOS signing secrets are set: set all of them or none (docs/deployment-guide.md, Release builds)"
             exit 1
           else
             echo "signed=true" >> "$GITHUB_OUTPUT"
           fi
+
+      # Without Developer ID: signed ad hoc (no entitlements, no hardened runtime), which seals the bundle so macOS
+      # offers Open Anyway instead of calling it damaged. The app then uses the login keychain (0.6.1).
+      - name: Unsigned Mac DMG
+        if: steps.secrets.outputs.signed == 'false'
+        run: |
+          if [ ! -e "$RUNNER_TEMP/in/unsigned-mac-supported" ]; then
+            echo "::notice title=macOS not published::$TAG predates the login-keychain fallback: its Mac app runs only signed with Developer ID (docs/deployment-guide.md, Release builds)."
+            exit 0
+          fi
+          mkdir -p "$RUNNER_TEMP/mac"
+          ditto -x -k "$RUNNER_TEMP/in/HandLive-unsigned.app.zip" "$RUNNER_TEMP/mac"
+          app="$RUNNER_TEMP/mac/HandLive.app"
+          codesign --force --deep --sign - "$app"
+          codesign --verify --deep --strict --verbose=2 "$app"
+          "$app/Contents/MacOS/HandLive" > "$RUNNER_TEMP/launch.log" 2>&1 &
+          pid=$!
+          sleep 10
+          if ! kill -0 "$pid" 2> /dev/null; then
+            cat "$RUNNER_TEMP/launch.log"; echo "::error::The ad-hoc signed Mac app quit at launch"; exit 1
+          fi
+          kill "$pid"
+          stage="$RUNNER_TEMP/dmg"
+          mkdir -p "$stage"
+          ditto "$app" "$stage/HandLive.app"
+          ln -s /Applications "$stage/Applications"
+          hdiutil create -volname "HandLive $VERSION" -srcfolder "$stage" -ov -format UDZO \
+            "$RUNNER_TEMP/out/HandLive-$VERSION-macos-unsigned.dmg"
 
       - name: Developer ID certificate and provisioning profile
         id: identity
@@ -348,28 +380,39 @@ jobs:
           codesign --verify --deep --strict --verbose=2 "$app"
           echo "app=$app" >> "$GITHUB_OUTPUT"
 
-      - name: Notarize, staple and try the Mac app
+      # The signed app goes into a DMG signed with the same identity; notarizing the DMG covers the app inside, and
+      # the ticket is stapled to the DMG.
+      - name: Signed Mac DMG, notarized and stapled
         if: steps.secrets.outputs.signed == 'true'
         env:
           NOTARY_KEY: ${{ secrets.APPLE_NOTARY_KEY_P8_BASE64 }}
           NOTARY_KEY_ID: ${{ secrets.APPLE_NOTARY_KEY_ID }}
           NOTARY_ISSUER: ${{ secrets.APPLE_NOTARY_ISSUER_ID }}
+          KEYCHAIN: ${{ steps.identity.outputs.keychain }}
+          IDENTITY: ${{ steps.identity.outputs.identity }}
           APP: ${{ steps.signed.outputs.app }}
         run: |
           key="$RUNNER_TEMP/notary.p8"
           trap 'rm -f "$key"' EXIT
           printf '%s' "$NOTARY_KEY" | base64 --decode > "$key"
-          ditto -c -k --keepParent "$APP" "$RUNNER_TEMP/notarize.zip"
+          dmg="$RUNNER_TEMP/out/HandLive-$VERSION-macos.dmg"
+          stage="$RUNNER_TEMP/dmg"
+          mkdir -p "$stage"
+          ditto "$APP" "$stage/HandLive.app"
+          ln -s /Applications "$stage/Applications"
+          hdiutil create -volname "HandLive $VERSION" -srcfolder "$stage" -ov -format UDZO "$dmg"
+          codesign --force --timestamp --keychain "$KEYCHAIN" --sign "$IDENTITY" "$dmg"
           # notarytool exits 0 for a rejected submission too: read its status.
-          xcrun notarytool submit "$RUNNER_TEMP/notarize.zip" --key "$key" --key-id "$NOTARY_KEY_ID" \
-            --issuer "$NOTARY_ISSUER" --wait --timeout 45m --output-format json > "$RUNNER_TEMP/notary.json"
+          xcrun notarytool submit "$dmg" --key "$key" --key-id "$NOTARY_KEY_ID" --issuer "$NOTARY_ISSUER" \
+            --wait --timeout 45m --output-format json > "$RUNNER_TEMP/notary.json"
           status="$(plutil -extract status raw -o - "$RUNNER_TEMP/notary.json")"
           if [ "$status" != Accepted ]; then
             id="$(plutil -extract id raw -o - "$RUNNER_TEMP/notary.json")"
             xcrun notarytool log "$id" --key "$key" --key-id "$NOTARY_KEY_ID" --issuer "$NOTARY_ISSUER" || true
             echo "::error::Notarization $status"; exit 1
           fi
-          xcrun stapler staple "$APP"
+          xcrun stapler staple "$dmg"
+          spctl --assess --type open --context context:primary-signature --verbose=2 "$dmg"
           spctl --assess --type execute --verbose=2 "$APP"
           # The system kills an app whose entitlements its profile does not grant: it must still run after 10 s.
           "$APP/Contents/MacOS/HandLive" > "$RUNNER_TEMP/launch.log" 2>&1 &
@@ -379,7 +422,6 @@ jobs:
             cat "$RUNNER_TEMP/launch.log"; echo "::error::The signed Mac app quit at launch"; exit 1
           fi
           kill "$pid"
-          ditto -c -k --keepParent "$APP" "$RUNNER_TEMP/out/HandLive-$VERSION-macos.zip"
 
       - name: Remove the release keychain
         if: always() && steps.identity.outputs.keychain != ''

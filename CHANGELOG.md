@@ -10,9 +10,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - Release workflow (`release-apple`): a pushed tag `v*`, or a manual run for an existing tag, attaches
   `HandLive-<version>-ios-unsigned.ipa` (Release build for devices with the Notification Service Extension, for
-  sideloading) and, once the Developer ID and notarization secrets exist, `HandLive-<version>-macos.zip` (universal,
-  signed inside out, hardened runtime, notarized, stapled) with their SHA-256 to the tag's GitHub Release; the tag's
-  version core must equal `MARKETING_VERSION`. Setup: hub `docs/deployment-guide.md`, Release builds.
+  sideloading) and the universal Mac app with their SHA-256 to the tag's GitHub Release:
+  `HandLive-<version>-macos-unsigned.dmg` signed ad hoc, or, once the Developer ID and notarization secrets exist,
+  `HandLive-<version>-macos.dmg` (signed inside out, hardened runtime, DMG notarized and stapled); the tag's version
+  core must equal `MARKETING_VERSION`. Setup: hub `docs/deployment-guide.md`, Release builds.
+- Mac builds without a team signature run: `KeychainSecretStore` picks the keychain from the app's own entitlements and
+  falls back to the login keychain when the app has no keychain access group (an ad-hoc signed download), where the
+  data-protection keychain answered every call with errSecMissingEntitlement (0.6.1). Delete All repeats the delete,
+  since the login keychain removes one matching item per call.
 - Calls from other apps on the Mac (CALL-05): decode `call_event/app_call`, the `features.call.app_calls` capability
   (the Mac reports `call.app_calls`, iPhone and iPad report `false`), `AppCallController` (latest version per
   `call_id`, Answer, Decline and End as `call_event/action`, `CALL_APP_ACTION_UNAVAILABLE`, `CALL_NOT_FOUND` and
