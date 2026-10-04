@@ -4,7 +4,7 @@ import SwiftUI
 
 /// Token màu của HandLive, mỗi token có đủ 4 giao diện.
 public enum HLColorToken: String, CaseIterable, Sendable {
-    /// Màu nhấn HandLive — xanh lá Mộc (Mộc sinh Hỏa): chữ liên kết, biểu tượng đang chọn, dấu chưa đọc. Chữ đạt 4.5:1 trên mọi nền hệ thống. Không làm nền có chữ trắng (dùng accent-fill).
+    /// Màu nhấn HandLive — xanh lá, như đèn xanh "đã nhận tín hiệu": chữ liên kết, biểu tượng đang chọn, dấu chưa đọc. Chữ đạt 4.5:1 trên mọi nền hệ thống. Không làm nền có chữ trắng (dùng accent-fill).
     case accent = "accent"
     /// Nền nút chính (prominent), bong bóng tin mình gửi, và giá trị của Color Set AccentColor trên Apple (4 giao diện) để nút nổi bật của hệ thống giữ chữ trắng ≥ 4.5:1. Chữ trên nền này dùng on-accent.
     case accentFill = "accent-fill"
@@ -12,27 +12,27 @@ public enum HLColorToken: String, CaseIterable, Sendable {
     case onAccent = "on-accent"
     /// Nền nhạt cho vùng được chọn, huy hiệu trạng thái nhấn nhẹ. Không đặt chữ accent lên nền này ở cỡ dưới 13 pt.
     case accentTint = "accent-tint"
-    /// Đỏ son — màu nhận diện (Hỏa, màu bản mệnh): chữ HandLive, biểu tượng app, màn chào. Không dùng cho nút hay trạng thái để khỏi lẫn với màu hủy/xóa.
+    /// Đỏ lửa — màu nhận diện, gốc ngọn lửa hiệu trong logo: chữ HandLive, biểu tượng app, màn chào. Chỉ cho chữ lớn. Không dùng cho nút hay trạng thái để khỏi lẫn với màu hủy/xóa.
     case brandFire = "brand-fire"
-    /// Đỏ than — mảng màu sâu của thương hiệu (thay cho đen, vì Thủy khắc Hỏa). Dùng cho khối lớn ở bìa, lớp nền icon app.
+    /// Tím than — mảng màu sâu của thương hiệu, thay cho đen: ngọn núi trong logo, mực của logo chữ HandLive, khối lớn ở bìa.
     case brandEmber = "brand-ember"
-    /// Cam lửa — điểm sáng trong gradient thương hiệu và minh họa. Không làm màu chữ.
+    /// Cam lửa — thân ngọn lửa và vòng sóng trong logo, điểm sáng trong gradient thương hiệu và minh họa. Không làm màu chữ.
     case brandFlame = "brand-flame"
-    /// Hồng đào — nền nhạt của khoảnh khắc thương hiệu (màn chào, màn ghép nối) ở lớp nội dung.
+    /// Kem bình minh — nền nhạt của khoảnh khắc thương hiệu (màn chào, màn ghép nối) ở lớp nội dung.
     case brandGlow = "brand-glow"
     /// systemRed — Từ chối, Kết thúc, xóa, lỗi. Làm chữ nhỏ thì dùng text-red.
     case systemRed = "system-red"
     /// systemOrange — đang kết nối, cần chú ý. Làm chữ nhỏ thì dùng text-orange.
     case systemOrange = "system-orange"
-    /// systemYellow — hiếm dùng (Hỏa sinh Thổ); chỉ cho cảnh báo nhẹ trong minh họa.
+    /// systemYellow — hiếm dùng; chỉ cho cảnh báo nhẹ trong minh họa.
     case systemYellow = "system-yellow"
     /// systemGreen — đã kết nối, công tắc bật (mặc định của iOS). Làm chữ nhỏ thì dùng text-green.
     case systemGreen = "system-green"
-    /// systemPink — màu Hỏa cho avatar chữ cái và minh họa.
+    /// systemPink — màu ấm cho avatar chữ cái và minh họa.
     case systemPink = "system-pink"
-    /// systemPurple — màu Hỏa cho avatar chữ cái và minh họa.
+    /// systemPurple — màu ấm cho avatar chữ cái và minh họa.
     case systemPurple = "system-purple"
-    /// systemBrown — avatar chữ cái; dùng ít (Thổ).
+    /// systemBrown — avatar chữ cái; dùng ít.
     case systemBrown = "system-brown"
     /// systemGray — ngoại tuyến, biểu tượng phụ.
     case systemGray = "system-gray"
@@ -152,10 +152,10 @@ public enum HLColorToken: String, CaseIterable, Sendable {
         case .accentFill: return HLColorPalette(light: HLRGBA(0x19, 0x79, 0x34, 0xFF), dark: HLRGBA(0x23, 0x86, 0x36, 0xFF), lightHighContrast: HLRGBA(0x14, 0x6B, 0x2E, 0xFF), darkHighContrast: HLRGBA(0x19, 0x79, 0x34, 0xFF))
         case .onAccent: return HLColorPalette(light: HLRGBA(0xFF, 0xFF, 0xFF, 0xFF), dark: HLRGBA(0xFF, 0xFF, 0xFF, 0xFF), lightHighContrast: HLRGBA(0xFF, 0xFF, 0xFF, 0xFF), darkHighContrast: HLRGBA(0xFF, 0xFF, 0xFF, 0xFF))
         case .accentTint: return HLColorPalette(light: HLRGBA(0x19, 0x79, 0x34, 0x1F), dark: HLRGBA(0x3D, 0xDC, 0x6C, 0x29), lightHighContrast: HLRGBA(0x14, 0x6B, 0x2E, 0x2E), darkHighContrast: HLRGBA(0x5B, 0xE5, 0x84, 0x33))
-        case .brandFire: return HLColorPalette(light: HLRGBA(0xD2, 0x38, 0x1F, 0xFF), dark: HLRGBA(0xFF, 0x6B, 0x4A, 0xFF), lightHighContrast: HLRGBA(0xB0, 0x2A, 0x14, 0xFF), darkHighContrast: HLRGBA(0xFF, 0x8A, 0x6E, 0xFF))
-        case .brandEmber: return HLColorPalette(light: HLRGBA(0x8A, 0x22, 0x10, 0xFF), dark: HLRGBA(0xB4, 0x3A, 0x20, 0xFF), lightHighContrast: HLRGBA(0x6E, 0x1A, 0x0B, 0xFF), darkHighContrast: HLRGBA(0xC9, 0x47, 0x2B, 0xFF))
-        case .brandFlame: return HLColorPalette(light: HLRGBA(0xF0, 0x7A, 0x1A, 0xFF), dark: HLRGBA(0xFF, 0x9A, 0x3D, 0xFF), lightHighContrast: HLRGBA(0xD8, 0x68, 0x0E, 0xFF), darkHighContrast: HLRGBA(0xFF, 0xAD, 0x5C, 0xFF))
-        case .brandGlow: return HLColorPalette(light: HLRGBA(0xFD, 0xE9, 0xE2, 0xFF), dark: HLRGBA(0x3B, 0x1A, 0x12, 0xFF), lightHighContrast: HLRGBA(0xFB, 0xDC, 0xCF, 0xFF), darkHighContrast: HLRGBA(0x4A, 0x20, 0x16, 0xFF))
+        case .brandFire: return HLColorPalette(light: HLRGBA(0xE6, 0x3D, 0x1A, 0xFF), dark: HLRGBA(0xFF, 0x74, 0x48, 0xFF), lightHighContrast: HLRGBA(0xB8, 0x2C, 0x10, 0xFF), darkHighContrast: HLRGBA(0xFF, 0x8F, 0x6B, 0xFF))
+        case .brandEmber: return HLColorPalette(light: HLRGBA(0x33, 0x23, 0x2D, 0xFF), dark: HLRGBA(0x6E, 0x54, 0x63, 0xFF), lightHighContrast: HLRGBA(0x2A, 0x1C, 0x25, 0xFF), darkHighContrast: HLRGBA(0x83, 0x67, 0x7A, 0xFF))
+        case .brandFlame: return HLColorPalette(light: HLRGBA(0xFF, 0x86, 0x1F, 0xFF), dark: HLRGBA(0xFF, 0xA0, 0x4A, 0xFF), lightHighContrast: HLRGBA(0xF0, 0x74, 0x10, 0xFF), darkHighContrast: HLRGBA(0xFF, 0xB0, 0x66, 0xFF))
+        case .brandGlow: return HLColorPalette(light: HLRGBA(0xFF, 0xF0, 0xE3, 0xFF), dark: HLRGBA(0x2B, 0x1E, 0x26, 0xFF), lightHighContrast: HLRGBA(0xFF, 0xE6, 0xD2, 0xFF), darkHighContrast: HLRGBA(0x33, 0x24, 0x2E, 0xFF))
         case .systemRed: return HLColorPalette(light: HLRGBA(0xFF, 0x38, 0x3C, 0xFF), dark: HLRGBA(0xFF, 0x42, 0x45, 0xFF), lightHighContrast: HLRGBA(0xE9, 0x15, 0x2D, 0xFF), darkHighContrast: HLRGBA(0xFF, 0x61, 0x65, 0xFF))
         case .systemOrange: return HLColorPalette(light: HLRGBA(0xFF, 0x8D, 0x28, 0xFF), dark: HLRGBA(0xFF, 0x92, 0x30, 0xFF), lightHighContrast: HLRGBA(0xC5, 0x53, 0x00, 0xFF), darkHighContrast: HLRGBA(0xFF, 0xA0, 0x56, 0xFF))
         case .systemYellow: return HLColorPalette(light: HLRGBA(0xFF, 0xCC, 0x00, 0xFF), dark: HLRGBA(0xFF, 0xD6, 0x00, 0xFF), lightHighContrast: HLRGBA(0xA1, 0x6A, 0x00, 0xFF), darkHighContrast: HLRGBA(0xFE, 0xDF, 0x43, 0xFF))

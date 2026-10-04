@@ -48,7 +48,7 @@ public struct GroupedSection<Content: View>: View {
     }
 }
 
-/// Nhóm chức năng quyết định màu ô biểu tượng (tránh xanh dương — Thủy khắc Hỏa).
+/// Nhóm chức năng quyết định màu ô biểu tượng (tránh xanh dương — màu đó để dành cho hệ thống).
 public enum HLFeatureGroup: Sendable, CaseIterable {
     case devices, clipboard, messages, calls, notifications, internet
 

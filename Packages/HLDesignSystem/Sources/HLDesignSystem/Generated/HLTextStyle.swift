@@ -8,7 +8,7 @@ public enum HLTextStyle: String, CaseIterable, Sendable {
     case brandLargeTitle = "brand-large-title"
     /// Be Vietnam Pro — tiêu đề trạng thái trống và bước onboarding.
     case brandTitle = "brand-title"
-    /// Chữ HandLive thay logo (chưa có logo). Màu brand-fire hoặc label.
+    /// Chữ HandLive trong app (màn chào, cửa sổ Giới thiệu). Màu brand-fire hoặc label. File logo: docs/brand trong hub.
     case wordmark = "wordmark"
     /// Large Title (.largeTitle) — tiêu đề lớn hiếm dùng trên Mac.
     case macLargeTitle = "mac-large-title"
