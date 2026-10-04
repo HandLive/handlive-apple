@@ -9,6 +9,7 @@ public enum ClipboardOp: String, Sendable {
 /// MIME types a clip travels as (CLIP-01 API 5): text is always UTF-8.
 public enum ClipMime {
     public static let text = "text/plain"
+    public static let html = "text/html"
     public static let png = "image/png"
     public static let jpeg = "image/jpeg"
 }
@@ -38,7 +39,7 @@ public struct ClipboardTransfer: Codable, Equatable, Sendable {
 }
 
 /// `clipboard/push` (CLIP-01 API 5, CLIP-03 API 3): exactly one of `text` (inline) and `transfer` (chunks);
-/// `width`/`height` only for images; `origin_ts` is on the origin device's clock (QC8 b).
+/// `html` (optional) is the sanitized rich form of an inline text; `width`/`height` only for images; `origin_ts` is on the origin device's clock (QC8 b).
 public struct ClipboardPushData: Codable, Equatable, Sendable {
     public enum Kind: String, Codable, Sendable {
         case text, image
@@ -53,6 +54,7 @@ public struct ClipboardPushData: Codable, Equatable, Sendable {
     public let kind: Kind
     public let mime: String
     public let text: String?
+    public let html: String?
     public let transfer: ClipboardTransfer?
     public let width: Int32?
     public let height: Int32?
@@ -61,13 +63,14 @@ public struct ClipboardPushData: Codable, Equatable, Sendable {
     public let source: Source
     public let originDeviceId: String
 
-    public init(clipId: String, kind: Kind, mime: String, text: String? = nil, transfer: ClipboardTransfer? = nil,
-                width: Int32? = nil, height: Int32? = nil, sensitive: Bool, originTs: Int64, source: Source,
-                originDeviceId: String) {
+    public init(clipId: String, kind: Kind, mime: String, text: String? = nil, html: String? = nil,
+                transfer: ClipboardTransfer? = nil, width: Int32? = nil, height: Int32? = nil, sensitive: Bool,
+                originTs: Int64, source: Source, originDeviceId: String) {
         self.clipId = clipId
         self.kind = kind
         self.mime = mime
         self.text = text
+        self.html = html
         self.transfer = transfer
         self.width = width
         self.height = height
@@ -78,7 +81,7 @@ public struct ClipboardPushData: Codable, Equatable, Sendable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case kind, mime, text, transfer, width, height, sensitive, source
+        case kind, mime, text, html, transfer, width, height, sensitive, source
         case clipId = "clip_id"
         case originTs = "origin_ts"
         case originDeviceId = "origin_device_id"
