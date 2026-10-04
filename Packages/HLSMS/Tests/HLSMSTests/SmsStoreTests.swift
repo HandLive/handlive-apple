@@ -67,6 +67,29 @@ struct SmsStoreTests {
         #expect(throws: SmsDatabaseError.invalidKey) { _ = try SmsDatabase.open(url: url, key: Data(count: 16)) }
     }
 
+    @Test("SET-03 API 1 logic 5: with both slots foreign, the slot used longest ago gives way, not the last one tried")
+    func dropsTheOlderForeignSlot() async throws {
+        let first = try SmsFixtures.database()
+        try await SmsStore(database: first).applySyncPage(page(threads: 1), pairId: pairId, now: 1)
+        try first.pool.close()
+        let url = first.url
+        let second = try SmsDatabase.open(url: url, key: Data(repeating: 9, count: 32))
+        try await SmsStore(database: second).applySyncPage(page(threads: 2), pairId: pairId, now: 1)
+        try second.pool.close()
+        let alt = SmsDatabase.altURL(for: url)
+        for suffix in ["", "-wal", "-shm"] where FileManager.default.fileExists(atPath: alt.path + suffix) {
+            try FileManager.default.setAttributes([.modificationDate: Date(timeIntervalSince1970: 1)],
+                                                  ofItemAtPath: alt.path + suffix)
+        }
+        let third = try SmsDatabase.open(url: url, key: Data(repeating: 10, count: 32))
+        #expect(third.url == alt) // the second key's slot was used longest ago
+        try third.pool.close()
+        let firstAgain = try SmsDatabase.open(url: url, key: SmsFixtures.key)
+        #expect(firstAgain.url == url)
+        #expect(try await threadCount(firstAgain) == 1)
+        try firstAgain.pool.close()
+    }
+
     @Test("SET-03 API 1 logic 5: an error other than the key (a file it may not read) changes no slot")
     func keepsSlotsOnOtherErrors() throws {
         let database = try SmsFixtures.database()

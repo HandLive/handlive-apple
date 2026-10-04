@@ -53,6 +53,9 @@ public final class SmsDatabase: Sendable {
     /// longest ago gives way (one generation is kept). Every other error is thrown and changes no slot.
     public static func open(url: URL, key: Data) throws -> SmsDatabase {
         let alt = altURL(for: url)
+        // Before any attempt: opening with a wrong key can checkpoint a leftover -wal and touch the files, which would
+        // make the slot tried last look like the one used last.
+        let urlModified = modified(url), altModified = modified(alt)
         guard exists(url) else {
             if exists(alt), let database = try? SmsDatabase(url: alt, key: key) { return database }
             try removeSet(at: url) // a -wal or -shm without its database holds nothing worth keeping
@@ -68,7 +71,7 @@ public final class SmsDatabase: Sendable {
             do {
                 return try SmsDatabase(url: alt, key: key)
             } catch let altError as DatabaseError where altError.resultCode == .SQLITE_NOTADB {
-                let older = modified(url) < modified(alt) ? url : alt
+                let older = urlModified < altModified ? url : alt
                 try removeSet(at: older)
                 return try SmsDatabase(url: older, key: key)
             }
