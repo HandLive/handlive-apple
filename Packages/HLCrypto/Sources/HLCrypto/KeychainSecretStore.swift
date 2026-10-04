@@ -86,6 +86,18 @@ public struct KeychainSecretStore: SecretStore {
         try deleteItems(dataProtectionKeychain: usesDataProtectionKeychain)
     }
 
+    /// "Delete All HandLive Data" (SET-02 API 7 logic 6): this build's keychain, then on macOS the other one, where a
+    /// build signed the other way (ad hoc ↔ team) kept its own keys. An ad-hoc build cannot reach the data-protection
+    /// keychain: errSecMissingEntitlement there leaves a team build's device-only keys in place.
+    public func deleteAllInEveryKeychain() throws {
+        try deleteAll()
+        #if os(macOS)
+        do {
+            try deleteItems(dataProtectionKeychain: !usesDataProtectionKeychain)
+        } catch CryptoError.keychain(status: errSecMissingEntitlement) {}
+        #endif
+    }
+
     public func delete(account: String) throws {
         try deleteItems(account: account, dataProtectionKeychain: usesDataProtectionKeychain)
     }

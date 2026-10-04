@@ -97,10 +97,10 @@ extension AppModel {
         calls.stop()
     }
 
-    /// SET-02 API 7 in its order: the keys first (`SecItemDelete`), then the database and the pair store, settings,
-    /// notifications and the login item. Missing items count as deleted.
+    /// SET-02 API 7 in its order: the keys first, in both keychains (logic 6), then the database and the pair store,
+    /// settings, notifications and the login item. Missing items count as deleted.
     private func eraseLocalData() {
-        try? secrets.deleteAll()
+        try? secrets.deleteAllInEveryKeychain()
         try? messages?.store.database.deleteFiles()
         try? SmsDatabase.removeFiles(at: smsDatabaseURL) // both slots, whichever one the open database used
         messages = nil
