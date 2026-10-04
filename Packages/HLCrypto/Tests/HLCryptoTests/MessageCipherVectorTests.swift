@@ -78,7 +78,8 @@ struct SecretStoreTests {
 
     @Test("Truy vấn Keychain: generic password, service app.handlive.keys, WhenUnlockedThisDeviceOnly")
     func keychainQuery() {
-        let query = KeychainSecretStore().addQuery(Data([9]), account: SecretAccount.keyAgreementKey)
+        let query = KeychainSecretStore(accessGroup: nil, usesDataProtectionKeychain: true)
+            .addQuery(Data([9]), account: SecretAccount.keyAgreementKey)
         #expect(query[kSecClass as String] as? String == kSecClassGenericPassword as String)
         #expect(query[kSecAttrService as String] as? String == "app.handlive.keys")
         #expect(query[kSecAttrAccount as String] as? String == "ik_dh")
@@ -86,7 +87,32 @@ struct SecretStoreTests {
                 == kSecAttrAccessibleWhenUnlockedThisDeviceOnly as String)
         #expect(query[kSecValueData as String] as? Data == Data([9]))
         #expect(query[kSecAttrAccessGroup as String] == nil)
+        #if os(macOS)
+        #expect(query[kSecUseDataProtectionKeychain as String] as? Bool == true)
+        #endif
     }
+
+    @Test("0.6.1: a team-signed process uses the data-protection keychain, an ad-hoc signed Mac build the login one")
+    func keychainChoice() {
+        let groups: [String: Any] = ["keychain-access-groups": ["ABCDE12345.app.handlive.mac"]]
+        let identifier: [String: Any] = ["com.apple.application-identifier": "ABCDE12345.app.handlive.mac"]
+        #expect(KeychainSecretStore.canUseDataProtectionKeychain { groups[$0] })
+        #expect(KeychainSecretStore.canUseDataProtectionKeychain { identifier[$0] })
+        #expect(!KeychainSecretStore.canUseDataProtectionKeychain { _ in nil })
+    }
+
+    #if os(macOS)
+    @Test("0.6.1: the login keychain gets the same item without the data-protection flag or an accessibility class")
+    func loginKeychainQuery() {
+        let store = KeychainSecretStore(accessGroup: nil, usesDataProtectionKeychain: false)
+        let query = store.addQuery(Data([9]), account: SecretAccount.keyAgreementKey)
+        #expect(query[kSecAttrService as String] as? String == "app.handlive.keys")
+        #expect(query[kSecAttrAccount as String] as? String == "ik_dh")
+        #expect(query[kSecValueData as String] as? Data == Data([9]))
+        #expect(query[kSecUseDataProtectionKeychain as String] == nil)
+        #expect(query[kSecAttrAccessible as String] == nil)
+    }
+    #endif
 
     @Test("iOS shares its keys with the Notification Service Extension through the App Group access group")
     func sharedAccessGroup() {
