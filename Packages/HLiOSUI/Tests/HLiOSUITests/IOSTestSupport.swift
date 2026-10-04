@@ -138,9 +138,10 @@ struct ClosedRelaySockets: RelaySocketOpening {
 func makeIOSModel(secrets: any SecretStore = InMemorySecretStore(), pasteboard: StubIOSPasteboard = StubIOSPasteboard(),
                   notifications: StubIOSNotifications = StubIOSNotifications(),
                   calls: StubIOSCallNotifications = StubIOSCallNotifications(),
-                  relay: ScriptedRelayAPI? = nil, platform: CapabilityData.Platform = .ios) -> IOSAppModel {
+                  relay: ScriptedRelayAPI? = nil, platform: CapabilityData.Platform = .ios,
+                  folder: URL = FileManager.default.temporaryDirectory
+                      .appendingPathComponent("handlive-ios-tests-\(UUID().uuidString)")) -> IOSAppModel {
     let defaults = UserDefaults(suiteName: "app.handlive.ios.tests.\(UUID().uuidString)")!
-    let folder = FileManager.default.temporaryDirectory.appendingPathComponent("handlive-ios-tests-\(UUID().uuidString)")
     return IOSAppModel(settings: AppSettings(defaults: defaults), secrets: secrets,
                        device: LocalDevice(appVersion: "1.0.0 (1)", osVersion: "18.0", model: "iPhone15,2",
                                            name: "iPhone của Lan", platform: platform),

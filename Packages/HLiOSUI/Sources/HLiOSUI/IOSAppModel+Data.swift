@@ -84,13 +84,10 @@ extension IOSAppModel {
     /// SET-02 API 7 in its order: the keys first, then the database and the pair store, settings and notifications.
     private func eraseLocalData() {
         try? secrets.deleteAll()
-        if let database = messages?.store.database {
-            try? database.deleteFiles()
-        } else {
-            try? SmsDatabase.removeFiles(at: smsDatabaseURL)
-        }
+        try? messages?.store.database.deleteFiles()
+        try? SmsDatabase.removeFiles(at: smsDatabaseURL) // both slots, whichever one the open database used
         messages = nil
-        try? FileManager.default.removeItem(at: pairStoreURL)
+        try? PairedDeviceStore.deleteFiles(at: pairStoreURL)
         settings.removeAll()
         if settings.defaults !== UserDefaults.standard {
             settings.defaults.removePersistentDomain(forName: Self.appGroup)

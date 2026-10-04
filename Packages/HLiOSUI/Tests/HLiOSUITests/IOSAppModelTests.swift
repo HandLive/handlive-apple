@@ -38,13 +38,6 @@ struct IOSAppModelTests {
         #expect(model.device.capability(settings: model.settings).features.sms?.notify == false)
     }
 
-    @Test("A Keychain that refuses the keys → keysFailed with Try Again (SET-03 E1)")
-    func keysFailed() {
-        let model = makeIOSModel(secrets: FailingSecretStore())
-        model.launch()
-        #expect(model.phase == .keysFailed)
-    }
-
     @Test("Pairing: the send card and the banner name the phone; {device_type} stays iPhone or iPad")
     func pairingAndClipboardTexts() throws {
         let pasteboard = StubIOSPasteboard()

@@ -147,13 +147,14 @@ public final class AppModel: ObservableObject {
         HLConnectionStatus(link: link, lastSeen: pairedDevice?.lastSeenAt)
     }
 
-    /// SET-03 step 2: load or create the keys, open the pair store, start the connection manager.
+    /// SET-03 step 2: load or create the keys, open the pair store (its second slot when the file is sealed with another
+    /// `db_key`, API 1 logic 5), start the connection manager.
     public func launch() {
         do {
             let keys = try DeviceIdentityKeys.loadOrCreate(secrets: secrets, settings: settings)
             identity = keys
             BenchLog.configure(deviceId: keys.deviceId, role: .macos)
-            let store = PairedDeviceStore(fileURL: pairStoreURL, databaseKey: keys.databaseKey)
+            let store = PairedDeviceStore.open(fileURL: pairStoreURL, databaseKey: keys.databaseKey)
             self.store = store
             pairedDevice = try? store.active()
             phase = .ready

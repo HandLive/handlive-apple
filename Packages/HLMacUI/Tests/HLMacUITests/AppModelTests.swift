@@ -32,6 +32,31 @@ struct AppModelTests {
         #expect(model.phase == .keysFailed)
     }
 
+    @Test("SET-03 API 1 logic 5: builds with different keys keep their own pairs; none is one-sided or lost")
+    func buildsWithDifferentKeysKeepTheirData() throws {
+        let folder = FileManager.default.temporaryDirectory
+            .appendingPathComponent("handlive-tests-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: folder) }
+        // Each build reads its own keychain access group: setup has started, and a build that finds no keys there
+        // recreates them with a new db_key (another team's signature, or a Keychain reset).
+        func launched(_ secrets: InMemorySecretStore) -> AppModel {
+            let model = makeModel(secrets: secrets, folder: folder)
+            model.settings.setupStartedAt = 5
+            model.launch()
+            return model
+        }
+        let first = InMemorySecretStore(), second = InMemorySecretStore()
+        let pixel = launched(first)
+        try pixel.completePairing(PairingControllerTests.result(name: "Pixel 8"))
+        let opened = launched(second) // opened and left without pairing
+        #expect(opened.phase == .ready && opened.deviceId != pixel.deviceId && opened.pairedDevice == nil)
+        #expect(opened.messages != nil) // SMS runs on its own database instead of staying off
+        #expect(launched(first).pairedDevice?.peerName == "Pixel 8")
+        try launched(second).completePairing(PairingControllerTests.result(name: "Galaxy S25")) // saves
+        #expect(launched(first).pairedDevice?.peerName == "Pixel 8")
+        #expect(launched(second).pairedDevice?.peerName == "Galaxy S25")
+    }
+
     @Test("Settings setters persist and clamp; clipboard needs a connected phone")
     func settings() {
         let model = makeModel()

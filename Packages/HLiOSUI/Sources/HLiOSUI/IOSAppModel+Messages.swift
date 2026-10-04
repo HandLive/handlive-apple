@@ -12,10 +12,11 @@ public enum IOSTab: Hashable, Sendable {
 }
 
 extension IOSAppModel {
-    /// SMS on this device (SMS-01…05): the database keyed with `db_key` in the app's own container, the engine and the
-    /// Messages screens. Without a database SMS stays off here (SMS-01 E7).
+    /// SMS on this device (SMS-01…05): the database keyed with `db_key` in the app's own container (its second slot
+    /// when the file is sealed with another key, SET-03 API 1 logic 5), the engine and the Messages screens.
+    /// Without a database SMS stays off here (SMS-01 E7).
     func startMessages(identity: DeviceIdentityKeys) {
-        guard let database = try? SmsDatabase(url: smsDatabaseURL, key: identity.databaseKey) else { return }
+        guard let database = try? SmsDatabase.open(url: smsDatabaseURL, key: identity.databaseKey) else { return }
         let store = SmsStore(database: database)
         let engine = SmsEngine(store: store)
         engine.enabledHere = { [weak self] in self?.settings.smsEnabled ?? false }

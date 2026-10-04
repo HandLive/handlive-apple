@@ -10,10 +10,11 @@ import HLSMSUI
 import HLTransport
 
 extension AppModel {
-    /// SMS on the Mac (SMS-01…05): the database keyed with `db_key` (0.6.1), the engine and the Messages screens. Without
-    /// a database the Messages window has nothing to show and SMS stays off here (SMS-01 E7).
+    /// SMS on the Mac (SMS-01…05): the database keyed with `db_key` (0.6.1; its second slot when the file is sealed with
+    /// another key, SET-03 API 1 logic 5), the engine and the Messages screens. Without a database the Messages window
+    /// has nothing to show and SMS stays off here (SMS-01 E7).
     func startMessages(identity: DeviceIdentityKeys) {
-        guard let database = try? SmsDatabase(url: smsDatabaseURL, key: identity.databaseKey) else { return }
+        guard let database = try? SmsDatabase.open(url: smsDatabaseURL, key: identity.databaseKey) else { return }
         self.database = database
         let store = SmsStore(database: database)
         let engine = SmsEngine(store: store)

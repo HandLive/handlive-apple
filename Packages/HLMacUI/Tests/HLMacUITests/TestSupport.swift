@@ -70,10 +70,11 @@ final class StubAlerts: ClipboardAlerting {
 @MainActor
 func makeModel(secrets: any SecretStore = InMemorySecretStore(), pasteboard: StubPasteboard = StubPasteboard(),
                alerts: StubAlerts = StubAlerts(), sms: StubSmsNotifier = StubSmsNotifier(),
-               calls: CallStubs = CallStubs(), relay: ScriptedRelayAPI? = nil) -> AppModel {
+               calls: CallStubs = CallStubs(), relay: ScriptedRelayAPI? = nil,
+               folder: URL = FileManager.default.temporaryDirectory
+                   .appendingPathComponent("handlive-tests-\(UUID().uuidString)")) -> AppModel {
     let suite = "app.handlive.tests.\(UUID().uuidString)"
     let defaults = UserDefaults(suiteName: suite)!
-    let folder = FileManager.default.temporaryDirectory.appendingPathComponent("handlive-tests-\(UUID().uuidString)")
     let settings = AppSettings(defaults: defaults)
     return AppModel(settings: settings, secrets: secrets,
                     device: LocalDevice(appVersion: "1.0.0 (1)", osVersion: "15.6", model: "Mac15,3", name: "Mac",
