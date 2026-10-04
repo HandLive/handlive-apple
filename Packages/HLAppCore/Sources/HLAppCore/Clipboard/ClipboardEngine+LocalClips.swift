@@ -1,5 +1,6 @@
 import Foundation
 import HLProtocol
+import HLTransport
 
 extension ClipboardEngine {
     // MARK: - Local clips (CLIP-02 steps 3–8, CLIP-03 steps 2–5)
@@ -14,6 +15,7 @@ extension ClipboardEngine {
             if manual, let phone { onNotice(.skippedJustReceived(deviceName: phone.name)) }
         case .unsupported:
             detectedLocalChange = nil
+            readFailed("empty_or_not_text", manual: manual, types: true)
             if manual { onNotice(.emptyOrNotText) }
         case .text(let text, let sensitiveType):
             captureText(text, sensitiveType: sensitiveType, manual: manual)
@@ -27,6 +29,7 @@ extension ClipboardEngine {
     private func captureImageClip(_ clip: LocalClip, manual: Bool) {
         guard settings.sendImages else {
             detectedLocalChange = nil
+            readFailed("images_off", manual: manual)
             if manual { onNotice(.emptyOrNotText) }
             return
         }
@@ -47,6 +50,7 @@ extension ClipboardEngine {
         let file = await Task.detached(priority: .userInitiated) { LocalClipReader.readImageFile(url) }.value
         guard case .data(let data) = file else {
             detectedLocalChange = nil
+            readFailed(file == .tooLarge ? "image_too_large" : "image_unreadable", manual: manual, stage: "file")
             if file == .tooLarge { onNotice(.imageTooLarge) } else if manual { onNotice(.imageUnreadable) }
             return
         }
@@ -82,10 +86,12 @@ extension ClipboardEngine {
     private func captureImage(_ image: ClipImage?, sensitiveType: Bool, manual: Bool) {
         detectedLocalChange = nil
         guard let image else {
+            readFailed("image_unreadable", manual: manual, stage: "normalize")
             if manual { onNotice(.imageUnreadable) }
             return
         }
         guard image.data.count <= ClipboardConstants.maxImageBytes else {
+            readFailed("image_too_large", manual: manual, stage: "normalize")
             onNotice(.imageTooLarge)
             return
         }
@@ -138,8 +144,20 @@ extension ClipboardEngine {
         send(held.content, sensitive: held.sensitive, manual: true)
     }
 
+    /// Debug builds only (`HLBENCH/1 clip_read_failed`): why a local copy was not sent, with the first item's
+    /// pasteboard type identifiers when they explain it (CLIP-02 E3, CLIP-03 E1–E3). Never the content.
+    private func readFailed(_ reason: String, manual: Bool, stage: String = "read", types: Bool = false) {
+        var fields = [("reason", reason), ("stage", stage), ("source", manual ? "manual" : "auto")]
+        if types { fields.append(("types", (access.firstItemTypes() ?? []).joined(separator: ",").ifEmptyDash())) }
+        BenchLog.event("clip_read_failed", fields: fields)
+    }
+
     /// First 8 hex digits of a `device_id` for `HLBENCH/1` lines.
     static func benchId(_ deviceId: String) -> String {
         String(deviceId.replacingOccurrences(of: "-", with: "").prefix(8))
     }
+}
+
+private extension String {
+    func ifEmptyDash() -> String { isEmpty ? "-" : self }
 }
