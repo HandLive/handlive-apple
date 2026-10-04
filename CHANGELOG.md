@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Mac: Delete All HandLive Data also deletes the keys a build signed the other way left in the other keychain. After
+  erasing in a team-signed build, the `ik_sig`, `ik_dh`, `db_key` and pair keys of an ad-hoc signed download are gone
+  from the login keychain, whose items travel in Time Machine backups and through Migration Assistant (security scan
+  of 2026-10-04, LOW). An ad-hoc build cannot reach the data-protection keychain, so a team build's device-only keys
+  stay there until a team build erases; a fresh install still clears only its own keychain, so switching back finds
+  the other build's keys (SET-02 API 7 logic 6, SET-03 API 1 logic 1).
+- Mac, ad-hoc signed download: an updated build could not delete the keys the previous build created in the login
+  keychain (`SecItemDelete` answered errSecInvalidOwnerEdit, -25244). Delete All left them, the next launch then
+  stopped at the keychain error instead of starting setup, and Unpair kept the pair's key. `LoginKeychain` now finds
+  them by reference and deletes them with `SecKeychainItemDelete`, without a dialog (0.6.1).
+
 ## [0.1.0-beta.2] — 2026-10-04
 
 ### Added
