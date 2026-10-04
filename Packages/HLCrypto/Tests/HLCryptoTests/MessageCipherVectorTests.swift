@@ -102,15 +102,27 @@ struct SecretStoreTests {
     }
 
     #if os(macOS)
-    @Test("0.6.1: the login keychain gets the same item without the data-protection flag or an accessibility class")
+    @Test("0.6.1: the login keychain gets the same item with the data-protection flag off and no accessibility class")
     func loginKeychainQuery() {
         let store = KeychainSecretStore(accessGroup: nil, usesDataProtectionKeychain: false)
         let query = store.addQuery(Data([9]), account: SecretAccount.keyAgreementKey)
         #expect(query[kSecAttrService as String] as? String == "app.handlive.keys")
         #expect(query[kSecAttrAccount as String] as? String == "ik_dh")
         #expect(query[kSecValueData as String] as? Data == Data([9]))
-        #expect(query[kSecUseDataProtectionKeychain as String] == nil)
+        // Explicit: left out, a team-signed process would match its data-protection items as well.
+        #expect(query[kSecUseDataProtectionKeychain as String] as? Bool == false)
         #expect(query[kSecAttrAccessible as String] == nil)
+    }
+
+    @Test("0.6.1: the login keychain is deleted by reference to each match, never by reading the secret")
+    func loginKeychainReferences() {
+        let match = KeychainSecretStore(accessGroup: nil, usesDataProtectionKeychain: false).baseQuery(account: "ik_sig")
+        let query = LoginKeychain.referenceQuery(match)
+        #expect(query[kSecReturnRef as String] as? Bool == true)
+        #expect(query[kSecMatchLimit as String] as? String == kSecMatchLimitAll as String)
+        #expect(query[kSecUseDataProtectionKeychain as String] as? Bool == false)
+        #expect(query[kSecAttrAccount as String] as? String == "ik_sig")
+        #expect(query[kSecReturnData as String] == nil)
     }
     #endif
 
