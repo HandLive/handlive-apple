@@ -21,6 +21,38 @@ struct ClipboardReceiveTests {
         #expect(harness.engine.ownWrite?.clipId == push.clipId)
     }
 
+    @Test("The HTML of a text push is sanitized again and written beside the text")
+    func writesHtml() async throws {
+        let harness = ClipboardHarness()
+        let push = ClipboardHarness.textPush("Hi Lan", html: "<p onclick=\"x\">Hi <b>Lan</b></p><script>bad()</script>")
+        let ack = try #require(await harness.reply(to: harness.receive(push)))
+        #expect(ack.ok && ack.clipboardData?.status == .applied)
+        #expect(harness.pasteboard.writes == [FakePasteboard.Write(content: .text("Hi Lan"), clipId: push.clipId,
+                                                                   sensitive: false, html: "<p>Hi <b>Lan</b></p>")])
+        #expect(harness.pasteboard.types.contains(PasteboardTypeID.html))
+        #expect(harness.engine.lastReceived?.html == "<p>Hi <b>Lan</b></p>")
+    }
+
+    @Test("html with an image, with a transfer, or longer than CLIP_MAX_HTML is BAD_REQUEST and writes nothing")
+    func rejectsMisplacedHtml() async {
+        let harness = ClipboardHarness()
+        func code(_ push: ClipboardPushData) async -> ErrorCode? {
+            await harness.reply(to: harness.receive(push))?.error?.code
+        }
+        let transfer = ClipboardTransfer(transferId: HLUUID.v7(), size: 1, sha256: Base64Coding.encodeB64u(Data(count: 32)),
+                                         chunkSize: 65_536, chunkCount: 1)
+        let origin = ClipboardHarness.phoneId
+        #expect(await code(ClipboardPushData(clipId: HLUUID.v7(), kind: .text, mime: ClipMime.text, html: "<b>x</b>",
+                                             transfer: transfer, sensitive: false, originTs: 1, source: .auto,
+                                             originDeviceId: origin)) == .badRequest)
+        #expect(await code(ClipboardPushData(clipId: HLUUID.v7(), kind: .image, mime: ClipMime.png, html: "<b>x</b>",
+                                             transfer: transfer, sensitive: false, originTs: 1, source: .auto,
+                                             originDeviceId: origin)) == .badRequest)
+        let long = String(repeating: "a", count: ClipboardConstants.maxHtmlBytes + 1)
+        #expect(await code(ClipboardHarness.textPush("x", html: long)) == .badRequest)
+        #expect(harness.pasteboard.writes.isEmpty)
+    }
+
     @Test("QC6: the same clip_id again is ignored as a duplicate and not written twice")
     func duplicate() async throws {
         let harness = ClipboardHarness()

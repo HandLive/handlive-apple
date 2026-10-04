@@ -59,7 +59,7 @@ struct ClipboardRulesTests {
         let pasteboard = FakePasteboard()
         #expect(LocalClipReader.read(pasteboard) == .unsupported)
         pasteboard.copy([("public.html", Data("<b>x</b>".utf8)), (PasteboardTypeID.text, Data("x".utf8))])
-        #expect(LocalClipReader.read(pasteboard) == .text("x", sensitiveType: false))
+        #expect(LocalClipReader.read(pasteboard) == .text("x", html: "<b>x</b>", sensitiveType: false))
         pasteboard.copy([(PasteboardTypeID.fileURL, Data("file:///a".utf8)), (PasteboardTypeID.text, Data("a".utf8))])
         #expect(LocalClipReader.read(pasteboard) == .unsupported)
         // A file copied in Finder: an image file is the copied image, any other file is skipped with its name.
@@ -77,8 +77,19 @@ struct ClipboardRulesTests {
         #expect(LocalClipReader.read(pasteboard) == .image(Data([2]), typeIdentifier: PasteboardTypeID.png,
                                                            sensitiveType: false))
         pasteboard.copy([(PasteboardTypeID.text, Data("secret".utf8)), ("org.nspasteboard.ConcealedType", Data())])
-        #expect(LocalClipReader.read(pasteboard) == .text("secret", sensitiveType: true))
+        #expect(LocalClipReader.read(pasteboard) == .text("secret", html: nil, sensitiveType: true))
         pasteboard.copy([(PasteboardTypeID.text, Data("x".utf8)), (PasteboardTypeID.clipId, Data("id".utf8))])
         #expect(LocalClipReader.read(pasteboard) == .ownWrite(clipId: "id"))
+    }
+
+    @Test("public.html beside the text is read sanitized; an HTML with nothing left, or not declared, is left out")
+    func readsHtml() {
+        let pasteboard = FakePasteboard()
+        pasteboard.copy(text: "Hi Lan", html: "<p onclick=\"x\">Hi <b>Lan</b></p><script>bad()</script>")
+        #expect(LocalClipReader.read(pasteboard) == .text("Hi Lan", html: "<p>Hi <b>Lan</b></p>", sensitiveType: false))
+        pasteboard.copy(text: "Hi", html: "<script>bad()</script>")
+        #expect(LocalClipReader.read(pasteboard) == .text("Hi", html: nil, sensitiveType: false))
+        pasteboard.copy(text: "Hi")
+        #expect(LocalClipReader.read(pasteboard) == .text("Hi", html: nil, sensitiveType: false))
     }
 }
