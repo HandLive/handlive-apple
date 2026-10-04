@@ -1,4 +1,4 @@
-# CI Apple: test 4 Swift package bằng xcodebuild, SwiftLint --strict, build app macOS (không ký).
+# CI Apple: test the Swift packages with xcodebuild, SwiftLint --strict, build the macOS and iOS apps (unsigned).
 # Bố cục workspace như máy dev: kho hub handlive ở gốc (test HLDesignSystem đọc ../docs), kho này ở apple/,
 # kho handlive-shared ở shared/ (test đọc ../shared). Hub phải checkout TRƯỚC (checkout ở gốc dọn sạch thư mục).
 # Sửa shared hay docs không tự kích hoạt workflow này: chạy tay (workflow_dispatch).
@@ -20,6 +20,10 @@ permissions:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
+env:
+  # Test targets of the core packages: the "core" lane tests these, the "features" lane every other test target.
+  CORE_TESTS: HLProtocolTests HLCryptoTests HLTransportTests HLAppCoreTests
 
 jobs:
   commit-policy:
@@ -49,11 +53,29 @@ jobs:
           fi
 
   build-test:
-    name: xcodebuild test + swiftlint + build app
+    # Four lanes on parallel macOS runners. A test lane builds the packages it needs ONCE through a shared scheme of
+    # HandLive.xcworkspace (Tools/make-test-scheme.sh), not once per package; the Mac app then reuses the features
+    # lane's build. No DerivedData cache: a fresh checkout changes every source's mtime, so a restored cache rebuilt
+    # everything anyway and only cost its restore and save (~2 min). The apps build for arm64 only (compile check).
+    name: ${{ matrix.name }}
     runs-on: macos-15
-    timeout-minutes: 90
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false # one red lane still lets the others report
+      matrix:
+        include:
+          - lane: core
+            name: test core packages
+          - lane: features
+            name: test feature packages + build Mac app
+          - lane: ios
+            name: build iOS app + Notification Service Extension
+          - lane: tools
+            name: swiftlint + build dev tools
     env:
       DERIVED_DATA: ${{ github.workspace }}/.ci-derived-data
+      HOMEBREW_NO_AUTO_UPDATE: "1"
+      LANE: ${{ matrix.lane }}
     steps:
       - name: Resolve matching branches of the hub and handlive-shared
         id: refs
@@ -107,94 +129,86 @@ jobs:
           xcodebuild -version
           swift --version
 
-      # DerivedData riêng cho từng package + app, khóa theo Package.swift và project.yml.
-      - name: Cache DerivedData
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
-        with:
-          path: ${{ env.DERIVED_DATA }}
-          key: apple-dd-${{ runner.os }}-${{ hashFiles('apple/Packages/*/Package.swift', 'apple/ThirdParty/*/Package.swift', 'apple/project.yml') }}
-          restore-keys: apple-dd-${{ runner.os }}-
-
       # SQLCipher's XCFramework as a local binary target: xcodebuild hangs downloading the remote one on this runner.
+      # Every lane needs it: the workspace's package graph includes GRDB.
       - name: Fetch SQLCipher (checksum-verified)
         run: apple/ThirdParty/SQLCipher/fetch.sh
 
-      # Chạy xcodebuild trong thư mục package (không cần .xcodeproj): scheme tự sinh của package
-      # một product cùng tên có luôn test target.
-      - name: xcodebuild test (every package)
-        # Insurance against a hanging test: without this a stuck test runs until the 90-min job timeout. A per-package
-        # watchdog below fails fast and names the package; this step cap is the backstop.
-        timeout-minutes: 30
+      - name: Test scheme of this lane
+        if: matrix.lane == 'core' || matrix.lane == 'features'
+        working-directory: apple
         run: |
-          set -euo pipefail
-          for pkg in HLProtocol HLCrypto HLTransport HLDesignSystem HLLocalization HLAppCore HLSMS HLSMSUI HLCalls HLMacUI HLiOSUI; do
-            echo "::group::xcodebuild test $pkg"
-            # A package with several products (HLSMS: HLSMS + HLSMSNotifications; HLCalls: HLCalls, HLCallNotifications,
-            # HLCallsUI) runs its tests in "<name>-Package".
-            scheme="$pkg"; case "$pkg" in HLSMS|HLCalls) scheme="$pkg-Package" ;; esac
-            # Run in the background and kill it if it stalls, so a hanging test fails *this* package (named) in minutes
-            # instead of stranding the whole step.
-            # Run serially: several call/session suites coordinate real-time async reconnection and are correct but
-            # not safe to run concurrently (they race for the MainActor under parallel execution). The product logic
-            # is unchanged; only the test scheduling is.
-            (cd "apple/Packages/$pkg" && xcodebuild test \
-              -scheme "$scheme" \
-              -destination 'platform=macOS' \
-              -parallel-testing-enabled NO \
-              -derivedDataPath "$DERIVED_DATA/$pkg") &
-            xpid=$!
-            (sleep 720; kill -9 "$xpid" 2>/dev/null) &
-            watchdog=$!
-            if wait "$xpid"; then
-              kill "$watchdog" 2>/dev/null || true
-            else
-              status=$?
-              kill "$watchdog" 2>/dev/null || true
-              echo "::error::xcodebuild test $pkg failed or exceeded 720s (exit $status) — a failing or hanging test"
-              exit 1
-            fi
-            echo "::endgroup::"
-          done
+          # CORE_TESTS is a list of names: split on purpose.
+          # shellcheck disable=SC2086
+          if [ "$LANE" = core ]; then
+            Tools/make-test-scheme.sh HLTests-core only $CORE_TESTS
+          else
+            Tools/make-test-scheme.sh HLTests-features except $CORE_TESTS
+          fi
+
+      - name: xcodebuild test
+        if: matrix.lane == 'core' || matrix.lane == 'features'
+        # A hanging test fails this step in minutes instead of running into the job timeout; the log's last
+        # "◇ Test … started" line names it.
+        timeout-minutes: 20
+        working-directory: apple
+        # Serial: several call/session suites coordinate real-time async reconnection and are correct but not safe to
+        # run concurrently (they race for the MainActor under parallel execution). The product logic is unchanged.
+        run: |
+          xcodebuild test \
+            -workspace HandLive.xcworkspace \
+            -scheme "HLTests-$LANE" \
+            -destination 'platform=macOS' \
+            -parallel-testing-enabled NO \
+            -derivedDataPath "$DERIVED_DATA"
+
+      - name: xcodegen generate
+        if: matrix.lane == 'features' || matrix.lane == 'ios'
+        working-directory: apple
+        run: |
+          brew install xcodegen
+          xcodegen generate
+
+      - name: Build Mac app (unsigned, arm64; reuses the packages the tests built)
+        if: matrix.lane == 'features'
+        working-directory: apple
+        run: |
+          xcodebuild build \
+            -workspace HandLive.xcworkspace \
+            -scheme HandLive \
+            -destination 'platform=macOS,arch=arm64' \
+            -derivedDataPath "$DERIVED_DATA" \
+            CODE_SIGNING_ALLOWED=NO
+
+      # The iPhone/iPad app with its Notification Service Extension, for the simulator, unsigned.
+      - name: Build iOS app + Notification Service Extension (simulator, unsigned, arm64)
+        if: matrix.lane == 'ios'
+        working-directory: apple
+        run: |
+          xcodebuild build \
+            -workspace HandLive.xcworkspace \
+            -scheme HandLiveiOS \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath "$DERIVED_DATA" \
+            ARCHS=arm64 \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: swiftlint lint --strict
+        if: matrix.lane == 'tools'
+        working-directory: apple
+        run: |
+          brew install swiftlint
+          swiftlint lint --strict
 
       # The headless dev client (apple/Tools/HandLiveDevClient) is not part of the apps: built only, so it keeps
       # compiling against the packages.
       - name: swift build dev client
+        if: matrix.lane == 'tools'
         working-directory: apple/Tools/HandLiveDevClient
         run: swift build
 
       # The HFP spike probe (apple/Tools/HFPSpike) runs by hand with a real phone: built only.
       - name: swift build HFP spike
+        if: matrix.lane == 'tools'
         working-directory: apple/Tools/HFPSpike
         run: swift build
-
-      - name: Cài XcodeGen + SwiftLint
-        run: brew install xcodegen swiftlint
-
-      - name: swiftlint lint --strict
-        working-directory: apple
-        run: swiftlint lint --strict
-
-      - name: xcodegen generate
-        working-directory: apple
-        run: |
-          xcodegen generate
-          xcodebuild -list -project HandLive.xcodeproj
-
-      - name: Build app macOS (không ký)
-        run: |
-          xcodebuild build \
-            -project apple/HandLive.xcodeproj \
-            -scheme HandLive \
-            -destination 'generic/platform=macOS' \
-            -derivedDataPath "$DERIVED_DATA/app" \
-            CODE_SIGNING_ALLOWED=NO
-
-      # The iPhone/iPad app with its Notification Service Extension, for the simulator, unsigned.
-      - name: Build app iOS + Notification Service Extension (simulator, unsigned)
-        run: |
-          xcodebuild build \
-            -project apple/HandLive.xcodeproj \
-            -scheme HandLiveiOS \
-            -destination 'generic/platform=iOS Simulator' \
-            -derivedDataPath "$DERIVED_DATA/app-ios" \
-            CODE_SIGNING_ALLOWED=NO

@@ -23,6 +23,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   key's file the older one gives way (one generation). Delete All removes both slots. The SQLCipher format is pinned
   with `PRAGMA cipher_compatibility = 4` (SET-03 API 1 logic 5).
 
+### Changed
+
+- CI (`ci-apple`): four parallel lanes (core tests, feature tests + Mac app, iOS app, SwiftLint + dev tools) instead
+  of one serial job. `Tools/make-test-scheme.sh` writes a shared test scheme into `HandLive.xcworkspace`, so a lane
+  builds the packages it tests once rather than once per package (2,869 compile units → 283 and 649); the Mac app
+  reuses that build; the apps build for arm64 only; the DerivedData cache, which never avoided a rebuild, is gone.
+
 ## [2026-09-30]
 
 ### Fixed
