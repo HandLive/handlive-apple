@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Release workflow (`release-apple`): a pushed tag `v*`, or a manual run for an existing tag, attaches
+  `HandLive-<version>-ios-unsigned.ipa` (Release build for devices with the Notification Service Extension, for
+  sideloading) and, once the Developer ID and notarization secrets exist, `HandLive-<version>-macos.zip` (universal,
+  signed inside out, hardened runtime, notarized, stapled) with their SHA-256 to the tag's GitHub Release; the tag's
+  version core must equal `MARKETING_VERSION`. Setup: hub `docs/deployment-guide.md`, Release builds.
 - Calls from other apps on the Mac (CALL-05): decode `call_event/app_call`, the `features.call.app_calls` capability
   (the Mac reports `call.app_calls`, iPhone and iPad report `false`), `AppCallController` (latest version per
   `call_id`, Answer, Decline and End as `call_event/action`, `CALL_APP_ACTION_UNAVAILABLE`, `CALL_NOT_FOUND` and

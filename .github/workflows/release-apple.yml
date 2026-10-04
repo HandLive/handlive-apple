@@ -1,0 +1,424 @@
+# Release: builds the Apple installables of a version tag and attaches them, with their SHA-256, to that tag's GitHub
+# Release (created when missing, pre-release when the tag has a suffix such as -beta.1).
+# - iOS/iPadOS: HandLive-<version>-ios-unsigned.ipa, a Release build for devices with its Notification Service
+#   Extension, not signed: sideloading tools re-sign it with the installer's own Apple ID. App Store/TestFlight
+#   distribution needs the paid Apple Developer Program team.
+# - macOS: HandLive-<version>-macos.zip, the universal app signed with Developer ID, hardened runtime, notarized and
+#   stapled. An unsigned Mac app cannot open its data-protection Keychain (errSecMissingEntitlement), so without the
+#   signing secrets below the Mac app is only compiled and nothing is published for it.
+# Runs on a pushed tag v*, or by hand for an existing tag: publish=false keeps the files as workflow artifacts only; a
+# file already attached is never replaced unless replace=true.
+# Two stages: "build" runs xcodegen/xcodebuild and the packages with read-only rights and no secret; "release" only
+# runs Apple's signing and notarization tools and gh, with the secrets (environment "release") and write access.
+# MARKETING_VERSION in project.yml must equal the tag's version core (v0.1.0-beta.1 → 0.1.0). The hub and
+# handlive-shared are checked out at the same tag (push their tags first); one without it falls back to main with a
+# warning.
+# macOS secrets (docs/deployment-guide.md, Release builds), all or none: APPLE_TEAM_ID,
+# APPLE_DEVELOPER_ID_P12_BASE64 + APPLE_DEVELOPER_ID_P12_PASSWORD (the "Developer ID Application" certificate with its
+# private key), APPLE_MAC_PROFILE_BASE64 (Developer ID provisioning profile of app.handlive.mac with Keychain Sharing,
+# Communication Notifications and Time Sensitive Notifications), APPLE_NOTARY_KEY_P8_BASE64 + APPLE_NOTARY_KEY_ID +
+# APPLE_NOTARY_ISSUER_ID (App Store Connect API key for notarytool).
+name: release-apple
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Version tag to build, e.g. v0.1.0-beta.1
+        required: true
+        type: string
+      publish:
+        description: Attach the files to the tag's GitHub Release (off = workflow artifacts only)
+        type: boolean
+        default: true
+      replace:
+        description: Replace files already attached to that Release
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-apple-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  TAG: ${{ inputs.tag || github.ref_name }}
+
+jobs:
+  build:
+    name: build ${{ matrix.platform }}
+    runs-on: macos-15
+    timeout-minutes: 60
+    strategy:
+      matrix:
+        platform: [ios, macos]
+    env:
+      DERIVED_DATA: ${{ github.workspace }}/.release-derived-data
+      HOMEBREW_NO_AUTO_UPDATE: "1"
+    outputs:
+      version: ${{ steps.tag.outputs.version }}
+    steps:
+      - name: Tag
+        id: tag
+        env:
+          OWNER: ${{ github.repository_owner }}
+          GH_TOKEN: ${{ secrets.HANDLIVE_REPOS_TOKEN || github.token }}
+        run: |
+          # The tag names files and API paths: one line, vMAJOR.MINOR.PATCH with an optional -suffix.
+          if ! [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]]; then
+            echo "::error::Not a version tag: $TAG (expected v1.2.3 or v1.2.3-beta.1)"; exit 1
+          fi
+          # The same tag in the hub and handlive-shared; a missing one falls back to main, any other API error stops.
+          resolve() {
+            if gh api "repos/${OWNER}/$1/git/ref/tags/${TAG}" > /dev/null 2> "$RUNNER_TEMP/resolve.err"; then
+              ref="$TAG"
+            elif grep -q 'HTTP 404' "$RUNNER_TEMP/resolve.err"; then
+              ref=main
+              echo "::warning::$1 has no tag $TAG: built against its main (push the hub and handlive-shared tags first)"
+            else
+              echo "::error::Cannot read the tags of $1: $(cat "$RUNNER_TEMP/resolve.err")"; exit 1
+            fi
+          }
+          resolve handlive; hub="$ref"
+          resolve handlive-shared; shared="$ref"
+          version="${TAG#v}"
+          { echo "hub=$hub"; echo "shared=$shared"; echo "version=$version"; echo "core=${version%%-*}"; } >> "$GITHUB_OUTPUT"
+          echo "$TAG: hub → $hub, handlive-shared → $shared"
+
+      - name: Kho hub handlive ở gốc workspace
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          repository: ${{ github.repository_owner }}/handlive
+          ref: ${{ steps.tag.outputs.hub }}
+          token: ${{ secrets.HANDLIVE_REPOS_TOKEN || github.token }}
+          persist-credentials: false
+
+      - name: Kho apple tại tag
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          path: apple
+          ref: refs/tags/${{ env.TAG }}
+          fetch-depth: 0 # the previous tag's build number
+          persist-credentials: false
+
+      - name: Kho handlive-shared cạnh apple/
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          repository: ${{ github.repository_owner }}/handlive-shared
+          path: shared
+          ref: ${{ steps.tag.outputs.shared }}
+          token: ${{ secrets.HANDLIVE_REPOS_TOKEN || github.token }}
+          persist-credentials: false
+
+      - name: The tag matches MARKETING_VERSION; the build number went up
+        working-directory: apple
+        env:
+          CORE: ${{ steps.tag.outputs.core }}
+        run: |
+          setting() { git show "$1:project.yml" | sed -n "s/^ *$2: \"\(.*\)\"\$/\1/p" | sort -u; }
+          versions="$(setting "$TAG" MARKETING_VERSION)"
+          if [ "$versions" != "$CORE" ]; then
+            echo "::error file=apple/project.yml::MARKETING_VERSION is \"$(echo "$versions" | tr '\n' ' ')\", the tag says \"$CORE\""
+            exit 1
+          fi
+          if previous="$(git describe --tags --abbrev=0 --match 'v*' "$TAG^" 2> /dev/null)" \
+            && [ "$(setting "$TAG" CURRENT_PROJECT_VERSION)" -le "$(setting "$previous" CURRENT_PROJECT_VERSION)" ]; then
+            echo "::warning file=apple/project.yml::CURRENT_PROJECT_VERSION is not above the one of $previous: TestFlight and the App Store refuse a build number they have seen"
+          fi
+
+      - name: Chọn Xcode ổn định mới nhất
+        uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
+        with:
+          xcode-version: latest-stable
+
+      - name: SQLCipher and the Xcode project
+        working-directory: apple
+        run: |
+          ThirdParty/SQLCipher/fetch.sh
+          brew install xcodegen
+          xcodebuild -version
+          xcodegen --version
+          xcodegen generate
+
+      - name: Build iOS app for devices (Release, unsigned) and package the IPA
+        if: matrix.platform == 'ios'
+        working-directory: apple
+        env:
+          VERSION: ${{ steps.tag.outputs.version }}
+        run: |
+          xcodebuild build \
+            -project HandLive.xcodeproj \
+            -scheme HandLiveiOS \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath "$DERIVED_DATA" \
+            CODE_SIGNING_ALLOWED=NO
+          work="$RUNNER_TEMP/ipa"
+          mkdir -p "$work/Payload" "$RUNNER_TEMP/out"
+          cp -R "$DERIVED_DATA/Build/Products/Release-iphoneos/HandLive.app" "$work/Payload/"
+          (cd "$work" && zip -qry "$RUNNER_TEMP/out/HandLive-$VERSION-ios-unsigned.ipa" Payload)
+
+      # Universal (arm64 + x86_64) and unsigned; the release job signs this very build. Zipped with ditto so the
+      # framework's symbolic links survive the artifact.
+      - name: Build Mac app (Release, universal, unsigned)
+        if: matrix.platform == 'macos'
+        working-directory: apple
+        run: |
+          xcodebuild build \
+            -project HandLive.xcodeproj \
+            -scheme HandLive \
+            -configuration Release \
+            -destination 'generic/platform=macOS' \
+            -derivedDataPath "$DERIVED_DATA" \
+            CODE_SIGNING_ALLOWED=NO
+          mkdir -p "$RUNNER_TEMP/out"
+          ditto -c -k --keepParent "$DERIVED_DATA/Build/Products/Release/HandLive.app" "$RUNNER_TEMP/out/HandLive-unsigned.app.zip"
+
+      - name: Keep the build for the release job
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: build-${{ matrix.platform }}-${{ steps.tag.outputs.version }}
+          path: ${{ runner.temp }}/out/
+          if-no-files-found: error
+          retention-days: 7
+
+  release:
+    name: sign, notarize and publish
+    needs: build
+    runs-on: macos-15
+    timeout-minutes: 60
+    environment: release
+    permissions:
+      contents: write # create the Release and upload its assets
+    env:
+      VERSION: ${{ needs.build.outputs.version }}
+      PUBLISH: ${{ github.event_name == 'push' || inputs.publish }}
+      REPLACE: ${{ inputs.replace || false }}
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: build-*-${{ needs.build.outputs.version }}
+          path: ${{ runner.temp }}/in
+          merge-multiple: true
+
+      # Only the entitlements file: the release job builds and runs nothing from the repository.
+      - name: Entitlements of the tag
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          path: apple
+          ref: refs/tags/${{ env.TAG }}
+          sparse-checkout: macOS/HandLive.entitlements
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+
+      - name: iOS IPA
+        run: |
+          mkdir -p "$RUNNER_TEMP/out"
+          mv "$RUNNER_TEMP/in/HandLive-$VERSION-ios-unsigned.ipa" "$RUNNER_TEMP/out/"
+
+      - name: macOS signing secrets
+        id: secrets
+        env:
+          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          P12: ${{ secrets.APPLE_DEVELOPER_ID_P12_BASE64 }}
+          P12_PASSWORD: ${{ secrets.APPLE_DEVELOPER_ID_P12_PASSWORD }}
+          PROFILE: ${{ secrets.APPLE_MAC_PROFILE_BASE64 }}
+          NOTARY_KEY: ${{ secrets.APPLE_NOTARY_KEY_P8_BASE64 }}
+          NOTARY_KEY_ID: ${{ secrets.APPLE_NOTARY_KEY_ID }}
+          NOTARY_ISSUER: ${{ secrets.APPLE_NOTARY_ISSUER_ID }}
+        run: |
+          set=0
+          for value in "$TEAM_ID" "$P12" "$P12_PASSWORD" "$PROFILE" "$NOTARY_KEY" "$NOTARY_KEY_ID" "$NOTARY_ISSUER"; do
+            [ -z "$value" ] || set=$((set + 1))
+          done
+          if [ "$set" = 0 ]; then
+            echo "signed=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=macOS not published::No Developer ID secrets: the Mac app was only compiled. An unsigned Mac app cannot open its Keychain; see docs/deployment-guide.md, Release builds."
+          elif [ "$set" != 7 ]; then
+            echo "::error::Only $set of the 7 macOS signing secrets are set: set all of them or none (docs/deployment-guide.md, Release builds)"
+            exit 1
+          else
+            echo "signed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Developer ID certificate and provisioning profile
+        id: identity
+        if: steps.secrets.outputs.signed == 'true'
+        env:
+          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          P12: ${{ secrets.APPLE_DEVELOPER_ID_P12_BASE64 }}
+          P12_PASSWORD: ${{ secrets.APPLE_DEVELOPER_ID_P12_PASSWORD }}
+          PROFILE: ${{ secrets.APPLE_MAC_PROFILE_BASE64 }}
+        run: |
+          trap 'rm -f "$RUNNER_TEMP/developer-id.p12"' EXIT
+          keychain="$RUNNER_TEMP/release.keychain-db"
+          password="$(openssl rand -hex 24)"
+          security create-keychain -p "$password" "$keychain"
+          echo "keychain=$keychain" >> "$GITHUB_OUTPUT" # the cleanup step removes it whatever happens next
+          security set-keychain-settings -lut 21600 "$keychain"
+          security unlock-keychain -p "$password" "$keychain"
+          printf '%s' "$P12" | base64 --decode > "$RUNNER_TEMP/developer-id.p12"
+          security import "$RUNNER_TEMP/developer-id.p12" -k "$keychain" -f pkcs12 -P "$P12_PASSWORD" \
+            -T /usr/bin/codesign -T /usr/bin/security
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$password" "$keychain" > /dev/null
+          # Search the release keychain first and keep the runner's own ones.
+          # shellcheck disable=SC2046 # one path per word
+          security list-keychains -d user -s "$keychain" $(security list-keychains -d user | tr -d '"')
+          identity="$(security find-identity -v -p codesigning "$keychain" \
+            | awk -v team="($TEAM_ID)" '/Developer ID Application/ && index($0, team) { print $2; exit }')"
+          if [ -z "$identity" ]; then
+            echo "::error::No \"Developer ID Application\" identity of team $TEAM_ID in APPLE_DEVELOPER_ID_P12_BASE64"; exit 1
+          fi
+          profile="$RUNNER_TEMP/developer-id.provisionprofile"
+          plist="$RUNNER_TEMP/profile.plist"
+          printf '%s' "$PROFILE" | base64 --decode > "$profile"
+          security cms -D -i "$profile" > "$plist"
+          read_profile() { /usr/libexec/PlistBuddy -c "Print :$1" "$plist" 2> /dev/null; }
+          # A Developer ID profile of this team and App ID, made for this certificate, granting what the app uses: a
+          # wrong one still notarizes but the system kills the app at launch.
+          if [ "$(read_profile TeamIdentifier:0)" != "$TEAM_ID" ] \
+            || [ "$(read_profile Entitlements:com.apple.application-identifier)" != "$TEAM_ID.app.handlive.mac" ]; then
+            echo "::error::APPLE_MAC_PROFILE_BASE64 is not a profile of $TEAM_ID.app.handlive.mac"; exit 1
+          fi
+          if [ "$(read_profile ProvisionsAllDevices)" != true ]; then
+            echo "::error::APPLE_MAC_PROFILE_BASE64 is not a Developer ID profile (ProvisionsAllDevices is not true)"; exit 1
+          fi
+          covered=no
+          index=0
+          while certificate="$(plutil -extract "DeveloperCertificates.$index" raw -o - "$plist" 2> /dev/null)"; do
+            if [ "$(printf '%s' "$certificate" | base64 --decode | shasum -a 1 | awk '{ print toupper($1) }')" = "$identity" ]; then
+              covered=yes
+            fi
+            index=$((index + 1))
+          done
+          if [ "$covered" != yes ]; then
+            echo "::error::APPLE_MAC_PROFILE_BASE64 does not include the certificate of APPLE_DEVELOPER_ID_P12_BASE64"; exit 1
+          fi
+          for key in com.apple.developer.usernotifications.communication \
+            com.apple.developer.usernotifications.time-sensitive keychain-access-groups; do
+            if ! read_profile "Entitlements:$key" > /dev/null; then
+              echo "::error::APPLE_MAC_PROFILE_BASE64 does not grant $key: turn the capability on for app.handlive.mac and make the profile again"; exit 1
+            fi
+          done
+          { echo "identity=$identity"; echo "profile=$profile"; } >> "$GITHUB_OUTPUT"
+
+      # Inside out: embedded frameworks first (SQLCipher), then the app with its entitlements, the hardened runtime and
+      # a secure timestamp. macOS/HandLive.entitlements is the source; the resource-access entitlements the hardened
+      # runtime needs (com.apple.security.device.audio-input, com.apple.security.automation.apple-events, …) go there
+      # once the app uses those resources.
+      - name: Sign the Mac app
+        id: signed
+        if: steps.secrets.outputs.signed == 'true'
+        env:
+          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          KEYCHAIN: ${{ steps.identity.outputs.keychain }}
+          IDENTITY: ${{ steps.identity.outputs.identity }}
+          PROFILE: ${{ steps.identity.outputs.profile }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/mac"
+          ditto -x -k "$RUNNER_TEMP/in/HandLive-unsigned.app.zip" "$RUNNER_TEMP/mac"
+          app="$RUNNER_TEMP/mac/HandLive.app"
+          # Every piece of code in the bundle must be one this step signs: the main executable or a top-level
+          # framework or dylib. An extension, login item or helper needs its own entitlements and signing first.
+          while IFS= read -r -d '' file; do
+            relative="${file#"$app"/Contents/}"
+            if [ "$relative" = MacOS/HandLive ] || ! file -b "$file" | grep -q Mach-O \
+              || [[ "$relative" =~ ^Frameworks/[^/]+\.framework/Versions/[^/]+/[^/]+$ ]] \
+              || [[ "$relative" =~ ^Frameworks/[^/]+\.dylib$ ]]; then
+              continue
+            fi
+            echo "::error::Contents/$relative is code this workflow does not sign yet: sign it with its own entitlements first"
+            exit 1
+          done < <(find "$app/Contents" -type f -print0)
+          cp "$PROFILE" "$app/Contents/embedded.provisionprofile"
+          entitlements="$RUNNER_TEMP/HandLive.entitlements"
+          sed "s/\$(AppIdentifierPrefix)/$TEAM_ID./g" apple/macOS/HandLive.entitlements > "$entitlements"
+          /usr/libexec/PlistBuddy -c "Add :com.apple.application-identifier string $TEAM_ID.app.handlive.mac" "$entitlements"
+          /usr/libexec/PlistBuddy -c "Add :com.apple.developer.team-identifier string $TEAM_ID" "$entitlements"
+          for item in "$app"/Contents/Frameworks/*.framework "$app"/Contents/Frameworks/*.dylib; do
+            [ -e "$item" ] || continue
+            codesign --force --timestamp --options runtime --keychain "$KEYCHAIN" --sign "$IDENTITY" "$item"
+          done
+          codesign --force --timestamp --options runtime --keychain "$KEYCHAIN" --sign "$IDENTITY" \
+            --entitlements "$entitlements" "$app"
+          codesign --verify --deep --strict --verbose=2 "$app"
+          echo "app=$app" >> "$GITHUB_OUTPUT"
+
+      - name: Notarize, staple and try the Mac app
+        if: steps.secrets.outputs.signed == 'true'
+        env:
+          NOTARY_KEY: ${{ secrets.APPLE_NOTARY_KEY_P8_BASE64 }}
+          NOTARY_KEY_ID: ${{ secrets.APPLE_NOTARY_KEY_ID }}
+          NOTARY_ISSUER: ${{ secrets.APPLE_NOTARY_ISSUER_ID }}
+          APP: ${{ steps.signed.outputs.app }}
+        run: |
+          key="$RUNNER_TEMP/notary.p8"
+          trap 'rm -f "$key"' EXIT
+          printf '%s' "$NOTARY_KEY" | base64 --decode > "$key"
+          ditto -c -k --keepParent "$APP" "$RUNNER_TEMP/notarize.zip"
+          # notarytool exits 0 for a rejected submission too: read its status.
+          xcrun notarytool submit "$RUNNER_TEMP/notarize.zip" --key "$key" --key-id "$NOTARY_KEY_ID" \
+            --issuer "$NOTARY_ISSUER" --wait --timeout 45m --output-format json > "$RUNNER_TEMP/notary.json"
+          status="$(plutil -extract status raw -o - "$RUNNER_TEMP/notary.json")"
+          if [ "$status" != Accepted ]; then
+            id="$(plutil -extract id raw -o - "$RUNNER_TEMP/notary.json")"
+            xcrun notarytool log "$id" --key "$key" --key-id "$NOTARY_KEY_ID" --issuer "$NOTARY_ISSUER" || true
+            echo "::error::Notarization $status"; exit 1
+          fi
+          xcrun stapler staple "$APP"
+          spctl --assess --type execute --verbose=2 "$APP"
+          # The system kills an app whose entitlements its profile does not grant: it must still run after 10 s.
+          "$APP/Contents/MacOS/HandLive" > "$RUNNER_TEMP/launch.log" 2>&1 &
+          pid=$!
+          sleep 10
+          if ! kill -0 "$pid" 2> /dev/null; then
+            cat "$RUNNER_TEMP/launch.log"; echo "::error::The signed Mac app quit at launch"; exit 1
+          fi
+          kill "$pid"
+          ditto -c -k --keepParent "$APP" "$RUNNER_TEMP/out/HandLive-$VERSION-macos.zip"
+
+      - name: Remove the release keychain
+        if: always() && steps.identity.outputs.keychain != ''
+        env:
+          KEYCHAIN: ${{ steps.identity.outputs.keychain }}
+        run: security delete-keychain "$KEYCHAIN"
+
+      - name: Checksums
+        run: |
+          cd "$RUNNER_TEMP/out"
+          for file in *; do shasum -a 256 "$file" > "$file.sha256"; done
+          ls -l
+
+      - name: Keep the files as workflow artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: apple-${{ needs.build.outputs.version }}
+          path: ${{ runner.temp }}/out/
+          retention-days: 14
+
+      - name: Attach to the GitHub Release
+        if: env.PUBLISH == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          files=("$RUNNER_TEMP"/out/*)
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            # Published files and their checksums stay as users downloaded them unless replace=true.
+            attached="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name')"
+            for file in "${files[@]}"; do
+              if printf '%s\n' "$attached" | grep -qxF "$(basename "$file")" && [ "$REPLACE" != true ]; then
+                echo "::error::$(basename "$file") is already attached to $TAG: run again with replace=true to replace it"
+                exit 1
+              fi
+            done
+            gh release upload "$TAG" "${files[@]}" --repo "$GITHUB_REPOSITORY" --clobber
+          else
+            prerelease=()
+            if [[ "$TAG" == *-* ]]; then prerelease=(--prerelease); fi
+            gh release create "$TAG" "${files[@]}" --repo "$GITHUB_REPOSITORY" --verify-tag \
+              --title "HandLive $TAG" --generate-notes "${prerelease[@]}"
+          fi
