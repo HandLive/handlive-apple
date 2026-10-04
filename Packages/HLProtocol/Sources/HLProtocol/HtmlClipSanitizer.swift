@@ -46,7 +46,7 @@ public enum HtmlClipSanitizer {
             }
         }
         out.append(contentsOf: text[pos...])
-        return String(decoding: out, as: UTF8.self)
+        return string(out)
     }
 
     // MARK: - Tokenizing
@@ -57,6 +57,12 @@ public enum HtmlClipSanitizer {
         let closing: Bool
         let name: String
         let attributes: Range<Int>
+    }
+
+    /// Bytes cut at ASCII syntax characters of a valid UTF-8 string are valid UTF-8 again, so decoding never repairs.
+    private static func string(_ bytes: some Collection<UInt8>) -> String {
+        // swiftlint:disable:next optional_data_string_conversion
+        String(decoding: bytes, as: UTF8.self)
     }
 
     private static func isLetter(_ byte: UInt8) -> Bool { (65...90).contains(byte) || (97...122).contains(byte) }
@@ -101,7 +107,7 @@ public enum HtmlClipSanitizer {
         let nameStart = index
         guard index < bytes.count, isLetter(bytes[index]) else { return nil }
         while index < bytes.count, isLetter(bytes[index]) || isDigit(bytes[index]) { index += 1 }
-        let name = String(decoding: bytes[nameStart..<index], as: UTF8.self).lowercased()
+        let name = string(bytes[nameStart..<index]).lowercased()
         let attributesStart = index
         while index < bytes.count {
             let byte = bytes[index]
@@ -149,7 +155,7 @@ public enum HtmlClipSanitizer {
             }
             var nameEnd = index + 1
             while nameEnd < bytes.endIndex, isNameByte(bytes[nameEnd]) { nameEnd += 1 }
-            let name = String(decoding: bytes[index..<nameEnd], as: UTF8.self).lowercased()
+            let name = string(bytes[index..<nameEnd]).lowercased()
             var valueStart = nameEnd
             while valueStart < bytes.endIndex, isSpace(bytes[valueStart]) { valueStart += 1 }
             var raw: String?
@@ -158,7 +164,7 @@ public enum HtmlClipSanitizer {
                 valueStart += 1
                 while valueStart < bytes.endIndex, isSpace(bytes[valueStart]) { valueStart += 1 }
                 if let valueEnd = valueEnd(in: bytes, from: valueStart) {
-                    raw = String(decoding: bytes[valueStart..<valueEnd], as: UTF8.self)
+                    raw = string(bytes[valueStart..<valueEnd])
                     end = valueEnd
                 }
             }
@@ -189,7 +195,7 @@ public enum HtmlClipSanitizer {
         guard let raw else { return "" }
         let bytes = Array(raw.utf8)
         if bytes.count >= 2, bytes[0] == bytes[bytes.count - 1], bytes[0] == 34 || bytes[0] == 39 {
-            return String(decoding: bytes[1..<(bytes.count - 1)], as: UTF8.self)
+            return string(bytes[1..<(bytes.count - 1)])
         }
         return raw
     }

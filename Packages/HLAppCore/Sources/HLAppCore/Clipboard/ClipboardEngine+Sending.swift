@@ -58,14 +58,18 @@ extension ClipboardEngine {
 
     /// A new local clip: it becomes the latest clip (QC7), supersedes a chunked transfer in progress, and goes to the
     /// phone when clipboard is active there.
-    func send(_ content: ClipContent, sensitive: Bool, manual: Bool) {
+    /// `html` is the sanitized rich form of a text clip: dropped here when over `CLIP_MAX_HTML` (CLIP-01 API 5).
+    func send(_ content: ClipContent, html: String? = nil, sensitive: Bool, manual: Bool) {
         detectedLocalChange = nil
+        let html = html.flatMap { $0.utf8.count <= ClipboardConstants.maxHtmlBytes ? $0 : nil }
         let createdAt = now()
         let clip = OutgoingClip(clipId: HLUUID.v7(timestampMs: Self.milliseconds(createdAt)), content: content,
-                                sensitive: sensitive, originTs: Self.milliseconds(createdAt), createdAt: createdAt,
+                                html: html, sensitive: sensitive, originTs: Self.milliseconds(createdAt), createdAt: createdAt,
                                 manual: manual)
-        BenchLog.event("clip_read", ["clip": clip.clipId, "kind": content.kind.rawValue,
-                                     "bytes": String(content.bytes.count), "source": platform == .ios ? "ios" : "mac"])
+        var readFields = [("clip", clip.clipId), ("kind", content.kind.rawValue), ("bytes", String(content.bytes.count)),
+                          ("source", platform == .ios ? "ios" : "mac")]
+        if html != nil { readFields.append(("html", "1")) }
+        BenchLog.event("clip_read", fields: readFields)
         cancelOutgoingTransfer(reason: .superseded)
         latestLocal = clip
         guard let phone else {
@@ -113,7 +117,7 @@ extension ClipboardEngine {
 
     private func push(_ clip: OutgoingClip, to phone: Phone) async throws -> Ack {
         let peerId = Self.benchId(phone.deviceId)
-        if let inline = inlinePush(clip) {
+        if let inline = inlinePush(clip, to: phone) {
             let waiter = try await phone.peer.sendPush(inline)
             BenchLog.event("clip_sent", ["clip": clip.clipId, "peer": peerId])
             return try await waiter.response(timeout: TransportConstants.requestTimeout)
@@ -144,17 +148,23 @@ extension ClipboardEngine {
         return try await waiter.response(timeout: TransportConstants.requestTimeout)
     }
 
-    /// The push with the text inline when its plaintext stays within `CLIP_INLINE_MAX` (QC5), else `nil`.
-    private func inlinePush(_ clip: OutgoingClip) -> ClipboardPushData? {
+    /// The push with the text inline when its plaintext stays within `CLIP_INLINE_MAX` (QC5), else `nil`. The HTML form
+    /// goes along only to a phone that lists `text/html`, and is left out again when it is what makes the push too large.
+    private func inlinePush(_ clip: OutgoingClip, to phone: Phone) -> ClipboardPushData? {
         guard case .text = clip.content else { return nil }
-        let push = pushData(clip, transfer: nil)
-        guard let plaintext = try? TypedPayload(op: ClipboardOp.push.rawValue, data: push).encoded(),
-              plaintext.count <= ClipboardConstants.inlineMaxPlaintext
-        else { return nil }
-        return push
+        let withHtml = clip.html != nil && (phone.feature?.mimes ?? []).contains(ClipMime.html)
+        for includeHtml in withHtml ? [true, false] : [false] {
+            let push = pushData(clip, transfer: nil, includeHtml: includeHtml)
+            if let plaintext = try? TypedPayload(op: ClipboardOp.push.rawValue, data: push).encoded(),
+               plaintext.count <= ClipboardConstants.inlineMaxPlaintext {
+                return push
+            }
+        }
+        return nil
     }
 
-    func pushData(_ clip: OutgoingClip, transfer: ClipboardTransfer?) -> ClipboardPushData {
+    func pushData(_ clip: OutgoingClip, transfer: ClipboardTransfer?,
+                  includeHtml: Bool = false) -> ClipboardPushData {
         var text: String?
         var width: Int32?
         var height: Int32?
@@ -165,7 +175,8 @@ extension ClipboardEngine {
             height = image.height
         }
         return ClipboardPushData(clipId: clip.clipId, kind: clip.content.kind, mime: clip.content.mime, text: text,
-                                 transfer: transfer, width: width, height: height, sensitive: clip.sensitive,
+                                 html: transfer == nil && includeHtml ? clip.html : nil, transfer: transfer,
+                                 width: width, height: height, sensitive: clip.sensitive,
                                  originTs: clip.originTs, source: platform == .ios ? .ios : .mac,
                                  originDeviceId: deviceId)
     }

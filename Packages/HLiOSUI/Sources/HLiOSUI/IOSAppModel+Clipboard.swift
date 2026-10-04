@@ -29,10 +29,10 @@ extension IOSAppModel {
     /// Steps 8–10: the content handed over by the system Paste button, sent at once (no permission prompt).
     public func sendPasted(_ providers: [NSItemProvider]) {
         Task {
-            guard let content = await PastedContent.load(providers, imagesAllowed: settings.sendImages) else {
+            guard let pasted = await PastedContent.load(providers, imagesAllowed: settings.sendImages) else {
                 return show(.unsupportedContent)
             }
-            clipboard?.sendPasted(content)
+            clipboard?.sendPasted(pasted.content, html: pasted.html)
         }
     }
 

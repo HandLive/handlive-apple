@@ -28,9 +28,16 @@ public final class IOSPasteboard: ClipboardAccess {
     /// API 1: `setItems(_:options:)` with `.localOnly` and `.expirationDate` when auto-clear is on; the clip carries
     /// `app.handlive.clip-id` so HandLive recognizes its own write.
     public func write(_ content: ClipContent, clipId: String, sensitive: Bool) -> Int? {
+        write(content, html: nil, clipId: clipId, sensitive: sensitive)
+    }
+
+    /// A text clip with HTML also gets `UTType.html` in the same item, beside the plain text.
+    public func write(_ content: ClipContent, html: String?, clipId: String, sensitive: Bool) -> Int? {
         var item: [String: Any] = [PasteboardTypeID.clipId: Data(clipId.utf8)]
         switch content {
-        case .text(let text): item[UTType.utf8PlainText.identifier] = text
+        case .text(let text):
+            item[UTType.utf8PlainText.identifier] = text
+            if let html { item[UTType.html.identifier] = html }
         case .image(let image):
             item[image.mime == ClipMime.png ? UTType.png.identifier : UTType.jpeg.identifier] = image.data
         }

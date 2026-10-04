@@ -17,14 +17,14 @@ extension ClipboardEngine {
 
     /// Steps 8–10: what the user pasted with the system Paste button goes to the phone at once. QC3 does not apply
     /// (the user sends deliberately); size and type are checked here (E3, E4, E7).
-    public func sendPasted(_ content: ClipContent) {
+    public func sendPasted(_ content: ClipContent, html: String? = nil) {
         if case .image = content, !settings.sendImages { return onNotice(.unsupportedContent) }
         let limit = content.kind == .text ? ClipboardConstants.maxTextBytes : ClipboardConstants.maxImageBytes
         guard content.bytes.count <= limit else { return onNotice(content.kind == .text ? .textTooLarge : .imageTooLarge) }
         lastSeenChangeCount = access.changeCount
         settings.seenChangeCount = lastSeenChangeCount
         setUnsentLocalContent(false)
-        send(content, sensitive: false, manual: true)
+        send(content, html: html, sensitive: false, manual: true)
     }
 
     /// "Copy" on the card of the last received clip: written again as HandLive's own clip (QC4), with a fresh
@@ -32,7 +32,8 @@ extension ClipboardEngine {
     @discardableResult
     public func copyLastReceivedAgain() -> Bool {
         guard let clip = lastReceived,
-              let count = access.write(clip.content, clipId: clip.clipId, sensitive: clip.sensitive) else { return false }
+              let count = access.write(clip.content, html: clip.html, clipId: clip.clipId, sensitive: clip.sensitive)
+        else { return false }
         ownWrite = OwnWrite(changeCount: count, clipId: clip.clipId, writtenAt: now())
         lastSeenChangeCount = count
         if platform == .ios {

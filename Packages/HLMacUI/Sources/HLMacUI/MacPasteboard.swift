@@ -26,12 +26,18 @@ final class MacPasteboard: ClipboardAccess {
     /// One item with every type, written in one pass, kept on this Mac (`.currentHostOnly`: no Universal Clipboard);
     /// `changeCount` is read only afterwards (API 7 logic 1–2). A JPEG also promises PNG, made only when an app asks.
     func write(_ content: ClipContent, clipId: String, sensitive: Bool) -> Int? {
+        write(content, html: nil, clipId: clipId, sensitive: sensitive)
+    }
+
+    /// A text clip with HTML also gets `public.html` in the same item, beside the plain text (API 7).
+    func write(_ content: ClipContent, html: String?, clipId: String, sensitive: Bool) -> Int? {
         let item = NSPasteboardItem()
         var written = true
         provider = nil
         switch content {
         case .text(let text):
             written = item.setString(text, forType: .string)
+            if let html { written = written && item.setString(html, forType: .html) }
         case .image(let image) where image.mime == ClipMime.jpeg:
             written = item.setData(image.data, forType: NSPasteboard.PasteboardType(PasteboardTypeID.jpeg))
             let promise = PNGPromise(jpeg: image.data)

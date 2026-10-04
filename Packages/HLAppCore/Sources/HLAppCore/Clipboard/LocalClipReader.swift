@@ -1,4 +1,5 @@
 import Foundation
+import HLProtocol
 import UniformTypeIdentifiers
 
 /// What the user copied, as the first clipboard item shows it (CLIP-02 API 1 logic 3, CLIP-03 API 2).
@@ -7,7 +8,8 @@ enum LocalClip: Equatable {
     case ownWrite(clipId: String?)
     /// Empty (an empty text too), a copied file that is not an image, or a type HandLive does not send (E3).
     case unsupported
-    case text(String, sensitiveType: Bool)
+/// `html` is the sanitized `public.html` of the same item, when it declares one.
+    case text(String, html: String?, sensitiveType: Bool)
     /// Image bytes and their type identifier; normalized later, off the main actor.
     case image(Data, typeIdentifier: String, sensitiveType: Bool)
     /// An image file copied in Finder and the type its extension names; read and normalized later, off the main actor.
@@ -41,7 +43,7 @@ enum LocalClipReader {
         for type in types {
             if isText(type) {
                 guard let text = access.string(forType: PasteboardTypeID.text), !text.isEmpty else { return .unsupported }
-                return .text(text, sensitiveType: sensitive)
+                return .text(text, html: sanitizedHtml(access, types: types), sensitiveType: sensitive)
             }
             if isImage(type) {
                 guard let (data, identifier) = readImage(access, types: types) else { return .unsupported }
@@ -49,6 +51,15 @@ enum LocalClipReader {
             }
         }
         return .unsupported
+    }
+
+    /// `public.html` of the first item when it declares one (CLIP-02 API 1): sanitized, `nil` when nothing is left.
+    private static func sanitizedHtml(_ access: ClipboardAccess, types: [String]) -> String? {
+        guard types.contains(PasteboardTypeID.html), let raw = access.string(forType: PasteboardTypeID.html) else {
+            return nil
+        }
+        let html = HtmlClipSanitizer.sanitize(raw)
+        return html.isEmpty ? nil : html
     }
 
     static func isText(_ type: String) -> Bool {

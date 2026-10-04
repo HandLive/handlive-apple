@@ -3,6 +3,7 @@ import Foundation
 /// Pasteboard type identifiers the clipboard feature reads and writes (CLIP-02 API 1, CLIP-01 API 7).
 public enum PasteboardTypeID {
     public static let text = "public.utf8-plain-text"
+    public static let html = "public.html"
     public static let png = "public.png"
     public static let jpeg = "public.jpeg"
     public static let tiff = "public.tiff"
@@ -25,6 +26,15 @@ public protocol ClipboardAccess: AnyObject {
     /// Replaces the clipboard with the clip, marked with `app.handlive.clip-id` (and concealed when sensitive), kept
     /// on this machine; returns `changeCount` after the write, or `nil` when the system refused it (`INTERNAL`).
     func write(_ content: ClipContent, clipId: String, sensitive: Bool) -> Int?
+    /// Same, with the sanitized HTML form of a text clip written beside the text in the same item (CLIP-01 API 7).
+    func write(_ content: ClipContent, html: String?, clipId: String, sensitive: Bool) -> Int?
     /// Empties the clipboard; returns the new `changeCount` (CLIP-05 step 8).
     func clear() -> Int
+}
+
+extension ClipboardAccess {
+    /// For clipboards that know no HTML form: the text alone.
+    public func write(_ content: ClipContent, html: String?, clipId: String, sensitive: Bool) -> Int? {
+        write(content, clipId: clipId, sensitive: sensitive)
+    }
 }
