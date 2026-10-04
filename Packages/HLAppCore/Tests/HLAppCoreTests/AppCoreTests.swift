@@ -80,12 +80,12 @@ struct DeviceIdentityKeysTests {
 
 @Suite("Local capability (0.7.2, SET-02 API 1)")
 struct LocalCapabilityTests {
-    @Test("Clipboard and relay follow the settings; Sync Images off leaves only text/plain")
+    @Test("Clipboard and relay follow the settings; Sync Images off leaves text/plain and text/html")
     func capability() {
         let settings = AppSettings(defaults: freshDefaults())
         let device = LocalDevice(appVersion: "1.0.0 (100)", osVersion: "15.6", model: "Mac15,3", name: "Mac", platform: .macos)
         var capability = device.capability(settings: settings)
-        #expect(capability.features.clipboard?.mimes == ["text/plain", "image/png", "image/jpeg"])
+        #expect(capability.features.clipboard?.mimes == ["text/plain", "text/html", "image/png", "image/jpeg"])
         #expect(capability.features.clipboard?.autoSend == true)
         #expect(capability.features.relay?.enabled == true)
         #expect(capability.features.sms == SmsFeature(enabled: true) && capability.features.camera == nil)
@@ -93,7 +93,7 @@ struct LocalCapabilityTests {
         settings.clipboardEnabled = false
         settings.smsEnabled = false
         capability = device.capability(settings: settings)
-        #expect(capability.features.clipboard?.mimes == ["text/plain"])
+        #expect(capability.features.clipboard?.mimes == ["text/plain", "text/html"])
         #expect(capability.features.clipboard?.enabled == false)
         #expect(capability.features.sms?.enabled == false && capability.features.sms?.notify == nil)
     }

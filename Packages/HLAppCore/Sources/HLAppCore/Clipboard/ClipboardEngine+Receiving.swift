@@ -27,8 +27,10 @@ extension ClipboardEngine {
             return
         }
         let bytes = push.text.map { $0.utf8.count } ?? Int(push.transfer?.size ?? 0)
-        BenchLog.event("clip_received", ["clip": push.clipId, "peer": Self.benchId(phone.deviceId),
-                                         "kind": push.kind.rawValue, "bytes": String(bytes)])
+        var receivedFields = [("clip", push.clipId), ("peer", Self.benchId(phone.deviceId)),
+                              ("kind", push.kind.rawValue), ("bytes", String(bytes))]
+        if push.html != nil { receivedFields.append(("html", "1")) }
+        BenchLog.event("clip_received", fields: receivedFields)
         if let code = validate(push) {
             ledger.record(push.clipId, .rejected, now: now())
             reply(requestId, .rejected(code, clipId: push.clipId))
@@ -51,12 +53,18 @@ extension ClipboardEngine {
     }
 
     /// `kind` matches `mime`, exactly one of `text`/`transfer`, clipboard on, within this Mac's limits and MIME types.
+    /// `html` only beside an inline text and within `CLIP_MAX_HTML` (CLIP-01 API 5).
     func validate(_ push: ClipboardPushData) -> ErrorCode? {
         let imageMimes = [ClipMime.png, ClipMime.jpeg]
         let kindMatches = push.kind == .text ? push.mime == ClipMime.text : imageMimes.contains(push.mime)
         guard HLUUID.isCanonical(push.clipId), kindMatches, (push.text == nil) != (push.transfer == nil),
               push.kind == .text || push.transfer != nil
         else { return .badRequest }
+        if let html = push.html {
+            guard push.kind == .text, push.transfer == nil, html.utf8.count <= ClipboardConstants.maxHtmlBytes else {
+                return .badRequest
+            }
+        }
         guard settings.clipboardEnabled else { return .featureDisabled }
         if push.kind == .image, !settings.sendImages { return .clipUnsupportedMime }
         let limit = push.kind == .text ? ClipboardConstants.maxTextBytes : ClipboardConstants.maxImageBytes
@@ -96,7 +104,11 @@ extension ClipboardEngine {
     }
 
     private func write(_ content: ClipContent, push: ClipboardPushData, requestId: String) {
-        guard let count = access.write(content, clipId: push.clipId, sensitive: push.sensitive) else {
+        // Never trust the sender's sanitizing: the HTML is cleaned again before it reaches the clipboard.
+        // Escaping can grow the output past the limit: the text then goes alone, still acknowledged applied.
+        let html = push.html.map(HtmlClipSanitizer.sanitize)
+            .flatMap { $0.isEmpty || $0.utf8.count > ClipboardConstants.maxHtmlBytes ? nil : $0 }
+        guard let count = access.write(content, html: html, clipId: push.clipId, sensitive: push.sensitive) else {
             ledger.record(push.clipId, .rejected, now: now())
             reply(requestId, .rejected(.internal, clipId: push.clipId))
             return
@@ -115,7 +127,7 @@ extension ClipboardEngine {
         ledger.record(push.clipId, .applied, now: writtenAt)
         scheduleAutoClear()
         reply(requestId, .applied(push.clipId))
-        let clip = ReceivedClip(clipId: push.clipId, content: content, sensitive: push.sensitive,
+        let clip = ReceivedClip(clipId: push.clipId, content: content, html: html, sensitive: push.sensitive,
                                 deviceName: phone?.name ?? "", receivedAt: writtenAt)
         lastReceived = clip
         onReceived(clip)
@@ -155,7 +167,7 @@ extension ClipboardEngine {
     /// CLIP-01 API 6 logic 3: "Clipboard Not Updated on <name>" with "Send Again", not for a replayed clip.
     private func receiveConflict(_ conflict: ClipboardConflictData) {
         guard let clip = latestLocal, clip.clipId == conflict.clipId, !clip.replayed else { return }
-        heldConflict = HeldClip(content: clip.content, sensitive: clip.sensitive, heldAt: now())
+        heldConflict = HeldClip(content: clip.content, html: clip.html, sensitive: clip.sensitive, heldAt: now())
         onAlert(.conflict(deviceName: conflict.deviceName))
     }
 

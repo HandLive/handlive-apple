@@ -26,6 +26,22 @@ struct ClipboardMessagesTests {
                                                   "origin_device_id"])
     }
 
+    @Test("A text push with html round-trips; without it the key is absent")
+    func htmlPush() throws {
+        let push = ClipboardPushData(clipId: "0192f3e0-5a21-7b3c-9d4e-1f2a3b4c5d6e", kind: .text, mime: ClipMime.text,
+                                     text: "Hi Lan", html: "<p>Hi <b>Lan</b></p>", sensitive: false,
+                                     originTs: 1_727_150_100_123, source: .auto,
+                                     originDeviceId: "8c7d6e5f-4a3b-8c2d-9e1f-0a1b2c3d4e5f")
+        let wire = try JSONSerialization.jsonObject(with: HLJSON.encode(push)) as? [String: Any]
+        #expect(wire?["html"] as? String == "<p>Hi <b>Lan</b></p>")
+        let decoded = try HLJSON.convert(HLJSON.convert(from: push), to: ClipboardPushData.self)
+        #expect(decoded == push && ClipMime.html == "text/html")
+        let plain = try JSONSerialization.jsonObject(with: HLJSON.encode(ClipboardPushData(
+            clipId: push.clipId, kind: .text, mime: ClipMime.text, text: "x", sensitive: false, originTs: 1,
+            source: .auto, originDeviceId: push.originDeviceId))) as? [String: Any]
+        #expect(plain?["html"] == nil)
+    }
+
     @Test("Image push with transfer of CLIP-03 API 3; an unknown source still decodes")
     func imagePush() throws {
         let push = try Self.data(#"{"op":"push","data":{"clip_id":"0192f3f1-2c3d-7e4f-8a5b-6c7d8e9f0a1b","kind":"image","#

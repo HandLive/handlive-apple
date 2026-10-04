@@ -8,6 +8,8 @@ public enum ClipboardConstants {
     public static let maxImageBytes = 10_485_760
     /// `CLIP_INLINE_MAX`: a `clipboard/push` plaintext up to this size carries the text inline (QC5).
     public static let inlineMaxPlaintext = 180 * 1024
+    /// `CLIP_MAX_HTML`: 180 KiB of UTF-8 of the `html` of a text clip, measured after sanitizing.
+    public static let maxHtmlBytes = 180 * 1024
     /// `CHUNK_SIZE`, before encryption.
     public static let chunkSize = 65_536
     /// `CLIP_POLL_MAC`.

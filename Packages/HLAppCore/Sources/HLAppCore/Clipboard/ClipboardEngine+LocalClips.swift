@@ -17,8 +17,8 @@ extension ClipboardEngine {
             detectedLocalChange = nil
             readFailed("empty_or_not_text", manual: manual, types: true)
             if manual { onNotice(.emptyOrNotText) }
-        case .text(let text, let sensitiveType):
-            captureText(text, sensitiveType: sensitiveType, manual: manual)
+        case .text(let text, let html, let sensitiveType):
+            captureText(text, html: html, sensitiveType: sensitiveType, manual: manual)
         case .image, .imageFile:
             captureImageClip(clip, manual: manual)
         }
@@ -63,7 +63,7 @@ extension ClipboardEngine {
             .value
     }
 
-    private func captureText(_ text: String, sensitiveType: Bool, manual: Bool) {
+    private func captureText(_ text: String, html: String?, sensitiveType: Bool, manual: Bool) {
         detectedLocalChange = nil
         let content = ClipContent.text(text)
         if let received, received.sha256 == content.sha256,
@@ -73,14 +73,14 @@ extension ClipboardEngine {
         }
         if !manual, echoesLatestLocal(content) { return }
         if settings.blockSensitive, sensitiveType || SensitiveContent.looksLikeCardNumber(text) {
-            hold(content, as: .sensitiveBlocked)
+            hold(content, html: html, as: .sensitiveBlocked)
             return
         }
         guard content.bytes.count <= ClipboardConstants.maxTextBytes else {
             onNotice(.textTooLarge)
             return
         }
-        send(content, sensitive: false, manual: manual)
+        send(content, html: html, sensitive: false, manual: manual)
     }
 
     private func captureImage(_ image: ClipImage?, sensitiveType: Bool, manual: Bool) {
@@ -119,8 +119,8 @@ extension ClipboardEngine {
             && now().timeIntervalSince(latestLocal.createdAt) <= ClipboardConstants.staleAfter
     }
 
-    private func hold(_ content: ClipContent, as alert: ClipboardAlert) {
-        heldSensitive = HeldClip(content: content, sensitive: true, heldAt: now())
+    private func hold(_ content: ClipContent, html: String? = nil, as alert: ClipboardAlert) {
+        heldSensitive = HeldClip(content: content, html: html, sensitive: true, heldAt: now())
         onAlert(alert)
     }
 
@@ -131,7 +131,7 @@ extension ClipboardEngine {
             return
         }
         heldSensitive = nil
-        send(held.content, sensitive: true, manual: true)
+        send(held.content, html: held.html, sensitive: true, manual: true)
     }
 
     /// "Send Again" on the conflict notification: the same content as a new clip within 120 s (CLIP-01 API 6).
@@ -141,7 +141,7 @@ extension ClipboardEngine {
             return
         }
         heldConflict = nil
-        send(held.content, sensitive: held.sensitive, manual: true)
+        send(held.content, html: held.html, sensitive: held.sensitive, manual: true)
     }
 
     /// Debug builds only (`HLBENCH/1 clip_read_failed`): why a local copy was not sent, with the first item's

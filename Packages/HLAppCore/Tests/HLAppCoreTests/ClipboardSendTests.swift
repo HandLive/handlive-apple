@@ -197,4 +197,52 @@ struct ClipboardSendTests {
         harness.engine.poll()
         #expect(harness.notices == [.pasteAccessNeeded] && harness.peer.pushes.isEmpty)
     }
+
+    @Test("HTML beside the text: sent inline only to a phone listing text/html; the text stays the identity")
+    func htmlOnlyToPhoneThatListsIt() async {
+        let withHtml = ClipboardHarness(feature: ClipboardHarness.htmlFeature)
+        withHtml.pasteboard.copy(text: "Hi Lan", html: "<p onclick=\"x\">Hi <b>Lan</b></p>")
+        withHtml.engine.poll()
+        #expect(await withHtml.until { withHtml.peer.pushes.count == 1 })
+        #expect(withHtml.peer.pushes[0].text == "Hi Lan" && withHtml.peer.pushes[0].html == "<p>Hi <b>Lan</b></p>")
+        #expect(withHtml.engine.latestLocal?.content.sha256 == ClipContent.text("Hi Lan").sha256)
+
+        let plain = ClipboardHarness() // the default phone lists no text/html
+        plain.pasteboard.copy(text: "Hi Lan", html: "<b>Lan</b>")
+        plain.engine.poll()
+        #expect(await plain.until { plain.peer.pushes.count == 1 })
+        #expect(plain.peer.pushes[0].text == "Hi Lan" && plain.peer.pushes[0].html == nil)
+    }
+
+    @Test("HTML is dropped when the push would pass CLIP_INLINE_MAX or the HTML passes CLIP_MAX_HTML; a chunked text has none")
+    func htmlDroppedWhenTooLarge() async {
+        let harness = ClipboardHarness(feature: ClipboardHarness.htmlFeature)
+        let text = String(repeating: "a", count: 100 * 1024)
+        harness.pasteboard.copy(text: text, html: "<p>" + String(repeating: "b", count: 100 * 1024) + "</p>")
+        harness.engine.poll()
+        #expect(await harness.until { harness.peer.pushes.count == 1 })
+        #expect(harness.peer.pushes[0].text == text && harness.peer.pushes[0].html == nil) // 200 KiB together
+
+        let huge = "<p>" + String(repeating: "c", count: ClipboardConstants.maxHtmlBytes) + "</p>"
+        harness.pasteboard.copy(text: "short", html: huge)
+        harness.engine.poll()
+        #expect(await harness.until { harness.peer.pushes.count == 2 })
+        #expect(harness.peer.pushes[1].text == "short" && harness.peer.pushes[1].html == nil)
+
+        harness.pasteboard.copy(text: String(repeating: "d", count: 200 * 1024), html: "<p>d</p>")
+        harness.engine.poll()
+        #expect(await harness.until { harness.peer.pushes.count == 3 })
+        #expect(harness.peer.pushes[2].transfer != nil && harness.peer.pushes[2].html == nil)
+    }
+
+    @Test("Send Anyway keeps the HTML of the held clip")
+    func sendAnywayKeepsHtml() async {
+        let harness = ClipboardHarness(feature: ClipboardHarness.htmlFeature)
+        harness.pasteboard.copy(text: "4111 1111 1111 1111", html: "<b>4111 1111 1111 1111</b>")
+        harness.engine.poll()
+        #expect(harness.alerts == [.sensitiveBlocked])
+        harness.engine.sendAnyway()
+        #expect(await harness.until { harness.peer.pushes.count == 1 })
+        #expect(harness.peer.pushes[0].sensitive && harness.peer.pushes[0].html == "<b>4111 1111 1111 1111</b>")
+    }
 }

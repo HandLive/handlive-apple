@@ -62,14 +62,18 @@ public struct ClipboardProgress: Equatable, Sendable {
 public struct ReceivedClip: Equatable, Sendable {
     public let clipId: String
     public let content: ClipContent
+    /// The sanitized HTML form of a text clip (CLIP-01 API 5 `html`), written beside the text.
+    public let html: String?
     /// Shown as "Sensitive content hidden".
     public let sensitive: Bool
     public let deviceName: String
     public let receivedAt: Date
 
-    public init(clipId: String, content: ClipContent, sensitive: Bool, deviceName: String, receivedAt: Date) {
+    public init(clipId: String, content: ClipContent, html: String? = nil, sensitive: Bool, deviceName: String,
+                receivedAt: Date) {
         self.clipId = clipId
         self.content = content
+        self.html = html
         self.sensitive = sensitive
         self.deviceName = deviceName
         self.receivedAt = receivedAt
@@ -80,6 +84,8 @@ public struct ReceivedClip: Equatable, Sendable {
 final class OutgoingClip {
     let clipId: String
     let content: ClipContent
+    /// Sanitized HTML form of a text clip; not part of its identity (QC4, QC6), sent only to a peer that lists `text/html`.
+    let html: String?
     let sensitive: Bool
     let originTs: Int64
     let createdAt: Date
@@ -90,9 +96,11 @@ final class OutgoingClip {
     /// Sent again after a reconnection: a conflict for it is not shown (CLIP-01 API 6 logic 3).
     var replayed = false
 
-    init(clipId: String, content: ClipContent, sensitive: Bool, originTs: Int64, createdAt: Date, manual: Bool) {
+    init(clipId: String, content: ClipContent, html: String? = nil, sensitive: Bool, originTs: Int64, createdAt: Date,
+         manual: Bool) {
         self.clipId = clipId
         self.content = content
+        self.html = html
         self.sensitive = sensitive
         self.originTs = originTs
         self.createdAt = createdAt
@@ -117,6 +125,7 @@ struct OwnWrite: Equatable {
 /// Content held for "Send Anyway" or "Send Again", at most `CLIP_STALE_AFTER`.
 struct HeldClip {
     let content: ClipContent
+    var html: String?
     let sensitive: Bool
     let heldAt: Date
 }

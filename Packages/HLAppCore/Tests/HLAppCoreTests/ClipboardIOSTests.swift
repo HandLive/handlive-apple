@@ -43,6 +43,19 @@ struct ClipboardIOSTests {
         #expect(harness.notices.last == .unsupportedContent && harness.peer.pushes.count == 1)
     }
 
+    @Test("A pasted text with HTML goes with its html to a phone that lists text/html; copying again keeps it")
+    func sendPastedWithHtml() async throws {
+        let harness = ClipboardHarness(platform: .ios, feature: ClipboardHarness.htmlFeature)
+        harness.engine.sendPasted(.text("Hẹn 3h"), html: "<p>Hẹn <b>3h</b></p>")
+        #expect(await harness.until { harness.peer.pushes.count == 1 })
+        #expect(harness.peer.pushes[0].text == "Hẹn 3h" && harness.peer.pushes[0].html == "<p>Hẹn <b>3h</b></p>")
+        let received = ClipboardHarness.textPush("từ Mac", html: "<i>từ Mac</i>")
+        #expect(await harness.reply(to: harness.receive(received))?.clipboardData?.status == .applied)
+        #expect(harness.pasteboard.writes.last?.html == "<i>từ Mac</i>")
+        #expect(harness.engine.copyLastReceivedAgain())
+        #expect(harness.pasteboard.writes.count == 2 && harness.pasteboard.writes[1].html == "<i>từ Mac</i>")
+    }
+
     @Test("E2: unsent content survives a push in the first 5 s of the session; a later push is written")
     func firstSecondsKeepLocalContent() async throws {
         let harness = ClipboardHarness(connected: false, platform: .ios)

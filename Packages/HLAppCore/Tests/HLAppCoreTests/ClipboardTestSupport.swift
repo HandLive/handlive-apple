@@ -4,71 +4,6 @@ import HLProtocol
 import HLTransport
 @testable import HLAppCore
 
-/// An in-memory pasteboard: one item with typed values, a `changeCount`, and counters of content reads.
-@MainActor
-final class FakePasteboard: ClipboardAccess {
-    private(set) var changeCount = 1
-    private(set) var types: [String] = []
-    private var values: [String: Data] = [:]
-    private(set) var contentReads = 0
-    struct Write: Equatable {
-        let content: ClipContent
-        let clipId: String
-        let sensitive: Bool
-    }
-
-    private(set) var writes: [Write] = []
-    var failWrites = false
-
-    /// The user copies in another app.
-    func copy(_ items: [(String, Data)]) {
-        types = items.map(\.0)
-        values = Dictionary(uniqueKeysWithValues: items)
-        changeCount += 1
-    }
-
-    func copy(text: String, extraTypes: [String] = []) {
-        copy([(PasteboardTypeID.text, Data(text.utf8))] + extraTypes.map { ($0, Data()) })
-    }
-
-    func firstItemTypes() -> [String]? {
-        contentReads += 1
-        return types.isEmpty ? nil : types
-    }
-
-    func string(forType type: String) -> String? {
-        contentReads += 1
-        return values[type].flatMap { String(data: $0, encoding: .utf8) }
-    }
-
-    func data(forType type: String) -> Data? {
-        contentReads += 1
-        return values[type]
-    }
-
-    func write(_ content: ClipContent, clipId: String, sensitive: Bool) -> Int? {
-        guard !failWrites else { return nil }
-        writes.append(Write(content: content, clipId: clipId, sensitive: sensitive))
-        var items: [(String, Data)]
-        switch content {
-        case .text(let text): items = [(PasteboardTypeID.text, Data(text.utf8))]
-        case .image(let image): items = [(image.mime == ClipMime.png ? PasteboardTypeID.png : PasteboardTypeID.jpeg,
-                                          image.data)]
-        }
-        items.append((PasteboardTypeID.clipId, Data(clipId.utf8)))
-        if sensitive { items.append((PasteboardTypeID.concealed, Data())) }
-        copy(items)
-        return changeCount
-    }
-
-    func clear() -> Int {
-        types = []
-        values = [:]
-        changeCount += 1
-        return changeCount
-    }
-}
-
 /// The phone as the engine sees it: records what is sent and answers pushes with scripted acks.
 final class FakeClipboardPeer: ClipboardPeer, @unchecked Sendable {
     enum Answer {
@@ -241,9 +176,14 @@ final class ClipboardHarness {
         return peer.replies.first { $0.requestId == requestId }?.ack
     }
 
+    /// A phone that takes the HTML form of a text clip.
+    static let htmlFeature = ClipboardFeature(enabled: true, autoSend: true, maxTextBytes: 1_048_576,
+                                              maxImageBytes: 10_485_760,
+                                              mimes: [ClipMime.text, ClipMime.html, ClipMime.png, ClipMime.jpeg])
+
     static func textPush(_ text: String, clipId: String = HLUUID.v7(), originTs: Int64 = 1_727_150_000_000,
-                         sensitive: Bool = false) -> ClipboardPushData {
-        ClipboardPushData(clipId: clipId, kind: .text, mime: ClipMime.text, text: text, sensitive: sensitive,
+                         sensitive: Bool = false, html: String? = nil) -> ClipboardPushData {
+        ClipboardPushData(clipId: clipId, kind: .text, mime: ClipMime.text, text: text, html: html, sensitive: sensitive,
                           originTs: originTs, source: .auto, originDeviceId: phoneId)
     }
 }

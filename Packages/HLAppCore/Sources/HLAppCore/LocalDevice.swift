@@ -58,7 +58,7 @@ public struct LocalDevice: Sendable, Equatable {
     /// reports `features.call.app_calls` = `feature.call` ∧ `call.app_calls`; iPhone and iPad always say `false`
     /// (CALL-05, 0.7.2).
     public func capability(settings: AppSettings) -> CapabilityData {
-        let mimes = settings.sendImages ? ClipboardLimits.mimes : [ClipboardLimits.textMime]
+        let mimes = settings.sendImages ? ClipboardLimits.mimes : ClipboardLimits.textMimes
         let clipboard = ClipboardFeature(enabled: settings.clipboardEnabled, autoSend: true,
                                          maxTextBytes: ClipboardLimits.maxTextBytes,
                                          maxImageBytes: ClipboardLimits.maxImageBytes, mimes: mimes)
@@ -77,7 +77,10 @@ public enum ClipboardLimits {
     public static let maxTextBytes: Int64 = 1_048_576
     public static let maxImageBytes: Int64 = 10_485_760
     public static let textMime = "text/plain"
+    public static let htmlMime = "text/html"
     public static let pngMime = "image/png"
     public static let jpegMime = "image/jpeg"
-    public static let mimes = [textMime, pngMime, jpegMime]
+    /// What this app accepts with images off: plain text and its HTML form (CLIP-01 API 5 `html`).
+    public static let textMimes = [textMime, htmlMime]
+    public static let mimes = textMimes + [pngMime, jpegMime]
 }
