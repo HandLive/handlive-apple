@@ -83,7 +83,7 @@ extension IOSAppModel {
 
     /// SET-02 API 7 in its order: the keys first, then the database and the pair store, settings and notifications.
     private func eraseLocalData() {
-        try? secrets.deleteAll()
+        try? secrets.deleteAllInEveryKeychain()
         try? messages?.store.database.deleteFiles()
         try? SmsDatabase.removeFiles(at: smsDatabaseURL) // both slots, whichever one the open database used
         messages = nil

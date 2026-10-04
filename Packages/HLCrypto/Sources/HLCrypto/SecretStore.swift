@@ -9,6 +9,16 @@ public protocol SecretStore: Sendable {
     /// Deletes every item of the service: a fresh install must not inherit keys the Keychain kept after the app
     /// was removed (SET-03 API 1 logic 1).
     func deleteAll() throws
+    /// "Delete All HandLive Data" (SET-02 API 7): like `deleteAll()`, and on the Mac also in the other keychain, where a
+    /// build signed the other way kept its own keys (logic 6).
+    func deleteAllInEveryKeychain() throws
+}
+
+extension SecretStore {
+    /// A store with a single keychain, or none: the same as `deleteAll()`.
+    public func deleteAllInEveryKeychain() throws {
+        try deleteAll()
+    }
 }
 
 public enum SecretAccount {
@@ -24,6 +34,12 @@ public enum SecretAccount {
 public final class InMemorySecretStore: SecretStore, @unchecked Sendable {
     private let lock = NSLock()
     private var items: [String: Data] = [:]
+    private var everyKeychainCount = 0
+
+    /// How many times "Delete All HandLive Data" cleared the store: a fresh install's `deleteAll()` does not count.
+    public var everyKeychainDeletions: Int {
+        locked { everyKeychainCount }
+    }
 
     public init() {}
 
@@ -41,6 +57,13 @@ public final class InMemorySecretStore: SecretStore, @unchecked Sendable {
 
     public func deleteAll() throws {
         locked { items.removeAll() }
+    }
+
+    public func deleteAllInEveryKeychain() throws {
+        locked {
+            items.removeAll()
+            everyKeychainCount += 1
+        }
     }
 
     private func locked<T>(_ body: () -> T) -> T {

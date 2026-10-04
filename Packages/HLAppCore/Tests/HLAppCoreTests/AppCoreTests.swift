@@ -58,6 +58,8 @@ struct DeviceIdentityKeysTests {
         let settings = AppSettings(defaults: freshDefaults())
         let keys = try DeviceIdentityKeys.loadOrCreate(secrets: secrets, settings: settings, now: 1_000)
         #expect(try secrets.load(account: "stale-pair-id") == nil)
+        // Only this build's keychain: a build signed the other way finds its keys again (SET-03 API 1 logic 1).
+        #expect(secrets.everyKeychainDeletions == 0)
         #expect(settings.setupStartedAt == 1_000)
         #expect(try secrets.load(account: SecretAccount.signingKey) == keys.signingSeed)
         #expect(keys.databaseKey.count == 32 && keys.signingPublicKey.count == 32)

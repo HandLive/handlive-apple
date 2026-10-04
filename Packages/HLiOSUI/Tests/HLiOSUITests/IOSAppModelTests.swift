@@ -128,7 +128,8 @@ struct IOSAppModelTests {
     func deleteAll() async throws {
         let relay = ScriptedRelayAPI()
         let notifications = StubIOSNotifications()
-        let model = makeIOSModel(notifications: notifications, relay: relay)
+        let secrets = InMemorySecretStore()
+        let model = makeIOSModel(secrets: secrets, notifications: notifications, relay: relay)
         model.launch()
         try model.completePairing(pairingResult())
         model.completeSetup()
@@ -144,6 +145,7 @@ struct IOSAppModelTests {
         #expect(relay.calls.contains("deleteDevice revoke_pairs=true local=\(pairId)"))
         #expect(erased && model.pairedDevice == nil && !model.setupCompleted && model.deviceId != oldDevice)
         #expect(notifications.removedEverything == 1)
+        #expect(secrets.everyKeychainDeletions == 1) // the explicit erase, unlike the fresh install that follows
     }
 
     @Test("Settings and the phone details: SMS off on the phone or missing permissions, off here, contacts hint")

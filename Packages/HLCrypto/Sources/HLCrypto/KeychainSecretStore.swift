@@ -39,14 +39,17 @@ public struct KeychainSecretStore: SecretStore {
     }
 
     func baseQuery(account: String) -> [String: Any] {
-        var query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: Self.service,
-            kSecAttrAccount as String: account
-        ]
+        matchQuery(account: account, dataProtectionKeychain: usesDataProtectionKeychain)
+    }
+
+    /// One account, or every item of the service (`account == nil`), in the data-protection or the login keychain. The
+    /// flag is explicit on macOS: left out, a team-signed process's query matches its data-protection items too.
+    func matchQuery(account: String? = nil, dataProtectionKeychain: Bool) -> [String: Any] {
+        var query: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: Self.service]
+        if let account { query[kSecAttrAccount as String] = account }
         if let accessGroup { query[kSecAttrAccessGroup as String] = accessGroup }
         #if os(macOS)
-        if usesDataProtectionKeychain { query[kSecUseDataProtectionKeychain as String] = true }
+        query[kSecUseDataProtectionKeychain as String] = dataProtectionKeychain
         #endif
         return query
     }
@@ -77,23 +80,36 @@ public struct KeychainSecretStore: SecretStore {
         return result as? Data
     }
 
+    /// This build's keychain only: a fresh install keeps what a build signed the other way stored in the other keychain,
+    /// so switching back to it finds its keys again (SET-03 API 1 logic 1).
     public func deleteAll() throws {
-        var query: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: Self.service]
-        if let accessGroup { query[kSecAttrAccessGroup as String] = accessGroup }
+        try deleteItems(dataProtectionKeychain: usesDataProtectionKeychain)
+    }
+
+    /// "Delete All HandLive Data" (SET-02 API 7 logic 6): this build's keychain, then on macOS the other one, where a
+    /// build signed the other way (ad hoc ↔ team) kept its own keys. An ad-hoc build cannot reach the data-protection
+    /// keychain: errSecMissingEntitlement there leaves a team build's device-only keys in place.
+    public func deleteAllInEveryKeychain() throws {
+        try deleteAll()
         #if os(macOS)
-        if usesDataProtectionKeychain { query[kSecUseDataProtectionKeychain as String] = true }
+        do {
+            try deleteItems(dataProtectionKeychain: !usesDataProtectionKeychain)
+        } catch CryptoError.keychain(status: errSecMissingEntitlement) {}
         #endif
-        // The login keychain deletes one matching item per call, the data-protection keychain all of them: repeat
-        // until none is left (bounded, in case an item cannot be deleted).
-        for _ in 0..<1_000 {
-            let status = SecItemDelete(query as CFDictionary)
-            if status == errSecItemNotFound { return }
-            try check(status)
-        }
     }
 
     public func delete(account: String) throws {
-        let status = SecItemDelete(baseQuery(account: account) as CFDictionary)
+        try deleteItems(account: account, dataProtectionKeychain: usesDataProtectionKeychain)
+    }
+
+    /// Missing items count as deleted. The data-protection keychain deletes every match in one call; the login keychain
+    /// goes through `LoginKeychain`, since `SecItemDelete` refuses the items another build created there (0.6.1).
+    func deleteItems(account: String? = nil, dataProtectionKeychain: Bool) throws {
+        let query = matchQuery(account: account, dataProtectionKeychain: dataProtectionKeychain)
+        #if os(macOS)
+        if !dataProtectionKeychain { return try LoginKeychain.deleteItems(matching: query) }
+        #endif
+        let status = SecItemDelete(query as CFDictionary)
         if status != errSecItemNotFound { try check(status) }
     }
 

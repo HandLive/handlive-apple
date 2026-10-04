@@ -102,17 +102,55 @@ struct SecretStoreTests {
     }
 
     #if os(macOS)
-    @Test("0.6.1: the login keychain gets the same item without the data-protection flag or an accessibility class")
+    @Test("0.6.1: the login keychain gets the same item with the data-protection flag off and no accessibility class")
     func loginKeychainQuery() {
         let store = KeychainSecretStore(accessGroup: nil, usesDataProtectionKeychain: false)
         let query = store.addQuery(Data([9]), account: SecretAccount.keyAgreementKey)
         #expect(query[kSecAttrService as String] as? String == "app.handlive.keys")
         #expect(query[kSecAttrAccount as String] as? String == "ik_dh")
         #expect(query[kSecValueData as String] as? Data == Data([9]))
-        #expect(query[kSecUseDataProtectionKeychain as String] == nil)
+        // Explicit: left out, a team-signed process would match its data-protection items as well.
+        #expect(query[kSecUseDataProtectionKeychain as String] as? Bool == false)
         #expect(query[kSecAttrAccessible as String] == nil)
     }
+
+    @Test("SET-02 API 7 logic 6: either build matches the whole service in either keychain")
+    func everyKeychainQueries() {
+        for usesDataProtection in [true, false] {
+            let store = KeychainSecretStore(accessGroup: nil, usesDataProtectionKeychain: usesDataProtection)
+            for dataProtection in [true, false] {
+                let query = store.matchQuery(dataProtectionKeychain: dataProtection)
+                #expect(query[kSecClass as String] as? String == kSecClassGenericPassword as String)
+                #expect(query[kSecAttrService as String] as? String == "app.handlive.keys")
+                #expect(query[kSecAttrAccount as String] == nil)
+                #expect(query[kSecUseDataProtectionKeychain as String] as? Bool == dataProtection)
+            }
+        }
+    }
+
+    @Test("0.6.1: the login keychain is deleted by reference to each match, never by reading the secret")
+    func loginKeychainReferences() {
+        let match = KeychainSecretStore(accessGroup: nil, usesDataProtectionKeychain: false).baseQuery(account: "ik_sig")
+        let query = LoginKeychain.referenceQuery(match)
+        #expect(query[kSecReturnRef as String] as? Bool == true)
+        #expect(query[kSecMatchLimit as String] as? String == kSecMatchLimitAll as String)
+        #expect(query[kSecUseDataProtectionKeychain as String] as? Bool == false)
+        #expect(query[kSecAttrAccount as String] as? String == "ik_sig")
+        #expect(query[kSecReturnData as String] == nil)
+    }
     #endif
+
+    @Test("SET-02 API 7: the explicit erase empties the store and is told apart from a fresh install's deleteAll")
+    func inMemoryEveryKeychain() throws {
+        let store = InMemorySecretStore()
+        try store.save(Data([1]), account: SecretAccount.signingKey)
+        try store.deleteAll()
+        #expect(store.everyKeychainDeletions == 0)
+        try store.save(Data([1]), account: SecretAccount.signingKey)
+        try store.deleteAllInEveryKeychain()
+        #expect(try store.load(account: SecretAccount.signingKey) == nil)
+        #expect(store.everyKeychainDeletions == 1)
+    }
 
     @Test("iOS shares its keys with the Notification Service Extension through the App Group access group")
     func sharedAccessGroup() {
