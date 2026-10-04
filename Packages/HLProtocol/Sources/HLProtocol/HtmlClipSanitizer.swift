@@ -69,6 +69,16 @@ public enum HtmlClipSanitizer {
     private static func isDigit(_ byte: UInt8) -> Bool { (48...57).contains(byte) }
     private static func isSpace(_ byte: UInt8) -> Bool { byte == 32 || (9...13).contains(byte) }
 
+    /// `str.strip` of the reference on ASCII whitespace only: NBSP and other Unicode spaces stay part of the value.
+    private static func trimSpace(_ value: String) -> String {
+        let bytes = Array(value.utf8)
+        var start = 0
+        var end = bytes.count
+        while start < end, isSpace(bytes[start]) { start += 1 }
+        while end > start, isSpace(bytes[end - 1]) { end -= 1 }
+        return String(decoding: bytes[start..<end], as: UTF8.self)
+    }
+
     /// `<!-- … -->` removed; an unclosed comment stays as it is.
     private static func removeComments(_ bytes: [UInt8]) -> [UInt8] {
         var out: [UInt8] = []
@@ -212,7 +222,7 @@ public enum HtmlClipSanitizer {
         for (key, raw) in attributes(in: attributeBytes) where found[key] == nil && allowed.contains(key) {
             var value = unquoted(raw)
             if let schemes = urlSchemes[key] {
-                value = value.trimmingCharacters(in: .whitespacesAndNewlines)
+                value = trimSpace(value)
                 let lower = Array(value.lowercased().utf8)
                 guard schemes.contains(where: { lower.starts(with: $0.utf8) }) else { continue }
             } else if digitsOnly.contains(key), value.isEmpty || !value.utf8.allSatisfy(isDigit) {
