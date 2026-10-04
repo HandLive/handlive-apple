@@ -63,12 +63,14 @@ public struct OnboardingView: View {
     }
 }
 
-/// Step 1: "Welcome to HandLive" with the brand name in `brand-fire`, the privacy summary and the two choices.
+/// Step 1: the brand mark, "Welcome to HandLive" with the brand name in `brand-fire`, the privacy summary and
+/// the two choices.
 struct WelcomeStep: View {
     @ObservedObject var flow: OnboardingFlow
 
     var body: some View {
         OnboardingPage(primary: L10n.Common.getStarted, action: flow.start) {
+            HLBrandMark(height: 72)
             Text(Self.title).hlTextStyle(.brandLargeTitle).multilineTextAlignment(.center)
             Text(L10n.Setup.welcomeBodyClient).hlTextStyle(.macBody).multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)

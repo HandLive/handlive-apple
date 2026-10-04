@@ -42,8 +42,7 @@ struct IOSSetupView: View {
     private var page: some View {
         switch flow.step {
         case .welcome:
-            Image(systemName: "iphone.and.arrow.forward").font(.system(size: 48)).foregroundStyle(Color.accentColor)
-                .accessibilityHidden(true)
+            HLBrandMark(height: 72)
             Text(L10n.Setup.welcomeTitle).hlTextStyle(.brandLargeTitle)
             Text(L10n.Setup.welcomeBodyClient).font(.body)
             if let privacy = PrivacyPage.url() {
