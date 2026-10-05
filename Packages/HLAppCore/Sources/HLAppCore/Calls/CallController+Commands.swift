@@ -88,15 +88,16 @@ extension CallController {
 
     /// One `ack` wait of `window` from the click; the same envelope `id` whenever a session is there.
     private func send(_ request: CallActionRequest, within window: Duration) async -> Ack? {
-        await CallActionSender.send(request, via: { [weak self] in self?.peer }, benchPeer: benchPeer, within: window)
+        await CallActionSender.send(request, via: { [weak self] in self?.peer }, benchPeer: benchPeer, within: window,
+                                    clock: clock)
     }
 
     /// After a successful `ack`: at most `stateWait` for the `state` that carries the result, then the buttons unlock
     /// and the latest `state` stays on screen (CALL-02 step 7).
     private func waitForState(callId: String) {
         stateWaitTask?.cancel()
-        stateWaitTask = Task { [weak self, stateWait] in
-            try? await Task.sleep(for: stateWait)
+        stateWaitTask = Task { [weak self, clock, stateWait] in
+            try? await clock.sleep(for: stateWait)
             guard !Task.isCancelled else { return }
             self?.finish(callId: callId, problem: nil)
         }

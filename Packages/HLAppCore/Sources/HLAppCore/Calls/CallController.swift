@@ -26,6 +26,8 @@ public final class CallController: ObservableObject {
     public var enabledHere: () -> Bool = { true }
 
     let now: () -> Int64
+    /// Times the waits below and the `ack` window of a command.
+    let clock: any Clock<Duration>
     /// `REQUEST_TIMEOUT` for the `ack` of a command (0.10).
     var requestTimeout: Duration = .seconds(10)
     /// After a successful `ack`, how long the buttons stay locked waiting for the `state` with the result (step 7).
@@ -58,8 +60,10 @@ public final class CallController: ObservableObject {
     var connectionLostTask: Task<Void, Never>?
     var stateWaitTask: Task<Void, Never>?
 
-    public init(now: @escaping () -> Int64 = { HLUUID.currentTimeMs() }) {
+    public init(now: @escaping () -> Int64 = { HLUUID.currentTimeMs() },
+                clock: any Clock<Duration> = ContinuousClock()) {
         self.now = now
+        self.clock = clock
     }
 
     // MARK: - Pair and session
@@ -184,8 +188,8 @@ public final class CallController: ObservableObject {
         call = ended
         let callId = ended.callId
         closeTask?.cancel()
-        closeTask = Task { [weak self, endedDisplay] in
-            try? await Task.sleep(for: endedDisplay)
+        closeTask = Task { [weak self, clock, endedDisplay] in
+            try? await clock.sleep(for: endedDisplay)
             guard !Task.isCancelled, let self, self.call?.callId == callId else { return }
             self.clear()
         }

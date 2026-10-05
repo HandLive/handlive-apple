@@ -16,8 +16,8 @@ extension AppCallController {
         }
         guard !contexts.isEmpty else { return }
         let since = connectedAtMs
-        staleTask = Task { [weak self, reconnectGrace] in
-            try? await Task.sleep(for: reconnectGrace)
+        staleTask = Task { [weak self, clock, reconnectGrace] in
+            try? await clock.sleep(for: reconnectGrace)
             guard !Task.isCancelled, let self else { return }
             for (callId, call) in self.contexts where call.receivedAtMs < since {
                 self.cancelTasks(of: callId)
@@ -33,8 +33,8 @@ extension AppCallController {
         peer = nil
         connectionLostTask?.cancel()
         guard !contexts.isEmpty else { return }
-        connectionLostTask = Task { [weak self, connectionLostDelay] in
-            try? await Task.sleep(for: connectionLostDelay)
+        connectionLostTask = Task { [weak self, clock, connectionLostDelay] in
+            try? await clock.sleep(for: connectionLostDelay)
             guard !Task.isCancelled, let self, self.peer == nil else { return }
             for callId in Array(self.contexts.keys) {
                 self.change(callId) { $0.connectionLost = true }

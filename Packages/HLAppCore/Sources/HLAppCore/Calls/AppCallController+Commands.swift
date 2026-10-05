@@ -47,7 +47,7 @@ extension AppCallController {
         // refuses `mac` (CALL-05 API 2).
         let request = CallActionRequest(callId: callId, action: command.action)
         guard let ack = await CallActionSender.send(request, via: { [weak self] in self?.peer }, benchPeer: benchPeer,
-                                                    within: requestTimeout) else {
+                                                    within: requestTimeout, clock: clock) else {
             finish(callId, problem: .commandNotSent)
             return .failed(.commandNotSent)
         }
@@ -58,8 +58,8 @@ extension AppCallController {
     private func accepted(_ callId: String, _ command: CallCommand) -> CallController.CommandOutcome {
         if case .answer = command { change(callId) { $0.answerRequested = true } }
         stateWaitTasks[callId]?.cancel()
-        stateWaitTasks[callId] = Task { [weak self, stateWait] in
-            try? await Task.sleep(for: stateWait)
+        stateWaitTasks[callId] = Task { [weak self, clock, stateWait] in
+            try? await clock.sleep(for: stateWait)
             guard !Task.isCancelled else { return }
             self?.finish(callId, problem: nil)
         }
