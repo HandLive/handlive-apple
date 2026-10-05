@@ -142,19 +142,20 @@ struct AppCallCommandTests {
 
     @Test("A session lost while waiting: the same envelope id goes again once the session is back in time")
     func resendAfterReconnect() async {
+        let timer = ManualClock()
         let lost = FakeCallPeer(otherwise: .sessionEnded)
-        let controller = AppCallController.connectedForTest(peer: lost)
+        let controller = AppCallController.connectedForTest(peer: lost, timer: timer)
         controller.requestTimeout = .seconds(3)
         controller.apply(AppCallSamples.ringing(), envelopeTs: 100)
         let back = FakeCallPeer([.ok])
-        let reconnect = Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(50))
-            controller.disconnected()
-            try? await Task.sleep(for: .milliseconds(50))
-            controller.connected(peer: back, capability: AppCallSamples.capability())
-        }
-        #expect(await controller.perform(.reject(reply: nil), for: callId) == .accepted)
-        await reconnect.value
+        let command = Task { await controller.perform(.reject(reply: nil), for: callId) }
+        #expect(await timer.waitForSleepers()) // the dead session refused it: waiting to try again
+        controller.disconnected()
+        await timer.advance(by: .milliseconds(100))
+        #expect(await timer.waitForSleepers(2)) // no session: still waiting, and so is "Lost connection"
+        controller.connected(peer: back, capability: AppCallSamples.capability())
+        await timer.advance(by: .milliseconds(100))
+        #expect(await command.value == .accepted)
         #expect(back.sent.count == 1 && !lost.sent.isEmpty)
         #expect(Set((lost.sent + back.sent).map(\.id)).count == 1)
     }

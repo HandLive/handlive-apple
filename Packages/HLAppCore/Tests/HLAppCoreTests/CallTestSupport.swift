@@ -119,12 +119,13 @@ final class CallEventLog {
 }
 
 extension CallController {
-    /// A controller with short timings, paired and connected to `peer` with `capability`.
+    /// A controller with short timings, paired and connected to `peer` with `capability`; `timer` runs its waits.
     @MainActor
     static func connectedForTest(peer: FakeCallPeer = FakeCallPeer(),
                                  capability: CapabilityData = CallSamples.capability(),
-                                 clock: TestClock = TestClock()) -> CallController {
-        let controller = CallController(now: { clock.now })
+                                 clock: TestClock = TestClock(),
+                                 timer: any Clock<Duration> = ContinuousClock()) -> CallController {
+        let controller = CallController(now: { clock.now }, clock: timer)
         controller.requestTimeout = .milliseconds(300)
         controller.stateWait = .milliseconds(200)
         controller.endedDisplay = .milliseconds(150)
