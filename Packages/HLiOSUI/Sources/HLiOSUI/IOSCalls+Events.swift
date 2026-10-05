@@ -36,9 +36,19 @@ extension IOSCalls {
         guard let call else { return }
         if call.phase == .ringing {
             incomingCallId = call.callId
+            postIncomingIfNeeded(call)
         } else if clearedCallId != call.callId {
             removeIncoming(call.callId)
         }
+    }
+
+    /// During the background grace the call comes over the session, not through push: the app posts the notification
+    /// the extension would have shown, once per call, with call notifications on (E3).
+    func postIncomingIfNeeded(_ call: ActiveCall) {
+        guard notifiesIncoming(), call.phase == .ringing, settings.callNotify, settings.callsEnabled,
+              postedIncomingCallId != call.callId, let pairId else { return }
+        postedIncomingCallId = call.callId
+        notifier.postIncoming(call.state, pairId: pairId)
     }
 
     private func removeIncoming(_ callId: String) {

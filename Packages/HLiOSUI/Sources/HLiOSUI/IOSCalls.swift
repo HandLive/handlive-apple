@@ -37,12 +37,16 @@ public final class IOSCalls: ObservableObject {
     var clearedCallId: String?
     /// The last call the banner came up for: VoiceOver and the bench line once per call.
     var announcedCallId: String?
+    /// The ringing call the app posted a notification for during the background grace (once per call).
+    var postedIncomingCallId: String?
 
     /// Hooks the app model sets: whether SMS can go out, the capability, reading the pair's pushes, VoiceOver.
     var smsCanSend: () -> Bool = { false }
     var capabilityChanged: () -> Void = {}
     var pushReader: () -> CallPushReader = { { _ in nil } }
     var announce: (String) -> Void = { _ in }
+    /// The app is in the background grace: a ringing call gets the notification its push would have shown.
+    var notifiesIncoming: () -> Bool = { false }
 
     public init(settings: AppSettings, notifier: any IOSCallNotifying, controller: CallController = CallController()) {
         self.settings = settings
@@ -106,7 +110,12 @@ public final class IOSCalls: ObservableObject {
         }
     }
 
-    /// The app went to the background, where pushes take over: no banner until the phone reports the call again.
+    /// The background grace began: a call already ringing gets its notification now.
+    func graceStarted() {
+        if let call = controller.call { postIncomingIfNeeded(call) }
+    }
+
+    /// The session closed in the background, where pushes take over: no banner until the phone reports the call again.
     func enteredBackground() {
         controller.forgetCall()
     }

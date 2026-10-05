@@ -44,8 +44,12 @@ public final class IOSPasteboard: ClipboardAccess {
         var options: [UIPasteboard.OptionsKey: Any] = [.localOnly: true]
         let clearAfter = settings.autoClearSeconds
         if clearAfter > 0 { options[.expirationDate] = Date().addingTimeInterval(TimeInterval(clearAfter)) }
+        let before = UIPasteboard.general.changeCount
         UIPasteboard.general.setItems([item], options: options)
-        return UIPasteboard.general.changeCount
+        let after = UIPasteboard.general.changeCount
+        // An unchanged count means the system dropped the write (it may in the background): the engine then answers
+        // `rejected` instead of taking someone else's clip for HandLive's own.
+        return after == before ? nil : after
     }
 
     public func clear() -> Int {

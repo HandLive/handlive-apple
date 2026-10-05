@@ -82,10 +82,17 @@ public final class IOSAppModel: ObservableObject {
     let pushTopic: String
     let makeRelay: @MainActor (RelayIdentity) -> RelayServices?
     let makeManager: @MainActor (CapabilityData, RelayServices?) -> ConnectionManager
-    /// The app is in the foreground: only then a session to the phone stays open (CONN-02 E3, CLIP-04 E1).
+    /// The app is in the foreground: the session stays open; in the background only while something holds it (CONN-02
+    /// E3, CLIP-04 E1).
     var inForeground = true
     /// How long a quick reply waits for the phone before "Not sent yet" (SMS-04 API 5: about 20 s).
     var quickReplyDeadline: Duration = .seconds(20)
+    /// `IOS_BACKGROUND_GRACE`: how long the session stays after the app leaves the foreground, at most the system's time
+    /// left less 5 s (CONN-02 E3).
+    var backgroundGrace: Duration = .seconds(25)
+    /// The session in the background: its holders, the grace, the close/reopen queue (`IOSAppModel+Background.swift`).
+    var hold = ConnectionHold()
+    let backgroundTasks: any BackgroundTaskProviding
     /// `CALL_REJECT_BG_TIMEOUT`: "Decline" from a notification, the background connection included (CALL-02 E8).
     var callRejectDeadline: Duration = .seconds(15)
     /// A "Decline" from a notification waits for the phone: a relay without the phone wakes it (CALL-02 API 6).
@@ -97,6 +104,7 @@ public final class IOSAppModel: ObservableObject {
                 smsDatabaseURL: URL, pasteboard: any ClipboardAccess, notifications: any IOSNotifying,
                 callNotifications: any IOSCallNotifying, pushProvider: RelayPushTokenRequest.Provider, pushTopic: String,
                 makeRelay: @escaping @MainActor (RelayIdentity) -> RelayServices?,
+                backgroundTasks: any BackgroundTaskProviding = NoBackgroundTasks(),
                 makeManager: @escaping @MainActor (CapabilityData, RelayServices?) -> ConnectionManager = {
                     ConnectionManager(localCapability: $0, relay: $1)
                 }) {
@@ -111,6 +119,7 @@ public final class IOSAppModel: ObservableObject {
         self.pushTopic = pushTopic
         self.makeRelay = makeRelay
         self.makeManager = makeManager
+        self.backgroundTasks = backgroundTasks
         calls = IOSCalls(settings: settings, notifier: callNotifications)
         clipboardEnabled = settings.clipboardEnabled
         sendImages = settings.sendImages
@@ -206,31 +215,6 @@ public final class IOSAppModel: ObservableObject {
     /// "Reconnect Now".
     public func reconnectNow() {
         Task { await manager?.reconnectNow() }
-    }
-
-    // MARK: - Scene phase (CONN-02 E3, CLIP-04 step 2)
-
-    /// The scene became active: reconnect, look at the clipboard's `changeCount`, remove stale incoming-call
-    /// notifications, re-read the notification state.
-    public func sceneBecameActive() {
-        inForeground = true
-        clipboard?.localChangeSeen()
-        messages?.setActive(true)
-        calls.becameActive()
-        Task {
-            await manager?.systemDidWake()
-            notificationPermission = await notifications.permission()
-            timeSensitive = await notifications.timeSensitive()
-        }
-    }
-
-    /// The scene went to the background: `session/bye {shutdown}` and no session until it comes back; SMS and calls
-    /// then arrive through push (CONN-04).
-    public func sceneEnteredBackground() {
-        inForeground = false
-        messages?.setActive(false)
-        calls.enteredBackground()
-        Task { await manager?.systemWillSleep() }
     }
 
     /// Several changes within 300 ms travel as one `capability/update` snapshot (SET-02 API 1 logic 2).

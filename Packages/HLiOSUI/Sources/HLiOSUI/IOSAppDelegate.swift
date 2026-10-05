@@ -32,7 +32,8 @@ extension IOSAppModel {
                                     RelayConfiguration.fromBundle().map {
                                         RelayServices.live(configuration: $0, identity: identity)
                                     }
-                                })
+                                },
+                                backgroundTasks: UIKitBackgroundTasks())
         // VoiceOver reads "Incoming call from …" when the banner comes up (CALL-01 special requirements).
         model.calls.announce = { UIAccessibility.post(notification: .announcement, argument: $0) }
         return model
@@ -75,7 +76,8 @@ public final class IOSAppDelegate: NSObject, UIApplicationDelegate, UNUserNotifi
         // No token: SMS and calls arrive only while the app is open; the next launch asks again.
     }
 
-    /// The foreground connection follows the scene (CONN-02 E3).
+    /// The connection follows the scene (CONN-02 E3). The app-level phase is `.background` only once every scene is
+    /// (iPad Split View, Stage Manager); `.inactive` keeps the session.
     public func scenePhaseChanged(_ phase: ScenePhase) {
         switch phase {
         case .active: model.sceneBecameActive()
@@ -112,15 +114,15 @@ public final class IOSAppDelegate: NSObject, UIApplicationDelegate, UNUserNotifi
 
     /// The system may suspend the app as soon as the delegate returns: each action runs in a background task.
     private func handle(_ response: SmsNotificationResponse) async {
-        let task = UIApplication.shared.beginBackgroundTask(withName: "HandLive reply")
+        let task = model.backgroundTasks.begin(name: "HandLive reply") {}
         await model.handleSmsNotification(response)
-        if task != .invalid { UIApplication.shared.endBackgroundTask(task) }
+        if let task { model.backgroundTasks.end(task) }
     }
 
     private func handle(_ response: CallNotificationResponse) async {
-        let task = UIApplication.shared.beginBackgroundTask(withName: "HandLive call")
+        let task = model.backgroundTasks.begin(name: "HandLive call") {}
         await model.handleCallNotification(response)
-        if task != .invalid { UIApplication.shared.endBackgroundTask(task) }
+        if let task { model.backgroundTasks.end(task) }
     }
 }
 #endif
