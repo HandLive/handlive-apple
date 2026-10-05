@@ -1,6 +1,7 @@
 import Foundation
 import HLAppCore
 import HLTransport
+import SwiftUI
 
 /// What the background logic asks of the connection: `ConnectionManager` in the app, a recorder in tests.
 protocol ConnectionLifecycle: Sendable {
@@ -16,7 +17,6 @@ extension ConnectionManager: ConnectionLifecycle {}
 /// runs closes and reopens in order.
 struct ConnectionHold {
     struct Grace {
-        let token: BackgroundTaskToken
         let generation: Int
         let timer: Task<Void, Never>
     }
@@ -30,6 +30,12 @@ struct ConnectionHold {
     var generation = 0
     /// The last close or reopen; the next one waits for it, so a wake never overtakes the sleep before it.
     var queue: Task<Void, Never>?
+    /// Grace tasks still open, by generation, kept apart from `grace`: after the deadline the task waits for the close,
+    /// and its expiration handler must still find and end it.
+    var openTasks: [Int: BackgroundTaskToken] = [:]
+    /// At most this long the task waits for the deadline's close, so it ends before the system's time is up even when
+    /// the `bye` hangs (the socket is then left to the suspension; the phone sees the idle timeout).
+    var closeWaitCap: Duration = .seconds(3)
     /// Stands in for the connection manager in tests.
     var lifecycle: (any ConnectionLifecycle)?
 }
@@ -41,6 +47,16 @@ enum GraceEnd: String {
 
 extension IOSAppModel {
     // MARK: - Scene phase (CONN-02 E3, CLIP-04 step 2)
+
+    /// The app-level scene phase: `.background` only once every scene is (iPad Split View, Stage Manager); `.inactive`
+    /// (Control Center, the app switcher, Face ID) keeps the session as it is.
+    public func scenePhaseChanged(_ phase: ScenePhase) {
+        switch phase {
+        case .active: sceneBecameActive()
+        case .background: sceneEnteredBackground()
+        default: break
+        }
+    }
 
     /// The scene became active: reconnect, look at the clipboard's `changeCount`, remove stale incoming-call
     /// notifications, re-read the notification state.
@@ -81,7 +97,7 @@ extension IOSAppModel {
         }
         let generation = hold.generation
         let token = backgroundTasks.begin(name: "HandLive session") { [weak self] in
-            self?.endGrace(generation: generation, reason: .expired)
+            self?.graceTaskExpired(generation: generation)
         }
         guard let token else {
             closeIfUnheld()
@@ -95,15 +111,16 @@ extension IOSAppModel {
             self?.endGrace(generation: generation, reason: .deadline)
         }
         hold.holders += 1
-        hold.grace = ConnectionHold.Grace(token: token, generation: generation, timer: timer)
+        hold.grace = ConnectionHold.Grace(generation: generation, timer: timer)
+        hold.openTasks[generation] = token
         clipboard?.protectLocalContent(true)
         BenchLog.event("grace_begin", ["wait_ms": String(Int(wait / .milliseconds(1)))])
         calls.graceStarted()
     }
 
     /// Ends the grace of `generation` (any grace when `nil`) and gives up its hold; a notification action still holding
-    /// the session keeps it under its own task. At the deadline the task ends once the `bye` went out; when the
-    /// system's time is up (the expiration handler must not wait), the session dropped or the app is back, at once.
+    /// the session keeps it under its own task. At the deadline the task ends once the `bye` went out, or after
+    /// `closeWaitCap` if the close hangs; when the system's time is up, the session dropped or the app is back, at once.
     func endGrace(generation: Int? = nil, reason: GraceEnd) {
         guard let grace = hold.grace, generation == nil || generation == grace.generation else { return }
         hold.grace = nil
@@ -112,12 +129,33 @@ extension IOSAppModel {
         clipboard?.protectLocalContent(false)
         BenchLog.event("grace_end", ["reason": reason.rawValue])
         let closing = closeIfUnheld()
-        guard reason == .deadline, let closing else { return backgroundTasks.end(grace.token) }
-        let tasks = backgroundTasks
-        Task {
+        guard reason == .deadline, let closing else { return endGraceTask(generation: grace.generation) }
+        // Whichever comes first ends the task; the close itself goes on if the cap wins.
+        let cap = hold.closeWaitCap
+        Task { [weak self] in
             await closing.value
-            tasks.end(grace.token)
+            self?.endGraceTask(generation: grace.generation)
         }
+        Task { [weak self] in
+            try? await Task.sleep(for: cap)
+            self?.endGraceTask(generation: grace.generation)
+        }
+    }
+
+    /// The system's time is up for the task of `generation`: the grace (if still on) ends, and the task ends here and
+    /// now — also when the grace already ended and the task only waited for the close.
+    func graceTaskExpired(generation: Int) {
+        if hold.grace?.generation == generation {
+            endGrace(generation: generation, reason: .expired)
+        } else {
+            endGraceTask(generation: generation)
+        }
+    }
+
+    /// Ends the grace task of `generation` once, whoever comes first.
+    private func endGraceTask(generation: Int) {
+        guard let token = hold.openTasks.removeValue(forKey: generation) else { return }
+        backgroundTasks.end(token)
     }
 
     /// The session ended during the grace: the grace lets go at once, the task ends, no new session in the background

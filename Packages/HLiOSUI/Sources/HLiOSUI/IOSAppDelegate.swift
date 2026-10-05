@@ -76,14 +76,9 @@ public final class IOSAppDelegate: NSObject, UIApplicationDelegate, UNUserNotifi
         // No token: SMS and calls arrive only while the app is open; the next launch asks again.
     }
 
-    /// The connection follows the scene (CONN-02 E3). The app-level phase is `.background` only once every scene is
-    /// (iPad Split View, Stage Manager); `.inactive` keeps the session.
+    /// The connection follows the scene (CONN-02 E3).
     public func scenePhaseChanged(_ phase: ScenePhase) {
-        switch phase {
-        case .active: model.sceneBecameActive()
-        case .background: model.sceneEnteredBackground()
-        default: break
-        }
+        model.scenePhaseChanged(phase)
     }
 
     /// While the app is open it shows messages itself: no banner for HandLive's own notifications. An incoming call
