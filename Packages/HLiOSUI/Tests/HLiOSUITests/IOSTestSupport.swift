@@ -2,6 +2,7 @@ import Foundation
 import HLAppCore
 import HLCrypto
 import HLProtocol
+import HLSMS
 import HLTransport
 @testable import HLiOSUI
 
@@ -68,6 +69,8 @@ final class StubIOSNotifications: IOSNotifying {
     func removeEverything() { removedEverything += 1 }
     func setBadge(_ count: Int) { badges.append(count) }
     func postNotSentYet(pairId: String, threadId: Int64) { notSentYet.append(threadId) }
+    private(set) var postedSms: [String] = []
+    func postSms(_ incoming: SmsIncoming, showPreview: Bool) { postedSms.append(incoming.message.messageKey) }
     var answer = NotificationPermission.allowed
     var timeSensitiveSetting = TimeSensitiveSetting.enabled
     private(set) var requests = 0
@@ -138,7 +141,8 @@ struct ClosedRelaySockets: RelaySocketOpening {
 func makeIOSModel(secrets: any SecretStore = InMemorySecretStore(), pasteboard: StubIOSPasteboard = StubIOSPasteboard(),
                   notifications: StubIOSNotifications = StubIOSNotifications(),
                   calls: StubIOSCallNotifications = StubIOSCallNotifications(),
-                  relay: ScriptedRelayAPI? = nil, platform: CapabilityData.Platform = .ios,
+                  relay: ScriptedRelayAPI? = nil, backgroundTasks: any BackgroundTaskProviding = NoBackgroundTasks(),
+                  platform: CapabilityData.Platform = .ios,
                   folder: URL = FileManager.default.temporaryDirectory
                       .appendingPathComponent("handlive-ios-tests-\(UUID().uuidString)")) -> IOSAppModel {
     let defaults = UserDefaults(suiteName: "app.handlive.ios.tests.\(UUID().uuidString)")!
@@ -151,6 +155,7 @@ func makeIOSModel(secrets: any SecretStore = InMemorySecretStore(), pasteboard: 
                        pushProvider: .apnsSandbox,
                        pushTopic: "app.handlive.ios",
                        makeRelay: { _ in relay.map { RelayServices(api: $0, sockets: ClosedRelaySockets()) } },
+                       backgroundTasks: backgroundTasks,
                        makeManager: { capability, _ in
                            ConnectionManager(localCapability: capability, discovery: SilentDiscovery(),
                                              network: SilentNetwork())
