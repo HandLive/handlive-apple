@@ -140,7 +140,10 @@ extension ClipboardEngine {
             scheduleAutoClear()
             return
         }
-        if access.changeCount == own.changeCount { lastSeenChangeCount = access.clear() }
+        if access.changeCount == own.changeCount {
+            lastSeenChangeCount = access.clear()
+            guardFollowsOwnWrite(lastSeenChangeCount)
+        }
         ownWrite = nil
     }
 

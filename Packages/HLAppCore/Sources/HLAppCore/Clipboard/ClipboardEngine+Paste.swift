@@ -36,6 +36,7 @@ extension ClipboardEngine {
         else { return false }
         ownWrite = OwnWrite(changeCount: count, clipId: clip.clipId, writtenAt: now())
         lastSeenChangeCount = count
+        guardFollowsOwnWrite(count)
         if platform == .ios {
             settings.seenChangeCount = count
             setUnsentLocalContent(false)
@@ -56,21 +57,23 @@ extension ClipboardEngine {
     }
 
     /// E2 for the whole background grace of an iPhone or iPad (CONN-02 E3): the user may copy in another app while the
-    /// session lives on, so a push is written only while nothing but HandLive changed `changeCount` since the app left
-    /// the foreground; otherwise the local copy stays (`ack` `ignored`/`conflict`) and the banner shows on return.
+    /// session lives on, so a push is written only while `changeCount` equals its reference — taken when the app left the
+    /// foreground, moved by each write or clear HandLive makes during the grace; otherwise the local copy stays (`ack` `ignored`/`conflict`) and the banner shows on return.
     /// Only `changeCount` is read, never the content.
     public func protectLocalContent(_ on: Bool) {
         localGuardSince = on && platform == .ios ? access.changeCount : nil
+    }
+
+    /// HandLive wrote or cleared the clipboard itself during the grace: the reference value moves with it.
+    func guardFollowsOwnWrite(_ count: Int) {
+        if localGuardSince != nil { localGuardSince = count }
     }
 
     /// E2: unsent local content and a push in the first 5 s of the session → the local content stays; the `ack` says
     /// `ignored`/`conflict` and no `clipboard/conflict` goes out.
     func keepsUnsentLocalContent() -> Bool {
         guard platform == .ios else { return false }
-        if let since = localGuardSince { // the grace: anything but HandLive's own write since leaving the foreground
-            let count = access.changeCount
-            return count != since && count != ownWrite?.changeCount
-        }
+        if let since = localGuardSince { return access.changeCount != since } // the grace: a copy since leaving
         guard unsentLocalContent, let start = sessionStartedAt else { return false }
         return now().timeIntervalSince(start) < ClipboardConstants.unsentLocalWindow
     }
