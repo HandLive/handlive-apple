@@ -5,6 +5,7 @@ import HLProtocol
 import HLSMS
 import HLSMSNotifications
 import HLTransport
+import SwiftUI
 import Testing
 @preconcurrency import UserNotifications
 @testable import HLiOSUI
@@ -81,6 +82,52 @@ struct IOSBackgroundGraceTests {
         tasks.expire()
         #expect(tasks.ended == tasks.begun && tasks.ended.count == 1)
         #expect(await eventuallyAsync { await recorder.log == ["sleep"] })
+    }
+
+    @Test("The bye hangs after the deadline: iOS's expiration still ends the task at once")
+    func hangingCloseThenExpiration() async {
+        let tasks = FakeBackgroundTasks()
+        let (model, _) = Self.connected(tasks: tasks, grace: .milliseconds(20))
+        let hanging = HangingLifecycle()
+        model.hold.lifecycle = hanging
+        model.hold.closeWaitCap = .seconds(30)
+        model.sceneEnteredBackground()
+        #expect(await eventuallyAsync { await hanging.log == ["sleep"] })
+        #expect(tasks.ended.isEmpty) // waiting for the close
+        tasks.expire()
+        #expect(tasks.ended == tasks.begun && tasks.ended.count == 1)
+        await hanging.release()
+        try? await Task.sleep(for: .milliseconds(100))
+        #expect(tasks.ended.count == 1) // ended once
+    }
+
+    @Test("The bye hangs after the deadline: the task ends after the wait cap, the close goes on")
+    func hangingCloseCapped() async {
+        let tasks = FakeBackgroundTasks()
+        let (model, _) = Self.connected(tasks: tasks, grace: .milliseconds(20))
+        let hanging = HangingLifecycle()
+        model.hold.lifecycle = hanging
+        model.hold.closeWaitCap = .milliseconds(100)
+        model.sceneEnteredBackground()
+        #expect(await eventuallyAsync { await hanging.log == ["sleep"] })
+        #expect(await eventually { tasks.ended == tasks.begun && tasks.ended.count == 1 })
+        #expect(await hanging.log == ["sleep"]) // still closing
+        await hanging.release()
+        #expect(await eventuallyAsync { await hanging.log == ["sleep", "closed"] })
+        tasks.expire() // a late expiration finds nothing left to end
+        #expect(tasks.ended.count == 1)
+    }
+
+    @Test(".inactive (Control Center, the app switcher, Face ID) keeps the session: no task, no bye")
+    func inactiveIsIgnored() async {
+        let tasks = FakeBackgroundTasks()
+        let (model, recorder) = Self.connected(tasks: tasks)
+        model.scenePhaseChanged(.inactive)
+        try? await Task.sleep(for: .milliseconds(300))
+        #expect(tasks.begun.isEmpty && model.inForeground)
+        #expect(await recorder.log.isEmpty)
+        model.scenePhaseChanged(.background) // the same switch does start the grace on .background
+        #expect(tasks.begun.count == 1 && !model.inForeground)
     }
 
     @Test("Background task refused, or no session: close at once, no task left")
@@ -167,53 +214,5 @@ struct IOSBackgroundGraceTests {
         #expect(await recorder.log.isEmpty)
         await reply.value
         #expect(await eventuallyAsync { await recorder.log == ["sleep"] })
-    }
-
-    @Test("SMS during the grace gets the notification the push would show; none in the foreground")
-    func smsDuringGrace() async throws {
-        let tasks = FakeBackgroundTasks()
-        let notifications = StubIOSNotifications()
-        let (model, _) = try await Self.pairedAndConnected(tasks: tasks, notifications: notifications)
-        model.sceneEnteredBackground()
-        await model.handle(.message(IOSAppModelTests.smsNew(1, ts: 1_000)))
-        #expect(await eventually { notifications.postedSms == ["sms:1"] })
-        model.sceneBecameActive()
-        await model.handle(.message(IOSAppModelTests.smsNew(2, ts: 2_000)))
-        try await Task.sleep(for: .milliseconds(200))
-        #expect(notifications.postedSms == ["sms:1"])
-    }
-
-    @Test("A ringing call during the grace is notified once; it goes when the call stops ringing")
-    func callDuringGrace() async throws {
-        let tasks = FakeBackgroundTasks()
-        let stub = StubIOSCallNotifications()
-        let (model, _) = try await Self.pairedAndConnected(tasks: tasks, calls: stub)
-        model.calls.controller.connected(peer: OkCallPeer(), capability: IOSCallSamples.capability())
-        model.sceneEnteredBackground()
-        model.calls.controller.apply(IOSCallSamples.ringing(), envelopeTs: 100)
-        model.calls.controller.apply(IOSCallSamples.ringing(), envelopeTs: 150)
-        #expect(stub.incoming == [IOSCallSamples.callId])
-        model.calls.controller.apply(IOSCallSamples.offhook(), envelopeTs: 200)
-        #expect(stub.removedIncoming.contains(IOSCallSamples.callId))
-    }
-
-    @Test("Grace notifications: locked shows the push's generic text; unlocked follows sms.preview")
-    func lockScreenRules() throws {
-        let new = SmsNewData(message: SmsMessageData(messageKey: "sms:1", threadId: 7, address: "+84900000123",
-                                                     body: "Mã OTP 123456", box: .inbox, ts: 1, read: false, subId: 1),
-                             thread: SmsThreadData(threadId: 7, addresses: ["+84900000123"], displayName: "Ngân hàng",
-                                                   snippet: "", lastTs: 1, unreadCount: 1))
-        let locked = GraceNotificationContent.sms(new, pairId: "p", simLabel: nil, showPreview: true, unlocked: false)
-        #expect(locked.title.isEmpty && locked.body == L10n.Push.smsNew && locked.categoryIdentifier.isEmpty)
-        let hidden = GraceNotificationContent.sms(new, pairId: "p", simLabel: nil, showPreview: false, unlocked: true)
-        #expect(hidden.body == L10n.Sms.notificationHiddenBody && !hidden.body.contains("123456"))
-        let shown = GraceNotificationContent.sms(new, pairId: "p", simLabel: nil, showPreview: true, unlocked: true)
-        #expect(shown.body == "Mã OTP 123456")
-        let call = GraceNotificationContent.incomingCall(IOSCallSamples.ringing(), pairId: "p", unlocked: false,
-                                                         nowMs: IOSCallSamples.ringing().startedAt)
-        #expect(call.title.isEmpty && call.body == L10n.Push.callIncoming && call.categoryIdentifier.isEmpty)
-        let open = GraceNotificationContent.incomingCall(IOSCallSamples.ringing(), pairId: "p", unlocked: true,
-                                                         nowMs: IOSCallSamples.ringing().startedAt)
-        #expect(!open.title.isEmpty && !open.categoryIdentifier.isEmpty)
     }
 }

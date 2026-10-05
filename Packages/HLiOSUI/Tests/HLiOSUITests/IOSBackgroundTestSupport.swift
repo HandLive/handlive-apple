@@ -48,3 +48,22 @@ func eventuallyAsync(_ condition: () async -> Bool) async -> Bool {
     }
     return await condition()
 }
+
+/// A connection whose close hangs (a stalled `bye`) until the test releases it.
+actor HangingLifecycle: ConnectionLifecycle {
+    private(set) var log: [String] = []
+    private var waiting: [CheckedContinuation<Void, Never>] = []
+
+    func systemWillSleep() async {
+        log.append("sleep")
+        await withCheckedContinuation { waiting.append($0) }
+        log.append("closed")
+    }
+
+    func systemDidWake() async { log.append("wake") }
+
+    func release() {
+        waiting.forEach { $0.resume() }
+        waiting = []
+    }
+}
