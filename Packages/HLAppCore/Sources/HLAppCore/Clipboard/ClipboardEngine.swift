@@ -65,6 +65,8 @@ public final class ClipboardEngine {
     var pasteGuideShown = false
     /// iPhone/iPad: when the phone's session started, for the 5 s rule of CLIP-04 E2.
     var sessionStartedAt: Date?
+    /// iPhone and iPad during the background grace (CONN-02 E3): `changeCount` when the app left the foreground.
+    var localGuardSince: Int?
     /// iPhone/iPad: content copied here and not sent yet (CLIP-04 step 2, E2).
     public internal(set) var unsentLocalContent = false
 

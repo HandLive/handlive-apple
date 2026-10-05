@@ -73,6 +73,30 @@ struct ClipboardIOSTests {
         #expect(harness.pasteboard.writes.map(\.content) == [.text("mới")])
     }
 
+    @Test("Background grace: pushes are written until the user copies elsewhere; then the copy stays, banner on return")
+    func graceKeepsANewLocalCopy() async throws {
+        let harness = ClipboardHarness(platform: .ios)
+        harness.advance(10) // past the first 5 s of the session
+        harness.engine.protectLocalContent(true)
+        let first = harness.receive(ClipboardHarness.textPush("một"))
+        #expect(await harness.reply(to: first)?.clipboardData?.status == .applied)
+        let second = harness.receive(ClipboardHarness.textPush("hai")) // after HandLive's own write: still written
+        #expect(await harness.reply(to: second)?.clipboardData?.status == .applied)
+        harness.advance(61)
+        harness.engine.checkAutoClear() // HandLive's own clear moves the reference too
+        let cleared = harness.receive(ClipboardHarness.textPush("sau khi xóa"))
+        #expect(await harness.reply(to: cleared)?.clipboardData?.status == .applied)
+        harness.pasteboard.copy(text: "chép trong Safari")
+        let third = harness.receive(ClipboardHarness.textPush("ba"))
+        let ack = await harness.reply(to: third)
+        #expect(ack?.clipboardData?.status == .ignored && ack?.clipboardData?.reason == .conflict)
+        #expect(harness.pasteboard.writes.map(\.content) == [.text("một"), .text("hai"), .text("sau khi xóa")])
+        #expect(harness.engine.unsentLocalContent && harness.pasteboard.contentReads == 0)
+        harness.engine.protectLocalContent(false)
+        let fourth = harness.receive(ClipboardHarness.textPush("bốn")) // back in the foreground: the 5 s rule again
+        #expect(await harness.reply(to: fourth)?.clipboardData?.status == .applied)
+    }
+
     @Test("The last received clip is kept for the card and can be copied again as HandLive's own write")
     func lastReceived() async throws {
         let harness = ClipboardHarness(platform: .ios)

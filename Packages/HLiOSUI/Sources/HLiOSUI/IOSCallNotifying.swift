@@ -3,7 +3,11 @@ import HLAppCore
 import HLCallNotifications
 import HLLocalization
 import HLProtocol
+import HLTransport
 @preconcurrency import UserNotifications
+#if os(iOS)
+import UIKit
+#endif
 
 /// Opens a call push the extension could not (it came while the device was locked): the ringing state inside, read
 /// with the pair's `K_push` while the app runs unlocked; `nil` for anything else.
@@ -18,6 +22,9 @@ public protocol IOSCallNotifying: AnyObject {
     func removeIncoming(callId: String, reader: @escaping CallPushReader)
     /// Every incoming-call notification whose call started more than 60 s ago (the app enters the foreground).
     func removeStaleIncoming(nowMs: Int64, reader: @escaping CallPushReader)
+    /// A ringing call that came over the session during the background grace: the time-sensitive notification with
+    /// "Decline" the extension shows for its push (CALL-01 API 6, CONN-02 E3).
+    func postIncoming(_ state: CallStateData, pairId: String)
     func postMissed(_ missed: MissedCall, canMessage: Bool)
     /// A pair's missed-call notifications: one entry's, or all of them, generic ones included (CALL-04 step 12).
     func removeMissed(pairId: String, entryId: Int64?)
@@ -44,6 +51,18 @@ public final class UserNotificationCallsIOS: IOSCallNotifying {
     public func removeStaleIncoming(nowMs: Int64, reader: @escaping CallPushReader) {
         CallNotificationCenter.removeDelivered {
             CallNotificationFilter.staleIncomingIdentifiers(in: $0, nowMs: nowMs, decode: reader)
+        }
+    }
+
+    public func postIncoming(_ state: CallStateData, pairId: String) {
+        let unlocked = UIApplication.shared.isProtectedDataAvailable
+        let content = GraceNotificationContent.incomingCall(state, pairId: pairId, unlocked: unlocked,
+                                                            nowMs: HLUUID.currentTimeMs())
+        let shown = unlocked ? CallNotificationBuilder.communication(content, state: state) : content
+        let callId = state.callId
+        let request = UNNotificationRequest(identifier: "call-incoming:\(callId)", content: shown, trigger: nil)
+        UNUserNotificationCenter.current().add(request) {
+            if $0 == nil { BenchLog.event("call_notified", ["call": callId, "level": "time_sensitive"]) }
         }
     }
 

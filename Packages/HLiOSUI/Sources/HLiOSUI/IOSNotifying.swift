@@ -1,8 +1,14 @@
 import Foundation
 import HLAppCore
 import HLLocalization
+import HLProtocol
+import HLSMS
 import HLSMSNotifications
+import HLTransport
 @preconcurrency import UserNotifications
+#if os(iOS)
+import UIKit
+#endif
 
 /// What the iPhone and iPad app does with notifications itself: the Notification Service Extension shows new SMS
 /// while the app is closed (CONN-04); the app removes those read here or on the phone (SMS-05 API 2), keeps the icon
@@ -21,6 +27,9 @@ public protocol IOSNotifying: AnyObject {
     func setBadge(_ count: Int)
     /// "Not sent yet. Open HandLive to try again." after a quick reply without `ack` (SMS-04 API 5 logic 3).
     func postNotSentYet(pairId: String, threadId: Int64)
+    /// A new SMS that came over the session during the background grace: the notification the extension shows for its
+    /// push (SMS-02 API 4, CONN-02 E3).
+    func postSms(_ incoming: SmsIncoming, showPreview: Bool)
     /// The notification permission as it is now (SET-03 field 7, CONN-04 field 1).
     func permission() async -> NotificationPermission
     /// SET-03 step 7: `requestAuthorization([.alert, .sound, .badge])` once; afterwards only the state is read.
@@ -90,6 +99,20 @@ public final class UserNotificationsIOS: IOSNotifying {
 
     public func setBadge(_ count: Int) {
         UNUserNotificationCenter.current().setBadgeCount(count)
+    }
+
+    public func postSms(_ incoming: SmsIncoming, showPreview: Bool) {
+        let unlocked = UIApplication.shared.isProtectedDataAvailable
+        let new = SmsNewData(message: incoming.message, thread: incoming.thread)
+        let content = GraceNotificationContent.sms(new, pairId: incoming.pairId, simLabel: incoming.simLabel,
+                                                   showPreview: showPreview, unlocked: unlocked)
+        let shown = unlocked ? SmsNotificationBuilder.communication(content, new: new, showPreview: showPreview) : content
+        let key = incoming.message.messageKey
+        let request = UNNotificationRequest(
+            identifier: SmsNotificationKeys.identifier(pairId: incoming.pairId, messageKey: key), content: shown, trigger: nil)
+        UNUserNotificationCenter.current().add(request) { error in
+            if error == nil { BenchLog.event("sms_notified", ["msg": key]) }
+        }
     }
 
     public func postNotSentYet(pairId: String, threadId: Int64) {

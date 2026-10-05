@@ -128,6 +128,17 @@ struct ConnectionManagerFailureTests {
         await setup.manager.stop()
     }
 
+    @Test("Wake with a live session keeps it: no bye, no second connection (iOS back within the grace, CONN-02 E3)")
+    func wakeWhileConnected() async throws {
+        let setup = await connectedSetup()
+        #expect(await setup.recorder.waitFor({ Self.isConnected($0) }) != nil)
+        await setup.manager.systemDidWake()
+        try await Task.sleep(for: .milliseconds(300))
+        #expect(await setup.recorder.connectedCount == 1)
+        #expect(await setup.manager.currentSession != nil)
+        await setup.manager.stop()
+    }
+
     @Test("HLBENCH/1 line format (shared/tools/bench/README.md)")
     func benchLine() {
         let line = BenchLog.line(wallMs: 1_727_151_142_000.5, monoNs: 5_042_000_000_000,

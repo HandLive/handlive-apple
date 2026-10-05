@@ -37,6 +37,7 @@ extension IOSAppModel {
         case .disconnected:
             updatePairRecord { $0.lastSeenAt = HLUUID.currentTimeMs() }
             clipboard?.phoneDisconnected()
+            sessionDroppedInBackground()
         case .message(let envelope):
             if envelope.type == .clipboard { clipboard?.receive(envelope) }
         case .pairRemoved:

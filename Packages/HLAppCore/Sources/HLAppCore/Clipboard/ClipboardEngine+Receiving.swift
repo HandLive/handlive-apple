@@ -116,6 +116,7 @@ extension ClipboardEngine {
         let writtenAt = now()
         ownWrite = OwnWrite(changeCount: count, clipId: push.clipId, writtenAt: writtenAt)
         lastSeenChangeCount = count
+        guardFollowsOwnWrite(count)
         if platform == .ios {
             settings.seenChangeCount = count
             setUnsentLocalContent(false) // what was copied here is gone from the clipboard now

@@ -20,7 +20,12 @@ extension IOSAppModel {
         let store = SmsStore(database: database)
         let engine = SmsEngine(store: store)
         engine.enabledHere = { [weak self] in self?.settings.smsEnabled ?? false }
-        engine.notifyEnabled = { false } // the app open shows the message itself; closed, push does (CONN-04)
+        // The app open shows the message itself; suspended, push does (CONN-04). In between, during the background
+        // grace, the message comes over the session and the app posts what the extension would have shown.
+        engine.notifyEnabled = { [weak self] in
+            guard let self else { return false }
+            return notifiesInBackground && settings.smsNotify
+        }
         engine.onEvent = { [weak self] event in self?.handleSmsEvent(event) }
         smsEngine = engine
         messages = MessagesModel(engine: engine, store: store)
@@ -64,7 +69,8 @@ extension IOSAppModel {
             unreadThreads = count
             notifications.setBadge(count)
         case .needsPhone: Task { await manager?.wakePhone(reason: .smsSend) } // CONN-04 step 5a
-        case .notify, .syncStatus, .history: break
+        case .notify(let incoming): notifications.postSms(incoming, showPreview: settings.smsPreview)
+        case .syncStatus, .history: break
         }
     }
 
@@ -86,12 +92,11 @@ extension IOSAppModel {
     func quickReply(_ info: SmsNotificationInfo, text: String) async -> Bool {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard let engine = smsEngine, let address = info.address, !trimmed.isEmpty else { return false } // logic 4
-        let wasInBackground = !inForeground
-        if wasInBackground { await manager?.systemDidWake() }
+        await holdConnection()
         let accepted = await engine.quickReply(text: trimmed, to: address, threadId: info.threadId, subId: info.subId,
                                                deadline: quickReplyDeadline)
         if !accepted { notifications.postNotSentYet(pairId: info.pairId, threadId: info.threadId) }
-        if wasInBackground, !inForeground { await manager?.systemWillSleep() }
+        await releaseConnection()
         return accepted
     }
 

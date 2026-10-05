@@ -15,6 +15,7 @@ final class StubIOSCallNotifications: IOSCallNotifying {
     private(set) var declineFailed: [String] = []
     private(set) var replyNotSent: [String] = []
     private(set) var lastReader: CallPushReader?
+    private(set) var incoming: [String] = []
 
     func removeIncoming(callId: String, reader: @escaping CallPushReader) {
         removedIncoming.append(callId)
@@ -26,6 +27,7 @@ final class StubIOSCallNotifications: IOSCallNotifying {
         lastReader = reader
     }
 
+    func postIncoming(_ state: CallStateData, pairId: String) { incoming.append(state.callId) }
     func postMissed(_ missed: MissedCall, canMessage: Bool) { self.missed.append((missed, canMessage)) }
     func removeMissed(pairId: String, entryId: Int64?) { removedMissed.append((pairId, entryId)) }
     func removeAllCalls() { removedAll += 1 }

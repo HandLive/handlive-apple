@@ -20,6 +20,7 @@ extension IOSAppModel {
         calls.smsCanSend = { [weak self] in self?.smsEngine?.canSend ?? false }
         calls.capabilityChanged = { [weak self] in self?.scheduleCapabilityUpdate() }
         calls.pushReader = { [weak self] in self?.callPushReader() ?? { _ in nil } }
+        calls.notifiesIncoming = { [weak self] in self?.notifiesInBackground ?? false }
         calls.start(database: messages?.store.database)
         calls.setPair(pairedDevice)
         storePeerCanSend(pairedDevice?.peerCapability)
@@ -108,8 +109,7 @@ extension IOSAppModel {
             calls.notifier.removeIncoming(callId: callId, reader: callPushReader())
             return
         }
-        let wasInBackground = !inForeground
-        if wasInBackground { await manager?.systemDidWake() }
+        await holdConnection()
         callActionPending = true
         if link.status == .phoneOffline { wakePhoneForCallAction() }
         let outcome = await calls.controller.declineFromNotification(callId: callId, within: callRejectDeadline)
@@ -120,7 +120,7 @@ extension IOSAppModel {
         default:
             calls.notifier.postDeclineFailed(callId: callId)
         }
-        if wasInBackground, !inForeground { await manager?.systemWillSleep() }
+        await releaseConnection()
     }
 
     /// CALL-04 API 4 "Message": like a quick reply (SMS-04 API 5) — connect, queue the SMS for the caller's number
@@ -132,14 +132,13 @@ extension IOSAppModel {
         }
         let body = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !body.isEmpty, pairId == pairedDevice?.pairId, let engine = smsEngine else { return false }
-        let wasInBackground = !inForeground
-        if wasInBackground { await manager?.systemDidWake() }
+        await holdConnection()
         let accepted = await engine.quickReply(text: body, toNumber: number, subId: subId, deadline: quickReplyDeadline)
         if !accepted {
             calls.notifier.postReplyNotSent(pairId: pairId, key: entryId.map(String.init) ?? callId ?? "")
         }
         await calls.markSeen(entryId)
-        if wasInBackground, !inForeground { await manager?.systemWillSleep() }
+        await releaseConnection()
         return accepted
     }
 
