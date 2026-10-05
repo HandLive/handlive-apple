@@ -30,12 +30,11 @@ final class ManualClock: Clock, @unchecked Sendable {
     private var sleepers: [Sleeper] = []
     private var cancelled: Set<UInt64> = []
     private var nextId: UInt64 = 0
+    /// Tests waiting in `waitForSleepers` for that many sleepers.
+    private var waiters: [(count: Int, continuation: CheckedContinuation<Void, Never>)] = []
 
     var now: Instant { lock.withLock { current } }
     var minimumResolution: Duration { .zero }
-
-    /// How many tasks are suspended in `sleep` right now.
-    var sleeperCount: Int { lock.withLock { sleepers.count } }
 
     func sleep(until deadline: Instant, tolerance: Duration? = nil) async throws {
         let id: UInt64 = lock.withLock {
@@ -44,13 +43,14 @@ final class ManualClock: Clock, @unchecked Sendable {
         }
         try await withTaskCancellationHandler {
             try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, any Error>) in
-                let outcome: Result<Void, any Error>? = lock.withLock {
-                    if cancelled.remove(id) != nil { return .failure(CancellationError()) }
-                    if deadline <= current { return .success(()) }
+                let (outcome, ready): (Result<Void, any Error>?, [CheckedContinuation<Void, Never>]) = lock.withLock {
+                    if cancelled.remove(id) != nil { return (.failure(CancellationError()), []) }
+                    if deadline <= current { return (.success(()), []) }
                     sleepers.append(Sleeper(id: id, deadline: deadline, continuation: continuation))
-                    return nil
+                    return (nil, takeReadyWaiters())
                 }
                 if let outcome { continuation.resume(with: outcome) }
+                ready.forEach { $0.resume() }
             }
         } onCancel: {
             let sleeper: Sleeper? = lock.withLock {
@@ -64,8 +64,8 @@ final class ManualClock: Clock, @unchecked Sendable {
         }
     }
 
-    /// Moves the time forward by `duration`, wakes every sleeper whose deadline it reaches, and lets them run.
-    func advance(by duration: Duration) async {
+    /// Moves the time forward by `duration` and wakes every sleeper whose deadline it reaches.
+    func advance(by duration: Duration) {
         let due: [Sleeper] = lock.withLock {
             current = current.advanced(by: duration)
             let now = current
@@ -76,23 +76,25 @@ final class ManualClock: Clock, @unchecked Sendable {
         for sleeper in due {
             sleeper.continuation.resume()
         }
-        await Self.settle()
     }
 
     /// Waits until at least `count` tasks sleep on this clock, so an `advance` cannot run ahead of the code under test.
-    /// It yields instead of sleeping: no real time is involved.
-    func waitForSleepers(_ count: Int = 1) async -> Bool {
-        for _ in 0..<100_000 {
-            if sleeperCount >= count { return true }
-            await Task.yield()
+    /// It is woken by the sleepers themselves, never by real time: however slow the machine, it waits for them.
+    func waitForSleepers(_ count: Int = 1) async {
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            let ready: Bool = lock.withLock {
+                guard sleepers.count < count else { return true }
+                waiters.append((count, continuation))
+                return false
+            }
+            if ready { continuation.resume() }
         }
-        return sleeperCount >= count
     }
 
-    /// Lets the tasks just woken run up to their next suspension.
-    private static func settle() async {
-        for _ in 0..<100 {
-            await Task.yield()
-        }
+    /// The waiters whose count of sleepers is reached, removed from the list; call it with the lock held.
+    private func takeReadyWaiters() -> [CheckedContinuation<Void, Never>] {
+        let ready = waiters.filter { $0.count <= sleepers.count }.map(\.continuation)
+        waiters.removeAll { $0.count <= sleepers.count }
+        return ready
     }
 }

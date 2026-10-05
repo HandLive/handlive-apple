@@ -149,12 +149,12 @@ struct AppCallCommandTests {
         controller.apply(AppCallSamples.ringing(), envelopeTs: 100)
         let back = FakeCallPeer([.ok])
         let command = Task { await controller.perform(.reject(reply: nil), for: callId) }
-        #expect(await timer.waitForSleepers()) // the dead session refused it: waiting to try again
+        await timer.waitForSleepers() // the dead session refused it: waiting to try again
         controller.disconnected()
-        await timer.advance(by: .milliseconds(100))
-        #expect(await timer.waitForSleepers(2)) // no session: still waiting, and so is "Lost connection"
+        timer.advance(by: .milliseconds(100))
+        await timer.waitForSleepers(2) // no session: still waiting, and so is "Lost connection"
         controller.connected(peer: back, capability: AppCallSamples.capability())
-        await timer.advance(by: .milliseconds(100))
+        timer.advance(by: .milliseconds(100))
         #expect(await command.value == .accepted)
         #expect(back.sent.count == 1 && !lost.sent.isEmpty)
         #expect(Set((lost.sent + back.sent).map(\.id)).count == 1)

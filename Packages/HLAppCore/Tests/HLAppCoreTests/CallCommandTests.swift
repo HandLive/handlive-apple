@@ -51,12 +51,12 @@ struct CallCommandTests {
         controller.apply(CallSamples.ringing(), envelopeTs: 100)
         let back = FakeCallPeer([.ok])
         let command = Task { await controller.perform(.reject(reply: nil)) }
-        #expect(await timer.waitForSleepers()) // the dead session refused it: waiting to try again
+        await timer.waitForSleepers() // the dead session refused it: waiting to try again
         controller.disconnected()
-        await timer.advance(by: .milliseconds(100))
-        #expect(await timer.waitForSleepers(2)) // no session: still waiting, and so is "Lost connection"
+        timer.advance(by: .milliseconds(100))
+        await timer.waitForSleepers(2) // no session: still waiting, and so is "Lost connection"
         controller.connected(peer: back, capability: CallSamples.capability())
-        await timer.advance(by: .milliseconds(100))
+        timer.advance(by: .milliseconds(100))
         #expect(await command.value == .accepted)
         #expect(back.sent.count == 1 && !lost.sent.isEmpty)
         #expect(Set((lost.sent + back.sent).map(\.id)).count == 1)
@@ -118,10 +118,10 @@ struct CallNotificationDeclineTests {
         controller.setPair(CallSamples.pairId, capability: CallSamples.capability())
         let peer = FakeCallPeer([.ok])
         let decline = Task { await controller.declineFromNotification(callId: CallSamples.callId, within: .seconds(3)) }
-        #expect(await timer.waitForSleepers()) // no session yet: waiting for one
+        await timer.waitForSleepers() // no session yet: waiting for one
         #expect(peer.sent.isEmpty)
         controller.connected(peer: peer, capability: CallSamples.capability())
-        await timer.advance(by: .milliseconds(100))
+        timer.advance(by: .milliseconds(100))
         #expect(await decline.value == .accepted)
         #expect(peer.sent.map(\.data) == [.object(["call_id": .string(CallSamples.callId), "action": .string("reject")])])
     }
