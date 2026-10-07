@@ -46,18 +46,16 @@ struct ClipboardSendTests {
         harness.engine.poll()
         harness.advance(121)
         harness.connect()
-        try? await Task.sleep(for: .milliseconds(50))
-        #expect(harness.peer.pushes.isEmpty)
+        #expect(!harness.sending && harness.peer.pushes.isEmpty)
         harness.engine.phoneDisconnected()
         harness.pasteboard.copy(text: "fresh")
         harness.connect()
         harness.engine.poll()
         #expect(await harness.until { harness.peer.pushes.count == 1 })
-        try? await Task.sleep(for: .milliseconds(50))
+        #expect(await harness.ackHandled())
         harness.engine.phoneDisconnected()
         harness.connect()
-        try? await Task.sleep(for: .milliseconds(50))
-        #expect(harness.peer.pushes.count == 1) // applied: nothing to replay
+        #expect(!harness.sending && harness.peer.pushes.count == 1) // applied: nothing to replay
     }
 
     @Test("QC3: a card number is held with 'Send Anyway', which sends it with sensitive = true within 120 s")
@@ -75,8 +73,7 @@ struct ClipboardSendTests {
         #expect(harness.alerts.count == 2)
         harness.advance(121)
         harness.engine.sendAnyway()
-        try? await Task.sleep(for: .milliseconds(50))
-        #expect(harness.peer.pushes.count == 1) // expired
+        #expect(!harness.sending && harness.peer.pushes.count == 1) // expired
         harness.settings.blockSensitive = false
         harness.pasteboard.copy(text: "4111 1111 1111 1111")
         harness.engine.poll()
@@ -113,8 +110,7 @@ struct ClipboardSendTests {
         // The same text copied again in another app within 5 s is still the phone's clip.
         harness.pasteboard.copy(text: "from the phone")
         harness.engine.poll()
-        try? await Task.sleep(for: .milliseconds(50))
-        #expect(harness.peer.pushes.isEmpty)
+        #expect(!harness.sending && harness.peer.pushes.isEmpty)
     }
 
     @Test("QC4: the clip just sent, written back by another clipboard tool, is not sent again for 5 s after the ack")
@@ -128,8 +124,7 @@ struct ClipboardSendTests {
         harness.advance(4)
         harness.pasteboard.copy(text: "https://example.com/echo")
         harness.engine.poll()
-        try? await Task.sleep(for: .milliseconds(50))
-        #expect(harness.peer.pushes.count == 1)
+        #expect(!harness.sending && harness.peer.pushes.count == 1)
         // "Send Clipboard to Phone" still sends it; 5 s after the phone applied it, a copy of the same text is new.
         harness.engine.sendClipboardNow()
         #expect(await harness.until { harness.peer.pushes.count == 2 })
@@ -147,11 +142,11 @@ struct ClipboardSendTests {
         harness.pasteboard.copy(text: "slow phone")
         harness.engine.poll()
         #expect(await harness.until { harness.peer.pushes.count == 1 })
+        #expect(await harness.ackHandled()) // no ack came: the clip stays unacknowledged
         harness.advance(20)
         harness.pasteboard.copy(text: "slow phone")
         harness.engine.poll()
-        try? await Task.sleep(for: .milliseconds(50))
-        #expect(harness.peer.pushes.count == 1)
+        #expect(!harness.sending && harness.peer.pushes.count == 1)
     }
 
     @Test("An empty text is nothing copied: not sent; the menu item says the clipboard is empty")
@@ -160,8 +155,7 @@ struct ClipboardSendTests {
         // An emulator's clipboard sharing writes an empty text once the phone holds an image.
         harness.pasteboard.copy(text: "")
         harness.engine.poll()
-        try? await Task.sleep(for: .milliseconds(50))
-        #expect(harness.peer.pushes.isEmpty && harness.notices.isEmpty)
+        #expect(!harness.sending && harness.peer.pushes.isEmpty && harness.notices.isEmpty)
         harness.engine.sendClipboardNow()
         #expect(harness.notices == [.emptyOrNotText] && harness.peer.pushes.isEmpty)
     }
@@ -173,14 +167,14 @@ struct ClipboardSendTests {
         harness.pasteboard.copy(text: "one")
         harness.engine.poll()
         #expect(await harness.until { harness.notices == [.writeFailedOnPhone] })
+        #expect(await harness.ackHandled())
         harness.pasteboard.copy(text: "two")
         harness.engine.poll()
         #expect(await harness.until { harness.peer.pushes.count == 2 })
-        try? await Task.sleep(for: .milliseconds(50))
+        #expect(await harness.ackHandled()) // FEATURE_DISABLED handled: sending is suspended
         harness.pasteboard.copy(text: "three")
         harness.engine.poll()
-        try? await Task.sleep(for: .milliseconds(50))
-        #expect(harness.peer.pushes.count == 2) // suspended (E10)
+        #expect(!harness.sending && harness.peer.pushes.count == 2) // suspended (E10)
         harness.engine.phoneCapabilityUpdated(ClipboardFeature(enabled: true, mimes: [ClipMime.text]))
         harness.pasteboard.copy(text: "four")
         harness.engine.poll()

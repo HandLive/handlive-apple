@@ -48,6 +48,7 @@ struct ClipboardIOSTests {
         let harness = ClipboardHarness(platform: .ios, feature: ClipboardHarness.htmlFeature)
         harness.engine.sendPasted(.text("Hẹn 3h"), html: "<p>Hẹn <b>3h</b></p>")
         #expect(await harness.until { harness.peer.pushes.count == 1 })
+        #expect(await harness.ackHandled()) // else the clip is still unacknowledged and the next push is a conflict
         #expect(harness.peer.pushes[0].text == "Hẹn 3h" && harness.peer.pushes[0].html == "<p>Hẹn <b>3h</b></p>")
         let received = ClipboardHarness.textPush("từ Mac", html: "<i>từ Mac</i>")
         #expect(await harness.reply(to: harness.receive(received))?.clipboardData?.status == .applied)
@@ -122,9 +123,9 @@ struct ClipboardIOSTests {
         harness.peer.answer(.timeout)
         harness.engine.sendPasted(.text("Hẹn 3h"))
         #expect(await harness.until { harness.notices.contains(.sendFailed) })
+        #expect(await harness.ackHandled())
         harness.engine.phoneDisconnected()
         harness.connect()
-        try? await Task.sleep(for: .milliseconds(50))
-        #expect(harness.peer.pushes.count == 1)
+        #expect(!harness.sending && harness.peer.pushes.count == 1)
     }
 }
