@@ -77,7 +77,7 @@ cd apple/Packages/HLCrypto && HL_SWIFT_TESTING_PACKAGE=1 swift test
 cd apple/Packages/HLMacUI && HL_SWIFT_TESTING_PACKAGE=1 SDKROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX26.sdk swift test
 ```
 
-The app targets build only with Xcode (CI: `xcodebuild build -scheme HandLive` for the Mac and `-scheme HandLiveiOS -destination 'generic/platform=iOS Simulator'` for iPhone and iPad with the extension, unsigned); everything they run lives in the packages.
+The app targets build only with Xcode (CI: `xcodebuild build -scheme HandLive` for the Mac and `-scheme HandLiveiOS -destination 'generic/platform=iOS Simulator'` for iPhone and iPad with the extension, unsigned); everything they run lives in the packages. Building the Mac app needs Xcode 26 or later **on macOS 26 or later**: on a macOS 15 host, actool crashes while it renders the Mac icon from `macOS/HandLive/Resources/AppIcon.icon` (CI and the release sign job run on `macos-26`). The built app still runs on macOS 13 and later.
 
 Cross-platform vectors: `HL_WRITE_ROUNDTRIP=1` (in `HLCrypto`) rewrites `shared/test-vectors/envelope-roundtrip-apple.json`; regular test runs always decrypt that file and Android's `envelope-roundtrip.json` when present.
 

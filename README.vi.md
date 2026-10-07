@@ -75,7 +75,7 @@ cd apple/Packages/HLCrypto && HL_SWIFT_TESTING_PACKAGE=1 swift test
 cd apple/Packages/HLMacUI && HL_SWIFT_TESTING_PACKAGE=1 SDKROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX26.sdk swift test
 ```
 
-Bản thân các target app chỉ dựng được bằng Xcode (CI: `xcodebuild build -scheme HandLive` cho Mac và `-scheme HandLiveiOS -destination 'generic/platform=iOS Simulator'` cho iPhone và iPad kèm extension, không ký); mọi thứ chúng chạy nằm trong các package.
+Bản thân các target app chỉ dựng được bằng Xcode (CI: `xcodebuild build -scheme HandLive` cho Mac và `-scheme HandLiveiOS -destination 'generic/platform=iOS Simulator'` cho iPhone và iPad kèm extension, không ký); mọi thứ chúng chạy nằm trong các package. Muốn dựng app Mac cần Xcode 26 trở lên **chạy trên macOS 26 trở lên**: trên máy macOS 15, actool bị crash khi dựng biểu tượng Mac từ `macOS/HandLive/Resources/AppIcon.icon` (CI và job ký bản phát hành chạy trên `macos-26`). App dựng xong vẫn chạy được trên macOS 13 trở lên.
 
 Vector liên nền tảng: `HL_WRITE_ROUNDTRIP=1` (trong `HLCrypto`) ghi lại `shared/test-vectors/envelope-roundtrip-apple.json`; test thường luôn giải mã file đó và `envelope-roundtrip.json` của Android nếu có.
 
