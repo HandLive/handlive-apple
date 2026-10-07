@@ -152,6 +152,18 @@ final class ClipboardHarness {
         return condition()
     }
 
+    /// Whether a push is in flight. A text clip's push starts synchronously in `poll()`, `sendAnyway()`,
+    /// `sendClipboardNow()`, `sendPasted(_:)` and `phoneConnected`, and stays in flight until its ack was handled, so
+    /// reading this right after the call tells whether anything was sent, with no waiting.
+    var sending: Bool { engine.sending != nil }
+
+    /// Waits until the push in flight, if any, is over, up to two seconds: its ack was handled (acknowledged,
+    /// suspended, told), or it ended without one (no ack in time, an error, the session gone). It says nothing about
+    /// which: the test checks that itself.
+    func pushSettled() async -> Bool {
+        await until { engine.sending == nil }
+    }
+
     /// A push from the phone, as the session delivers it.
     func receive(_ push: ClipboardPushData) -> String {
         let id = HLUUID.v7()
