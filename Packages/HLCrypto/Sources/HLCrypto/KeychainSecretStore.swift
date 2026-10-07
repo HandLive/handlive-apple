@@ -7,7 +7,7 @@ import Security
 /// build without that entitlement uses the login keychain instead (0.6.1): same items, no accessibility class.
 public struct KeychainSecretStore: SecretStore {
     public static let service = "app.handlive.keys"
-    /// iOS/iPadOS: the App Group `group.app.handlive`, which doubles as the keychain access group the app shares with
+    /// iOS/iPadOS: the App Group `group.app.hxd.handlive`, which doubles as the keychain access group the app shares with
     /// its Notification Service Extension (SET-03 API 1, CONN-04 step 9b); `nil` keeps the app's default group (Mac).
     public let accessGroup: String?
     /// macOS: the data-protection keychain (`true`) or the login keychain. Always `true` on iOS, whose only keychain it is.

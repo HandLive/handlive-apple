@@ -154,8 +154,8 @@ struct SecretStoreTests {
 
     @Test("iOS shares its keys with the Notification Service Extension through the App Group access group")
     func sharedAccessGroup() {
-        let query = KeychainSecretStore(accessGroup: "group.app.handlive").baseQuery(account: "pair")
-        #expect(query[kSecAttrAccessGroup as String] as? String == "group.app.handlive")
+        let query = KeychainSecretStore(accessGroup: "group.app.hxd.handlive").baseQuery(account: "pair")
+        #expect(query[kSecAttrAccessGroup as String] as? String == "group.app.hxd.handlive")
         #expect(query[kSecAttrService as String] as? String == "app.handlive.keys")
     }
 }

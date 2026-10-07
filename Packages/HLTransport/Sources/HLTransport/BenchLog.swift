@@ -19,7 +19,7 @@ public enum BenchLog {
 
     /// Sets the `dev` (first 8 hex digits of `device_id`) and `role` of every later line. The subsystem is the app's
     /// (`app.handlive.mac`, `app.handlive.ios`) unless given: the Notification Service Extension logs under
-    /// `app.handlive.ios.nse` with the role `ios` (shared/tools/bench/README.md).
+    /// `app.handlive.ios.notifications` with the role `ios` (shared/tools/bench/README.md).
     public static func configure(deviceId: String, role: Role, subsystem: String? = nil) {
         let prefix = String(deviceId.replacingOccurrences(of: "-", with: "").prefix(8))
         let name = subsystem ?? (role == .macos ? "app.handlive.mac" : "app.handlive.ios")

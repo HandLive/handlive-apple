@@ -76,7 +76,7 @@ targets:
       - package: HLAppCore
       - package: HLMacUI
   # iPhone and iPad (SET-03, CLIP-04, SMS-01…05): thin app sources over HLiOSUI; builds on CI for the simulator
-  # without signing. The App Group group.app.handlive is shared with the extension (settings suite, keychain group).
+  # without signing. The App Group group.app.hxd.handlive is shared with the extension (settings suite, keychain group).
   HandLiveiOS:
     type: application
     platform: iOS
@@ -122,7 +122,7 @@ targets:
       - path: iOS/NotificationService
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: app.handlive.ios.nse
+        PRODUCT_BUNDLE_IDENTIFIER: app.handlive.ios.notifications
         PRODUCT_NAME: HandLiveNotificationService
         MARKETING_VERSION: "0.1.0"
         CURRENT_PROJECT_VERSION: "3"

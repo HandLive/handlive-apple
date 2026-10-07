@@ -21,7 +21,7 @@ public final class IOSAppModel: ObservableObject {
     }
 
     /// The App Group shared with the Notification Service Extension: settings suite and keychain access group (0.2).
-    public static let appGroup = "group.app.handlive"
+    public static let appGroup = "group.app.hxd.handlive"
 
     @Published public internal(set) var phase = Phase.launching
     @Published public internal(set) var link = LinkStatus(state: .idle(.notPaired))

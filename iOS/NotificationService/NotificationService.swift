@@ -17,7 +17,7 @@ import UserNotifications
 /// unexpected: the generic text the APNs `loc-key` names stays (E5–E7, E9). No database, no network: well under the
 /// 30 MB limit.
 final class NotificationService: UNNotificationServiceExtension {
-    private static let appGroup = "group.app.handlive"
+    private static let appGroup = "group.app.hxd.handlive"
     private var contentHandler: ((UNNotificationContent) -> Void)?
     private var generic: UNNotificationContent?
 
@@ -69,7 +69,7 @@ final class NotificationService: UNNotificationServiceExtension {
 
     /// The extension's bench lines: role `ios` under its own subsystem.
     private static func configureBench() {
-        BenchLog.configure(deviceId: "00000000", role: .ios, subsystem: "app.handlive.ios.nse")
+        BenchLog.configure(deviceId: "00000000", role: .ios, subsystem: "app.handlive.ios.notifications")
     }
 
     /// iOS is about to give up: the generic text stays.
