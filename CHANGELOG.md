@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Security
+
+- Clipboard HTML: the sanitizer finds tags in linear time, so copying a large page no longer hangs the app. Repeated
+  tag starts that never complete (`<a` without `>`, or before a quote that never closes) used to take quadratic time
+  on the main thread that reads a copy, about 5 s for 80 KB on the Mac. The output is unchanged byte for byte
+  (`clipboard-html.json`).
+
 ### Fixed
 
 - Mac: Delete All HandLive Data also deletes the keys a build signed the other way left in the other keychain. After
