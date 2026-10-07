@@ -64,7 +64,8 @@ env:
 jobs:
   sign:
     name: sign ${{ matrix.platform }}
-    runs-on: macos-15
+    # macOS 26: on a macOS 15 host, actool (Xcode 26) crashes rendering the Mac app icon from AppIcon.icon.
+    runs-on: macos-26
     timeout-minutes: 60
     # The environment holds the macOS secrets (only tags v* and main may use it). No step of this job launches the
     # built app: that is the launch job.
@@ -425,7 +426,8 @@ jobs:
   launch:
     name: launch the built apps
     needs: sign
-    runs-on: macos-15
+    # Same macOS as the sign job that produced the apps.
+    runs-on: macos-26
     timeout-minutes: 15
     permissions: {}
     env:
