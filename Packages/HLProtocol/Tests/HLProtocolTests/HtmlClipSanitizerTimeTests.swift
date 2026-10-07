@@ -21,6 +21,19 @@ struct HtmlClipSanitizerTimeTests {
                     becomes: String(repeating: "&lt;a\"x\"", count: 209_715) + "'>")
     }
 
+    @Test("1 MiB of <a '\"' then \">: quotes nested in quotes, the last one never closed, takes under 5 s",
+          .timeLimit(.minutes(1)))
+    func nestedQuotes() {
+        expectQuick("<a '\"' repeated, then \">", String(repeating: "<a '\"'", count: 174_763) + "\">",
+                    becomes: String(repeating: "&lt;a '\"'", count: 174_763) + "\">")
+    }
+
+    /// An odd number of `"`: the first tag start meets a quote that never closes, the second one closes at the end.
+    @Test("1 MiB of <a\" an odd number of times, then >: one tag at the end, under 5 s", .timeLimit(.minutes(1)))
+    func oddQuoteCount() {
+        expectQuick("<a\" odd times, then >", String(repeating: "<a\"", count: 349_525) + ">", becomes: "&lt;a\"<a>")
+    }
+
     private func expectQuick(_ name: String, _ input: String, becomes output: String,
                              sourceLocation: SourceLocation = #_sourceLocation) {
         let clock = ContinuousClock()
