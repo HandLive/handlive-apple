@@ -29,9 +29,10 @@ public enum HtmlClipSanitizer {
     /// The sanitized form of `html`; the size limit (`CLIP_MAX_HTML`) is measured on this output.
     public static func sanitize(_ html: String) -> String {
         let text = removeBogusComments(removeComments(Array(html.utf8)))
+        let scanEnds = attributeScanEnds(text)
         var out: [UInt8] = []
         var pos = 0
-        while let tag = nextTag(in: text, from: pos) {
+        while let tag = nextTag(in: text, from: pos, scanEnds: scanEnds) {
             appendText(text[pos..<tag.start], to: &out)
             pos = tag.end
             if dropContent.contains(tag.name) {
@@ -116,9 +117,11 @@ public enum HtmlClipSanitizer {
         for index in segment.indices {
             let opensTag = segment[index] == 60 && index + 1 < segment.endIndex
                 && (segment[index + 1] == 47 || isLetter(segment[index + 1]))
-            if opensTag { out.append(contentsOf: Array("&lt;".utf8)) } else { out.append(segment[index]) }
+            if opensTag { out.append(contentsOf: escapedLessThan) } else { out.append(segment[index]) }
         }
     }
+
+    private static let escapedLessThan = Array("&lt;".utf8)
 
     private static func find(_ needle: [UInt8], in bytes: [UInt8], from: Int) -> Int? {
         guard from + needle.count <= bytes.count else { return nil }
@@ -130,36 +133,52 @@ public enum HtmlClipSanitizer {
 
     /// The next `<name attrs>` or `</name attrs>` at or after `from`: a quoted `>` inside an attribute value does not end
     /// it; a `<` that does not start a complete tag is text.
-    private static func nextTag(in bytes: [UInt8], from: Int) -> Tag? {
+    private static func nextTag(in bytes: [UInt8], from: Int, scanEnds: [Int]) -> Tag? {
         var index = from
         while index < bytes.count {
-            if bytes[index] == 60, let tag = tag(in: bytes, at: index) { return tag }
+            if bytes[index] == 60, let tag = tag(in: bytes, at: index, scanEnds: scanEnds) { return tag }
             index += 1
         }
         return nil
     }
 
-    private static func tag(in bytes: [UInt8], at start: Int) -> Tag? {
+    /// Where a scan of attribute text started at each position ends: the index of the `>` that closes the tag (a quoted
+    /// `"…"` or `'…'` is skipped whole), or -1 when the input ends first (no `>`, or a quote never closed). The scan
+    /// depends on its start position only, so one pass from the end answers every `<`: a tag start that never completes
+    /// costs a lookup instead of a scan to the end of the input, which made long inputs quadratic.
+    private static func attributeScanEnds(_ bytes: [UInt8]) -> [Int] {
+        var ends = [Int](repeating: -1, count: bytes.count + 1)
+        var nextDoubleQuote = -1
+        var nextSingleQuote = -1
+        for index in stride(from: bytes.count - 1, through: 0, by: -1) {
+            switch bytes[index] {
+            case 62:
+                ends[index] = index
+            case 34:
+                ends[index] = nextDoubleQuote < 0 ? -1 : ends[nextDoubleQuote + 1]
+                nextDoubleQuote = index
+            case 39:
+                ends[index] = nextSingleQuote < 0 ? -1 : ends[nextSingleQuote + 1]
+                nextSingleQuote = index
+            default:
+                ends[index] = ends[index + 1]
+            }
+        }
+        return ends
+    }
+
+    private static func tag(in bytes: [UInt8], at start: Int, scanEnds: [Int]) -> Tag? {
         var index = start + 1
         let closing = index < bytes.count && bytes[index] == 47
         if closing { index += 1 }
         let nameStart = index
         guard index < bytes.count, isLetter(bytes[index]) else { return nil }
         while index < bytes.count, isLetter(bytes[index]) || isDigit(bytes[index]) { index += 1 }
-        let name = string(bytes[nameStart..<index]).lowercased()
         let attributesStart = index
-        while index < bytes.count {
-            let byte = bytes[index]
-            if byte == 62 {
-                return Tag(start: start, end: index + 1, closing: closing, name: name, attributes: attributesStart..<index)
-            }
-            if byte == 34 || byte == 39 {
-                guard let quoteEnd = bytes[(index + 1)...].firstIndex(of: byte) else { return nil }
-                index = quoteEnd
-            }
-            index += 1
-        }
-        return nil
+        let close = scanEnds[attributesStart]
+        guard close >= 0 else { return nil }
+        let name = string(bytes[nameStart..<attributesStart]).lowercased()
+        return Tag(start: start, end: close + 1, closing: closing, name: name, attributes: attributesStart..<close)
     }
 
     /// End of the first `</name>` (ASCII case-insensitive only, spaces allowed before `>`) at or after `from`.
