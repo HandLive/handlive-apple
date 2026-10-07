@@ -49,12 +49,13 @@ enum AppCallSamples {
 }
 
 extension AppCallController {
-    /// A controller with short timings, paired and connected to `peer` with `capability`.
+    /// A controller with short timings, paired and connected to `peer` with `capability`; `timer` runs its waits.
     @MainActor
     static func connectedForTest(peer: FakeCallPeer = FakeCallPeer(),
                                  capability: CapabilityData = AppCallSamples.capability(),
-                                 clock: TestClock = TestClock()) -> AppCallController {
-        let controller = AppCallController(now: { clock.now })
+                                 clock: TestClock = TestClock(),
+                                 timer: any Clock<Duration> = ContinuousClock()) -> AppCallController {
+        let controller = AppCallController(now: { clock.now }, clock: timer)
         controller.requestTimeout = .milliseconds(300)
         controller.stateWait = .milliseconds(200)
         controller.reconnectGrace = .milliseconds(150)

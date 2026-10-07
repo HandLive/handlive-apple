@@ -17,8 +17,8 @@ extension CallController {
         let callId = current.callId
         let since = connectedAtMs
         staleTask?.cancel()
-        staleTask = Task { [weak self, reconnectGrace] in
-            try? await Task.sleep(for: reconnectGrace)
+        staleTask = Task { [weak self, clock, reconnectGrace] in
+            try? await clock.sleep(for: reconnectGrace)
             guard !Task.isCancelled, let self, let call = self.call, call.callId == callId,
                   call.receivedAtMs < since else { return }
             self.clear()
@@ -33,8 +33,8 @@ extension CallController {
         connectionLostTask?.cancel()
         guard let current = call, current.phase != .ended else { return }
         let callId = current.callId
-        connectionLostTask = Task { [weak self, connectionLostDelay] in
-            try? await Task.sleep(for: connectionLostDelay)
+        connectionLostTask = Task { [weak self, clock, connectionLostDelay] in
+            try? await clock.sleep(for: connectionLostDelay)
             guard !Task.isCancelled, let self, self.peer == nil, var call = self.call, call.callId == callId,
                   call.phase != .ended else { return }
             call.connectionLost = true

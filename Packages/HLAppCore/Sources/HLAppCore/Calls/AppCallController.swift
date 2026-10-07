@@ -18,6 +18,8 @@ public final class AppCallController: ObservableObject {
     public var enabledHere: () -> Bool = { true }
 
     let now: () -> Int64
+    /// Times the waits below and the `ack` window of a command.
+    let clock: any Clock<Duration>
     /// `REQUEST_TIMEOUT` for the `ack` of a command (0.10).
     var requestTimeout: Duration = .seconds(10)
     /// After a successful `ack`, how long the buttons stay locked waiting for the version with the result.
@@ -45,8 +47,10 @@ public final class AppCallController: ObservableObject {
     var staleTask: Task<Void, Never>?
     var connectedAtMs: Int64 = 0
 
-    public init(now: @escaping () -> Int64 = { HLUUID.currentTimeMs() }) {
+    public init(now: @escaping () -> Int64 = { HLUUID.currentTimeMs() },
+                clock: any Clock<Duration> = ContinuousClock()) {
         self.now = now
+        self.clock = clock
     }
 
     /// App calls are in effect: on here and on the phone (0.7.2 `features.call.app_calls`, absent means off).
