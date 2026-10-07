@@ -157,8 +157,10 @@ final class ClipboardHarness {
     /// reading this right after the call tells whether anything was sent, with no waiting.
     var sending: Bool { engine.sending != nil }
 
-    /// Waits until the push in flight, if any, had its ack handled (acknowledged, suspended, told), up to two seconds.
-    func ackHandled() async -> Bool {
+    /// Waits until the push in flight, if any, is over, up to two seconds: its ack was handled (acknowledged,
+    /// suspended, told), or it ended without one (no ack in time, an error, the session gone). It says nothing about
+    /// which: the test checks that itself.
+    func pushSettled() async -> Bool {
         await until { engine.sending == nil }
     }
 

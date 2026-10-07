@@ -52,7 +52,7 @@ struct ClipboardSendTests {
         harness.connect()
         harness.engine.poll()
         #expect(await harness.until { harness.peer.pushes.count == 1 })
-        #expect(await harness.ackHandled())
+        #expect(await harness.pushSettled())
         harness.engine.phoneDisconnected()
         harness.connect()
         #expect(!harness.sending && harness.peer.pushes.count == 1) // applied: nothing to replay
@@ -142,7 +142,7 @@ struct ClipboardSendTests {
         harness.pasteboard.copy(text: "slow phone")
         harness.engine.poll()
         #expect(await harness.until { harness.peer.pushes.count == 1 })
-        #expect(await harness.ackHandled()) // no ack came: the clip stays unacknowledged
+        #expect(await harness.pushSettled()) // no ack came: the clip stays unacknowledged
         harness.advance(20)
         harness.pasteboard.copy(text: "slow phone")
         harness.engine.poll()
@@ -167,11 +167,11 @@ struct ClipboardSendTests {
         harness.pasteboard.copy(text: "one")
         harness.engine.poll()
         #expect(await harness.until { harness.notices == [.writeFailedOnPhone] })
-        #expect(await harness.ackHandled())
+        #expect(await harness.pushSettled())
         harness.pasteboard.copy(text: "two")
         harness.engine.poll()
         #expect(await harness.until { harness.peer.pushes.count == 2 })
-        #expect(await harness.ackHandled()) // FEATURE_DISABLED handled: sending is suspended
+        #expect(await harness.pushSettled()) // FEATURE_DISABLED handled: sending is suspended
         harness.pasteboard.copy(text: "three")
         harness.engine.poll()
         #expect(!harness.sending && harness.peer.pushes.count == 2) // suspended (E10)
