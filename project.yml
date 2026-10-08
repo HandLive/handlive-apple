@@ -9,9 +9,19 @@ options:
     macOS: "13.0"
     iOS: "16.0"
   createIntermediateGroups: true
+  # LastUpgradeCheck: without it xcodegen writes 1430 and Xcode keeps asking to "Update to recommended settings".
+  xcodeVersion: "27.0"
 settings:
   base:
     SWIFT_VERSION: "6.0"
+    # Xcode 27's recommended project settings (Base_ProjectSettings template) that xcodegen's presets do not set.
+    # No target has a run-script phase, so the script sandbox changes nothing today; no C or C++ sources either.
+    ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS: YES
+    CLANG_CXX_LANGUAGE_STANDARD: gnu++20
+    DEAD_CODE_STRIPPING: YES
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    GCC_C_LANGUAGE_STANDARD: gnu17
+    LOCALIZATION_PREFERS_STRING_CATALOGS: YES
 packages:
   HLProtocol:
     path: Packages/HLProtocol
