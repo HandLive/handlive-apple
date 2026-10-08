@@ -134,7 +134,7 @@ actor FakeRelay: RelaySocketOpening {
             loops.append(Task { await self.readPhone(relaySide) })
             let answer = helloAnswer
             Task {
-                if case .welcome = answer { try? await fake.accept() } else { try? await fake.answerHello(answer) }
+                if case .welcome = answer { _ = try? await fake.accept() } else { try? await fake.answerHello(answer) }
             }
         } else {
             await phoneLink?.close(code: .normal)

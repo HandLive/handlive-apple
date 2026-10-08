@@ -120,7 +120,7 @@ final class FakeConnector: ChannelConnecting, @unchecked Sendable {
             let phone = FakePhone(channel: phoneChannel, pair: pair)
             keep(phone)
             Task {
-                if case .welcome = answer { try? await phone.accept() } else { try? await phone.answerHello(answer) }
+                if case .welcome = answer { _ = try? await phone.accept() } else { try? await phone.answerHello(answer) }
             }
             return ChannelConnection(channel: client, certificateSHA256: ManagerHarness.pin, host: "192.168.1.23", port: 47800)
         }

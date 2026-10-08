@@ -28,8 +28,9 @@ public struct PairingQRCode: View {
         .accessibilityHidden(true)
     }
 
-    /// The largest whole multiple of the module count that leaves a quiet zone inside the card.
-    static func moduleAlignedSide(modules: Int) -> CGFloat {
+    /// The largest whole multiple of the module count that leaves a quiet zone inside the card. Pure arithmetic, so
+    /// it is not tied to the main actor like the rest of the view (tests call it synchronously).
+    nonisolated static func moduleAlignedSide(modules: Int) -> CGFloat {
         let available = HLSize.qr - 2 * HLSpacing.space12
         guard modules > 0 else { return available }
         return CGFloat(Int(available) / modules * modules)
