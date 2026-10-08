@@ -8,6 +8,9 @@ import SwiftUI
 public final class WindowPresenter {
     private let model: AppModel
     private var welcomeWindow: NSWindow?
+    /// Owned here: `NSWindow.delegate` is weak, so without this reference the delegate would die as soon as it is set
+    /// and `windowWillClose` would never run.
+    private var welcomeDelegate: WelcomeWindowDelegate?
     private var flow: OnboardingFlow?
     private var messagesWindow: MessagesWindowController?
 
@@ -32,11 +35,14 @@ public final class WindowPresenter {
         window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true
         window.isReleasedWhenClosed = false
-        window.delegate = WelcomeWindowDelegate { [weak self] in
+        let delegate = WelcomeWindowDelegate { [weak self] in
             self?.model.welcomeWindowVisibilityChanged(false)
             self?.welcomeWindow = nil
+            self?.welcomeDelegate = nil
             self?.flow = nil
         }
+        welcomeDelegate = delegate
+        window.delegate = delegate
         window.contentViewController = hostingController()
         window.center()
         window.level = .floating
