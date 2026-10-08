@@ -8,8 +8,11 @@ from design_tokens_model import THEMES, ColorToken, RGBA
 CATALOG_DIR = "Sources/HLDesignSystem/Resources/Colors.xcassets"
 # Color Set `AccentColor` = `accent-fill` (01-mau-sac.md): nút nổi bật của hệ thống giữ chữ trắng ≥ 4.5:1.
 ACCENT_COLOR_SOURCE = "accent-fill"
-# Catalog của target app: màu nhấn toàn app (`ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor`).
-# Chỉ AccentColor.colorset và Contents.json gốc do script ghi; biểu tượng app nằm cạnh, không bị đụng.
+# Catalog của hai target app (iOS tham chiếu cùng thư mục): màu nhấn toàn app
+# (`ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor`). Chỉ AccentColor.colorset và Contents.json gốc
+# do script ghi; biểu tượng app nằm cạnh, không bị đụng. AccentColor chỉ nằm ở đây, không trong catalog của package:
+# Xcode sinh symbol bằng cách bỏ hậu tố "Color", nên `AccentColor` và token `accent` sẽ cùng thành `.accent` (cảnh báo
+# trong GeneratedAssetSymbols.swift), và package cũng không tải Color Set này.
 APP_CATALOG_DIR = "../../macOS/HandLive/Resources/Assets.xcassets"
 _INFO = {"author": "xcode", "version": 1}
 
@@ -57,7 +60,6 @@ def render_asset_catalog(colors: list[ColorToken]) -> dict[str, str]:
     for token in colors:
         files[f"{CATALOG_DIR}/{token.name}.colorset/Contents.json"] = _color_set(token.values)
     accent = _color_set(next(token for token in colors if token.name == ACCENT_COLOR_SOURCE).values)
-    files[f"{CATALOG_DIR}/AccentColor.colorset/Contents.json"] = accent
     files[f"{APP_CATALOG_DIR}/Contents.json"] = _dump({"info": _INFO})
     files[f"{APP_CATALOG_DIR}/AccentColor.colorset/Contents.json"] = accent
     return files

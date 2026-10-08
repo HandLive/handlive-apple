@@ -78,12 +78,13 @@ struct ColorSetTests {
         }
     }
 
-    @Test("AccentColor = accent-fill, cả trong package và catalog của app")
+    @Test("AccentColor của catalog app = accent-fill; package không có AccentColor (trùng symbol với `accent`)")
     func accentColorMatchesAccentFillToken() throws {
-        #expect(try colorSet(named: "AccentColor") == colorSet(named: "accent-fill"))
         let appAccent = RepositoryPaths.appAssetCatalog.appendingPathComponent("AccentColor.colorset/Contents.json")
-        let packageAccent = RepositoryPaths.colorCatalog.appendingPathComponent("AccentColor.colorset/Contents.json")
-        #expect(try Data(contentsOf: appAccent) == Data(contentsOf: packageAccent))
+        let packageAccentFill = RepositoryPaths.colorCatalog.appendingPathComponent("accent-fill.colorset/Contents.json")
+        #expect(try Data(contentsOf: appAccent) == Data(contentsOf: packageAccentFill))
+        let packageAccent = RepositoryPaths.colorCatalog.appendingPathComponent("AccentColor.colorset")
+        #expect(!FileManager.default.fileExists(atPath: packageAccent.path))
     }
 
     @Test("Mã Swift sinh ra có cùng giá trị với tokens.json")
