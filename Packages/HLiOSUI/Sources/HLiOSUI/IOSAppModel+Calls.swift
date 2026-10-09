@@ -24,6 +24,27 @@ extension IOSAppModel {
         calls.start(database: messages?.store.database)
         calls.setPair(pairedDevice)
         storePeerCanSend(pairedDevice?.peerCapability)
+        // UI-test seam (task_05ef3c28a93f, owner-approved, same pattern as `-HLUITestSeedDemoMessages`): the
+        // App Store screenshot of the in-app ringing banner needs a live incoming call, which cannot be triggered
+        // safely on the owner's real phone. Feeds a fake `call_event/state` straight into the real `CallController`
+        // (`apply`, the same entry point a real phone push uses), so `IOSCalls.updateBanner` reacts exactly as it
+        // would for a real call. `apply` unconditionally clears the current call for any newer envelope, so seeding
+        // right away raced the real phone's idle state at reconnect and lost; a short delay lets that real sync
+        // settle first so the fake ringing call is the latest state and nothing overwrites it afterward (no real
+        // call is happening). Gated so it never runs outside an XCUITest launch.
+        if ProcessInfo.processInfo.arguments.contains("-HLUITestSeedIncomingCall") {
+            Task {
+                try? await Task.sleep(for: .seconds(2))
+                let state = CallStateData(callId: "demo-call-1", direction: .incoming, state: .ringing,
+                                           number: "+15552223333", displayName: "Sam Rivera", presentation: .allowed,
+                                           startedAt: HLUUID.currentTimeMs(), controls: CallControls(reject: true))
+                calls.controller.apply(state, envelopeTs: HLUUID.currentTimeMs())
+                let log = "callSeed: pairId=\(pairedDevice?.pairId ?? "nil") callsEnabled=\(settings.callsEnabled) " +
+                    "callNotify=\(settings.callNotify) controllerCall=\(String(describing: calls.controller.call)) " +
+                    "banner=\(String(describing: calls.banner))\n"
+                try? log.write(toFile: "/tmp/handlive-ios-call-seed-debug.txt", atomically: false, encoding: .utf8)
+            }
+        }
     }
 
     /// Opens the active pair's call pushes with its `K_push`, read now while the app runs unlocked (C3).
