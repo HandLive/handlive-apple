@@ -96,11 +96,11 @@ final class ScreenshotUITests: XCTestCase {
         // read out separately — "1 2 3 4 5 6" — per PairingView.swift's `.accessibilityLabel`.
         let pinPredicate = NSPredicate(format: "label MATCHES %@", "\\d( \\d){5}")
         var pinText = app.staticTexts.matching(pinPredicate).firstMatch
-        for i in 0..<20 {
+        for attempt in 0..<20 {
             if pinText.exists { break }
-            if i % 4 == 0 {
+            if attempt % 4 == 0 {
                 let all = app.staticTexts.allElementsBoundByIndex.map(\.label).joined(separator: " | ")
-                debugLog("pin-wait \(i): [\(all)]")
+                debugLog("pin-wait \(attempt): [\(all)]")
             }
             Thread.sleep(forTimeInterval: 0.5)
             pinText = app.staticTexts.matching(pinPredicate).firstMatch

@@ -170,16 +170,17 @@ extension IOSAppModel {
     /// names and numbers that cannot resolve to a real person.
     static var demoSyncPage: SmsSyncAckData {
         let now = HLUUID.currentTimeMs()
-        let m = now - 600_000
-        let lastTsThread1 = m + 480_000
+        let threadStart = now - 600_000
+        let lastTsThread1 = threadStart + 480_000
         let lastTsThread2 = now - 3_600_000
         let messages = [
             SmsMessageData(messageKey: "demo-1", threadId: 1, address: "+15551234567",
-                           body: "Hey! Are we still on for coffee tomorrow?", box: .inbox, ts: m, read: true),
+                           body: "Hey! Are we still on for coffee tomorrow?", box: .inbox, ts: threadStart, read: true),
             SmsMessageData(messageKey: "demo-2", threadId: 1, address: "+15551234567",
-                           body: "Yes! 10am at the usual place works great", box: .sent, ts: m + 60_000, read: true),
+                           body: "Yes! 10am at the usual place works great", box: .sent, ts: threadStart + 60_000,
+                           read: true),
             SmsMessageData(messageKey: "demo-3", threadId: 1, address: "+15551234567",
-                           body: "Perfect, see you then", box: .inbox, ts: m + 120_000, read: true),
+                           body: "Perfect, see you then", box: .inbox, ts: threadStart + 120_000, read: true),
             SmsMessageData(messageKey: "demo-4", threadId: 1, address: "+15551234567",
                            body: "Can't wait!", box: .sent, ts: lastTsThread1, read: true),
             SmsMessageData(messageKey: "demo-5", threadId: 2, address: "+15559876543",
