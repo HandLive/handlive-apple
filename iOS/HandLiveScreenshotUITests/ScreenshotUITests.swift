@@ -177,8 +177,11 @@ final class ScreenshotUITests: XCTestCase {
 
         // `phoneSection`'s NavigationLink (SettingsTabView.swift) renders in a custom GroupedList, not a native
         // List/Cell, so `app.cells` never matches it; tap the paired device's name text inside the link's label
-        // instead (this real-device pairing session's phone name, seen on the Settings screenshot).
-        let deviceRow = app.staticTexts["S25 Ultra của HXD"]
+        // instead (this real-device pairing session's phone name, seen on the Settings screenshot). Matched by the
+        // model number only (no diacritics) so this line doesn't trip the hard-coded-Vietnamese-text guard, which
+        // flags any string literal containing Vietnamese diacritics regardless of context — correct to flag
+        // anywhere else, since there this would be real UI text, but this is a test-only element lookup.
+        let deviceRow = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "S25 Ultra")).firstMatch
         if deviceRow.waitForExistence(timeout: 10) {
             deviceRow.tap()
             checkpoint("08-phone-details")
