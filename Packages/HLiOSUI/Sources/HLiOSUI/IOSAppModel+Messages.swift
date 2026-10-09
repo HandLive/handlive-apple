@@ -28,6 +28,34 @@ extension IOSAppModel {
         }
         engine.onEvent = { [weak self] event in self?.handleSmsEvent(event) }
         smsEngine = engine
+        // UI-test seam (task_05ef3c28a93f, owner-approved): App Store screenshots need a realistic conversation, but
+        // Samsung blocks synthetic SMS writes to its content provider even from adb shell (verified: the insert
+        // reports success, a readback finds nothing), so there is no way to seed this through the real phone. Feeds
+        // a fake `sms/sync` page (`applySyncPage`) straight into the local store exactly like a real sync would —
+        // `insertHistory` alone only writes `sms_message` and leaves `sms_thread` empty, so the Messages list stayed
+        // "No Messages Yet" even though the rows existed. `resetForResync` first clears any real history the live
+        // pairing already synced (this seam must never show the owner's real SMS in a screenshot) and any stale
+        // cursor a previous seeding run left; `hasMore: true` stops this fake page from persisting a cursor of its
+        // own, which earlier made the real device's next sync see it as invalid and auto-wipe everything it seeded.
+        // Gated so it never runs outside an XCUITest launch.
+        if ProcessInfo.processInfo.arguments.contains("-HLUITestSeedDemoMessages") {
+            let pairId = pairedDevice?.pairId
+            Task {
+                var log = "seed: pairId=\(pairId ?? "nil")\n"
+                if let pairId {
+                    do {
+                        try await store.resetForResync(pairId: pairId)
+                        try await store.applySyncPage(Self.demoSyncPage, pairId: pairId, now: HLUUID.currentTimeMs())
+                        log += "seed: inserted ok\n"
+                        let verify = try await database.pool.read { db in try SmsStore.threads(db, pairId: pairId) }
+                        log += "seed: readback count=\(verify.count) \(verify.map(\.threadId))\n"
+                    } catch {
+                        log += "seed: error \(error)\n"
+                    }
+                }
+                try? log.write(toFile: "/tmp/handlive-ios-seed-debug.txt", atomically: false, encoding: .utf8)
+            }
+        }
         messages = MessagesModel(engine: engine, store: store)
         pairChangedForMessages()
         outboxExpiry?.cancel()
@@ -136,5 +164,38 @@ extension IOSAppModel {
         Task { try? await store.deletePair(pairId) }
         notifications.removeAllSms()
         pairChangedForMessages()
+    }
+
+    /// Screenshot-only demo content (see `-HLUITestSeedDemoMessages` above): two threads, generic placeholder
+    /// names and numbers that cannot resolve to a real person.
+    static var demoSyncPage: SmsSyncAckData {
+        let now = HLUUID.currentTimeMs()
+        let threadStart = now - 600_000
+        let lastTsThread1 = threadStart + 480_000
+        let lastTsThread2 = now - 3_600_000
+        let messages = [
+            SmsMessageData(messageKey: "demo-1", threadId: 1, address: "+15551234567",
+                           body: "Hey! Are we still on for coffee tomorrow?", box: .inbox, ts: threadStart, read: true),
+            SmsMessageData(messageKey: "demo-2", threadId: 1, address: "+15551234567",
+                           body: "Yes! 10am at the usual place works great", box: .sent, ts: threadStart + 60_000,
+                           read: true),
+            SmsMessageData(messageKey: "demo-3", threadId: 1, address: "+15551234567",
+                           body: "Perfect, see you then", box: .inbox, ts: threadStart + 120_000, read: true),
+            SmsMessageData(messageKey: "demo-4", threadId: 1, address: "+15551234567",
+                           body: "Can't wait!", box: .sent, ts: lastTsThread1, read: true),
+            SmsMessageData(messageKey: "demo-5", threadId: 2, address: "+15559876543",
+                           body: "Thanks for sending over the files earlier!", box: .inbox, ts: lastTsThread2,
+                           read: false),
+        ]
+        let threads = [
+            SmsThreadData(threadId: 1, addresses: ["+15551234567"], displayName: "Alex Morgan",
+                          snippet: "Can't wait!", lastTs: lastTsThread1, unreadCount: 0),
+            SmsThreadData(threadId: 2, addresses: ["+15559876543"], displayName: "Jordan Lee",
+                          snippet: "Thanks for sending over the files earlier!", lastTs: lastTsThread2,
+                          unreadCount: 1),
+        ]
+        // `hasMore: true` so `applySyncPage` upserts the threads/messages but skips saving a cursor: a persisted
+        // fake cursor made the real device's next sync see it as invalid and wipe everything via auto-resync.
+        return SmsSyncAckData(threads: threads, messages: messages, cursor: "demo-seed", hasMore: true)
     }
 }

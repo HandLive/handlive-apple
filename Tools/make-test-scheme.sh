@@ -50,7 +50,7 @@ mkdir -p "$directory"
 {
     cat <<'HEAD'
 <?xml version="1.0" encoding="UTF-8"?>
-<Scheme LastUpgradeVersion = "1600" version = "1.7">
+<Scheme LastUpgradeVersion = "2700" version = "1.7">
    <BuildAction parallelizeBuildables = "YES" buildImplicitDependencies = "YES">
    </BuildAction>
    <TestAction buildConfiguration = "Debug" selectedDebuggerIdentifier = ""

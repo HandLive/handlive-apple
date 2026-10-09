@@ -17,6 +17,12 @@ public enum NotificationPermission: Equatable, Sendable {
 
     /// `requestAuthorization([.alert, .sound, .badge])`; no provisional, no critical alerts.
     public static func request() async -> NotificationPermission {
+        // UI-test seam only: on this machine's iOS 27 Simulator, `requestAuthorization`'s completion handler never
+        // fires and no dialog ever shows (Apple bug, developer.apple.com/forums/thread/849449; does not reproduce
+        // on a real device). The flag is never set outside an XCUITest launch argument, so real runs are unaffected.
+        guard !ProcessInfo.processInfo.arguments.contains("-HLUITestSkipNotificationRequest") else {
+            return .allowed
+        }
         _ = try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge])
         return await current()
     }

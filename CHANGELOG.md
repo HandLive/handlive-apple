@@ -15,6 +15,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   claims the Communication Notifications entitlement (Apple grants that capability to the app target only). A beta install updated to
   this build loses its settings and keys and must pair again; the Mac app and Android are unchanged.
 
+### Fixed
+
+- Mac: closing the welcome / Pair Phone window now takes the app back to the menu bar (the Dock icon went away only
+  after another window was closed); the window's delegate was released as soon as it was set.
+
 ## [0.1.0-beta.3] — 2026-10-07
 
 ### Added
