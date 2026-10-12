@@ -2,66 +2,84 @@ English | [Tiếng Việt](README.vi.md)
 
 # handlive-apple
 
-The HandLive apps for Mac, iPhone and iPad, written in Swift 6 (macOS 13+, iOS 16+). The apps receive data from Android and send data back. The Mac app lives in the menu bar and handles the clipboard, SMS, call audio, and the phone camera and microphone. iPhone and iPad sync the clipboard, SMS and call details. The UI is multilingual: English by default, Vietnamese as the second language (strings come from `../shared/strings`, detailed design 0.12).
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
-Specification: `../docs/detailed-design/00-common-specs.md`. Plan: `../plans/20260925-implementation/` (hub repository).
+The HandLive companion applications for macOS (menu bar app), iOS, and iPadOS, written in Swift 6 (macOS 13+, iOS 16+). They connect Apple devices to Android phones to provide two-way clipboard sync, an SMS bridge, and incoming call notifications with action controls.
 
-This repository is one part of the HandLive workspace: the hub repository `handlive` (docs, plans) is the parent directory, and `../shared` is the `handlive-shared` repository (test vectors, schemas, design tokens). Clone the whole set from the hub with `tools/workspace.sh clone <group-url>`. See this repository's `CLAUDE.md`.
+## Overview
+
+- **macOS menu bar app:** Lives in the system menu bar (`app.handlive.mac`). Handles two-way clipboard sync, full SMS conversations, and a non-activating incoming call panel with Answer, Decline, and End controls (call audio remains on the phone; Phase 4 call audio stopped).
+- **iOS and iPadOS app:** Standalone app (`app.handlive.ios`) with a Notification Service Extension (`app.handlive.ios.nse`). Supports clipboard sync via Paste button, SMS messaging tab, and push-based incoming call notifications with Decline action.
+- **End-to-end encrypted:** Built with hand-written HChaCha20 + CryptoKit `ChaChaPoly` (XChaCha20-Poly1305), strict Ed25519, X25519, HKDF, and Argon2id. Private keys are safeguarded in the system Keychain behind `SecretStore`.
+- **Multilingual UI:** English by default, Vietnamese as second language, with String Catalogs generated from `handlive-shared`.
+- **Database storage:** Encrypted local SQLite via SQLCipher 4.19 and GRDB.swift 7.11 for SMS conversations and call history.
+
+## Workspace context
+
+This repository is one component of the HandLive workspace:
+- Hub repository [`handlive`](https://github.com/HandLive/handlive) (docs, plans) is the parent directory.
+- [`handlive-shared`](https://github.com/HandLive/handlive-shared) (`../shared`) supplies shared protocol schemas, test vectors, and UI strings.
+- Clone the full workspace from the hub using `tools/workspace.sh clone <group-url>`. See [`CLAUDE.md`](CLAUDE.md) for local workspace workflows.
 
 ## Layout
 
 | Path | Contents |
 |------|----------|
-| `project.yml` | XcodeGen: app targets `HandLive` (Mac menu bar app, bundle `app.handlive.mac`), `HandLiveiOS` (iPhone and iPad, bundle `app.handlive.ios`) with `HandLiveNotificationService` (`app.handlive.ios.nse`), development language `en`, known regions `en` and `vi`, and the local packages. No signing configuration |
-| `HandLive.xcworkspace` | Workspace referencing the generated `HandLive.xcodeproj` and the packages |
-| `macOS/HandLive/` | Menu bar app entry point (`HandLiveMacApp`, app delegate); `Resources/Assets.xcassets` (AccentColor = `accent-fill`, generated), `Resources/InfoPlist.xcstrings` (purpose strings in en and vi, generated) |
-| `macOS/Info.plist` | `NSBonjourServices`, `NSUserActivityTypes` (`INSendMessageIntent`, `INStartCallIntent`) and the English purpose strings, `NSFocusStatusUsageDescription` included (written by the string generator) |
-| `macOS/HandLive.entitlements` | `keychain-access-groups` for the data-protection keychain, communication notifications (also what lets the app read the Focus status) and time-sensitive notifications (used once the app is signed; CI builds unsigned) |
-| `iOS/HandLive/` | iPhone and iPad entry point (`HandLiveIOSApp` over `HLiOSUI`); `Resources/InfoPlist.xcstrings` (purpose strings) and `Resources/Localizable.xcstrings` (the `push.*` loc-keys of APNs alerts), both generated |
-| `iOS/NotificationService/` | Notification Service Extension (CONN-04 step 9b): opens the push envelope with `K_push` while unlocked and builds the communication notification of a new SMS (`INSendMessageIntent`) or a ringing call (`INStartCallIntent`, "Decline"), or the missed-call notification; generic `loc-key` text otherwise |
-| `iOS/Info.plist`, `iOS/NotificationService-Info.plist`, `iOS/*.entitlements` | Purpose strings (generated), `NSBonjourServices`, `NSUserActivityTypes` (`INSendMessageIntent`, `INStartCallIntent`) and the extension's `IntentsSupported`; `aps-environment`, communication and time-sensitive notifications, the App Group and keychain group `group.app.handlive` shared with the extension |
-| `ThirdParty/GRDB` | GRDB.swift 7.11.1 (MIT) vendored with a manifest that builds it against SQLCipher (see its header) |
-| `ThirdParty/SQLCipher` | Local package for the SQLCipher 4.19.0 XCFramework (BSD-style): run `ThirdParty/SQLCipher/fetch.sh` once after cloning — it downloads and checksum-verifies the framework (not committed) |
-| `Packages/HLProtocol` | Envelope, `{op, data}`, Ack, `ErrorCode` (0.8.1), HL frames (0.5.2), binary `clipboard/chunk` plaintext, UUIDv7, b64/b64u, AAD, `session`/`capability` types |
-| `Packages/HLCrypto` | Hand-written HChaCha20 + CryptoKit `ChaChaPoly` = XChaCha20-Poly1305; X25519, strict Ed25519, HKDF/HMAC-SHA256; BLAKE2b + Argon2id (`K_pin`); `device_id`; PRK; pairing MACs, `prk_check`, attestation; mDNS hints; handshake/rekey/`K_stream`; envelope and HL frame encryption; Keychain behind the `SecretStore` protocol |
-| `Packages/HLTransport` | `ConnectionManager` (0.11 state machine, `last_host` fast path, mDNS discovery by hourly hint with `NWBrowser`, `NWPathMonitor`, `RECONNECT_BACKOFF`, sleep/wake, the relay route of CONN-03 with wake pushes), `WebSocketConnector` (TLS 1.3, certificate pinning, Network.framework WebSocket), the relay client (`RelayAPIClient` REST with `HLREG1`/`HLAUTH1` and JWT, SPKI-pinned `RelayTrust`, `RelayLink` over `/v1/relay`, pairing rendezvous), `ControlSession` (`/v1/ctl` handshake, capability, acks, de-duplication, rekey, keepalive, end-to-end ping and `session/bye` through the relay), close codes and the client's reaction, pairing (`PairingSearch` finds the phone's window by TXT `pr`/`pm` or meets it in the rendezvous, `PairingExchange` runs `/v1/pair`, `PairingInvite` builds the QR URI), `HLBENCH/1` debug logging. The relay host comes from the `HLRelayHost` Info.plist key (`HLRelayBackupPin` adds a backup SPKI pin); without it the apps stay on the LAN |
-| `Packages/HLDesignSystem` | Colors (system APIs, hex only where the platform has none), text styles, metrics, `StatusIndicator`, `GroupedList`, button styles; `Scripts/generate-design-tokens.py` generates tokens from `../shared/design-tokens` |
-| `Packages/HLAppCore` | Platform-neutral app state: settings keys (0.9.5), identity keys in the Keychain, this device's capability, the encrypted pair store (`paired_device`), the pairing controller (PAIR-01, QR code with relay rendezvous), permission helpers, the clipboard engine (`Clipboard/`: CLIP-01…05 — polling on the Mac, the Paste button on iPhone and iPad, inline and chunked transfers, conflicts, replay, auto-clear) behind a `ClipboardAccess` protocol, and the call controller (`Calls/`: CALL-01…03 — the phone's call applied in envelope order, Answer, Decline and End with one `ack` wait and the same envelope `id` on a new session, Decline from an iPhone notification; `AppCallController`, CALL-05 — calls from other apps on the phone, Mac only: `call_event/app_call` applied per `call_id`, Answer, Decline and End by the same `call_event/action`) |
-| `Packages/HLSMS` | SMS (SMS-01…05): the SQLCipher database (`handlive.sqlite`, GRDB; it also holds the call log), the store, the engine (sync with cursors, history paging, `sms/new`, the outbox with the forward-only status rule, read state) and the GSM-7/UCS-2 part counter; `HLSMSNotifications` (no database): notification content, categories, removal rules, push decoding and de-duplication for the extension |
-| `Packages/HLSMSUI` | The Messages screens shared by the Mac window and the iPhone/iPad tab: list, conversation, New Message, compose bar, display texts |
-| `Packages/HLCalls` | Calls (CALL-01…04): `HLCalls` — the call log in the encrypted database (`call_log_entry`) and its engine (`log_sync` pages, `log_new`, missed calls, seen marks, 90-day pruning); `HLCallNotifications` (no database) — call notification content, categories and `userInfo`, removal rules, push decoding for the extension; `HLCallsUI` — the call list, display texts and the caller avatar |
-| `Packages/HLMacUI` | The Mac app's model and views: `AppModel`, `AppCoordinator` (launch, reopen, sleep/wake, quit, Dock menu), menu bar menu and icon (with the ringing call and recent missed calls), the Messages window (with its Calls item), Settings panes (General with the relay actions, Devices, Clipboard, Messages, Calls with the quick replies), the welcome window (SET-03), the pairing sheet (PAIR-01), `MacPasteboard`, SMS, clipboard and call notifications, and the call panel (non-activating `NSPanel` on every Space, synthesized ringtone, Focus rule; the same panel shows a call from another app with its title, the tap-to-answer hint and "Audio: Phone") |
-| `Packages/HLiOSUI` | The iPhone and iPad app: `IOSAppModel` (also built for macOS so its tests run with the Command Line Tools), setup (SET-03), the pairing sheet, the Clipboard (`PasteButton`), Messages (`NavigationSplitView`), Calls (the call log) and Settings tabs, the incoming-call banner, the app delegate (push token, SMS and call notification actions in background tasks); the views build for iOS only |
-| `Tools/HandLiveDevClient` | Development only, not part of the apps: a headless Mac client built from the real packages (pairing by PIN, the `/v1/ctl` session, calls, SMS, clipboard, a scripted demo) to test them against the Android app in an emulator through `adb forward`; builds with the Command Line Tools (`swift build`), see its README |
-| `Tools/CameraSpike` | Development only, not part of the apps: the gate G5 probe for Phase 5 — a Camera Extension with a sink stream fed by a host app, and a loopback HAL plug-in with its PKG; needs Xcode and XcodeGen (`./build.sh test`), not built in CI; the runbook for the owner is its README |
-| `Packages/HLLocalization` | `Localizable.xcstrings` and type-safe `L10n` accessors generated from `../shared/strings/ui-strings.json` by `Scripts/generate-strings.py` (also the app's `InfoPlist.xcstrings` and Info.plist purpose strings); no UI text is written in code |
+| `project.yml` | XcodeGen definition: targets for `HandLive` (macOS menu bar app), `HandLiveiOS` (iOS/iPadOS), `HandLiveNotificationService` (NSE), localization settings, and local Swift packages |
+| `HandLive.xcworkspace` | Workspace referencing the generated `HandLive.xcodeproj` and local packages |
+| `macOS/HandLive/` | macOS app entry point (`HandLiveMacApp`), app delegate, generated `Assets.xcassets`, and `InfoPlist.xcstrings` |
+| `macOS/Info.plist` | Service identifiers (`NSBonjourServices`), Intents, and generated permission descriptions |
+| `macOS/HandLive.entitlements` | Data-protection keychain groups, communication notifications, and time-sensitive notifications |
+| `iOS/HandLive/` | iOS app entry point (`HandLiveIOSApp`), root UI (`HLiOSUI`), and generated String Catalogs |
+| `iOS/NotificationService/` | Notification Service Extension: decrypts APNs push envelopes using `K_push` and constructs communication notifications |
+| `iOS/Info.plist`, `iOS/*.entitlements` | iOS entitlements, App Group and Keychain sharing (`group.app.handlive`), and push environments |
+| `ThirdParty/GRDB` | GRDB.swift 7.11.1 vendored package configured to build against SQLCipher |
+| `ThirdParty/SQLCipher` | SQLCipher 4.19.0 XCFramework package wrapper (downloaded via `fetch.sh`) |
+| `Packages/HLProtocol` | Wire formats: Envelope, Payload, Ack, `ErrorCode` (0.8.1), HL frames, chunked clipboard structures, UUIDv7, Base64/Base64URL |
+| `Packages/HLCrypto` | Cryptographic primitives: XChaCha20-Poly1305, X25519, strict Ed25519, HKDF, Argon2id, pairing attestations, and Keychain storage |
+| `Packages/HLTransport` | Connection manager state machine (0.11), mDNS discovery (`NWBrowser`), WebSocket connector (TLS 1.3), relay client (`RelayAPIClient`), and control sessions (`/v1/ctl`) |
+| `Packages/HLDesignSystem` | Design tokens, dynamic colors, typography, layout metrics, and reusable UI components |
+| `Packages/HLAppCore` | Shared app state: settings, pair storage, pairing controller (QR and rendezvous), clipboard engine, and call event controller |
+| `Packages/HLSMS` | SMS engine: SQLCipher database, synchronization cursors, history paging, outbox state machine, and notification decoding |
+| `Packages/HLSMSUI` | Shared SwiftUI messaging views: conversations list, thread view, compose bar, and message bubbles |
+| `Packages/HLCalls` | Call management: call log engine, missed call tracking, retention pruning, and notification payload decoding |
+| `Packages/HLMacUI` | macOS UI: menu bar icon, status menus, Messages window, call panel (`NSPanel`), Settings panes, and pairing sheets |
+| `Packages/HLiOSUI` | iOS UI: tab navigation, Messages view, Calls history, Clipboard paste flow, and Settings |
+| `Packages/HLLocalization` | Type-safe `L10n` accessors and String Catalogs generated from `../shared/strings/ui-strings.json` |
+| `Tools/HandLiveDevClient` | Developer CLI tool: headless Mac client for testing against Android emulators over `adb forward` |
+| `Tools/CameraSpike` | Exploratory spike for Phase 5 (virtual camera extension and audio HAL plugin; not built in CI) |
 
-Dependencies: `HLTransport → HLCrypto → HLProtocol`; `HLDesignSystem → HLLocalization`; `HLAppCore → HLTransport`; `HLSMS → HLTransport, GRDB → SQLCipher`; `HLSMSUI → HLSMS, HLDesignSystem`; `HLCalls → HLAppCore, HLSMS, HLDesignSystem`; `HLMacUI`, `HLiOSUI → HLAppCore, HLSMSUI, HLCalls`.
+## Requirements
 
-After cloning, fetch SQLCipher once (CI does the same): `apple/ThirdParty/SQLCipher/fetch.sh`.
+- **macOS & Xcode:** Xcode 26 or later on macOS 26 or later to build the Mac app (avoids `actool` asset compilation crashes; built apps run on macOS 13+ and iOS 16+)
+- **XcodeGen:** Pinned XcodeGen (`xcodegen`) to generate the Xcode project from `project.yml`
+- **Swift:** Swift 6 toolchain with `swift-testing` support
 
-## Generated files
+## Setup and generated files
 
-Both generators write committed files and have a `--check` mode that the package tests run:
+Fetch the vendor SQLCipher XCFramework once after cloning:
+
+```sh
+apple/ThirdParty/SQLCipher/fetch.sh
+```
+
+Generate design tokens and localized strings from `../shared` (tests run these with `--check`):
 
 ```sh
 python3 apple/Packages/HLDesignSystem/Scripts/generate-design-tokens.py   # tokens.json → colors, text styles, metrics
 python3 apple/Packages/HLLocalization/Scripts/generate-strings.py        # ui-strings.json → String Catalogs, L10n
 ```
 
-Change the catalog in `../shared` (docs first), then run the generator; never edit generated files by hand.
-
-## Generate the Xcode project
+## Generate Xcode project
 
 ```sh
 cd apple && xcodegen generate     # creates HandLive.xcodeproj (not committed, listed in .gitignore)
-# CI and releases use the pinned, checksum-verified XcodeGen: xcodegen="$(Tools/fetch-xcodegen.sh /tmp/xcodegen)"
 open HandLive.xcworkspace
 ```
 
 ## Tests
 
-Tests use swift-testing (`import Testing`) and read `shared/test-vectors/*.json` and `shared/schemas/*.json` through paths relative to the workspace root (the parent directory holding `apple/`, `shared/` and the hub's `docs/`).
+Tests use swift-testing (`import Testing`) and validate against schemas and test vectors in `../shared`:
 
 ```sh
 # With Xcode: uses the Testing module bundled with Xcode
@@ -77,10 +95,6 @@ cd apple/Packages/HLCrypto && HL_SWIFT_TESTING_PACKAGE=1 swift test
 cd apple/Packages/HLMacUI && HL_SWIFT_TESTING_PACKAGE=1 SDKROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX26.sdk swift test
 ```
 
-The app targets build only with Xcode (CI: `xcodebuild build -scheme HandLive` for the Mac and `-scheme HandLiveiOS -destination 'generic/platform=iOS Simulator'` for iPhone and iPad with the extension, unsigned); everything they run lives in the packages. Building the Mac app needs Xcode 26 or later **on macOS 26 or later**: on a macOS 15 host, actool crashes while it renders the Mac icon from `macOS/HandLive/Resources/AppIcon.icon` (CI and the release sign job run on `macos-26`). The built app still runs on macOS 13 and later.
-
-Cross-platform vectors: `HL_WRITE_ROUNDTRIP=1` (in `HLCrypto`) rewrites `shared/test-vectors/envelope-roundtrip-apple.json`; regular test runs always decrypt that file and Android's `envelope-roundtrip.json` when present.
-
 ## Lint
 
 ```sh
@@ -88,6 +102,15 @@ cd apple && swiftlint lint --strict
 # Command Line Tools only: TOOLCHAIN_DIR=/Library/Developer/CommandLineTools swiftlint lint --strict
 ```
 
+## Documentation and community
+
+- [System Architecture](https://github.com/HandLive/handlive/blob/main/docs/system-architecture.md) — System design and security model
+- [Detailed Design](https://github.com/HandLive/handlive/tree/main/docs/detailed-design) — Protocols, formats, and specifications
+- [Deployment Guide](https://github.com/HandLive/handlive/blob/main/docs/deployment-guide.md) — Packaging and distribution guidelines
+- [CONTRIBUTING](https://github.com/HandLive/.github/blob/main/CONTRIBUTING.md) — PR workflow, small commits, and DCO sign-off (`git commit -s`)
+- [SECURITY](https://github.com/HandLive/.github/blob/main/SECURITY.md) — Vulnerability reporting policy
+- [CODE_OF_CONDUCT](https://github.com/HandLive/.github/blob/main/CODE_OF_CONDUCT.md) — Community standards
+
 ## License
 
-Apache License 2.0 — see [LICENSE](LICENSE); the bundled font keeps its own license, listed in [NOTICE](NOTICE). Contributions follow [CONTRIBUTING](https://github.com/HandLive/.github/blob/main/CONTRIBUTING.md) (small commits under a real name, DCO sign-off with `git commit -s`); report vulnerabilities privately as described in [SECURITY](https://github.com/HandLive/.github/blob/main/SECURITY.md).
+Apache License 2.0 — see [LICENSE](LICENSE). Bundled fonts retain their respective upstream licenses, listed in [NOTICE](NOTICE).
