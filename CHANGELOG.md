@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.1] — 2026-10-22
+
 ### Changed
 
 - iPhone and iPad: the App Group is `group.app.hxd.handlive` (was `group.app.handlive`) and the Notification Service
@@ -14,6 +16,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   listed under Keychain Sharing (an App Group name is a keychain access group by itself), and the extension no longer
   claims the Communication Notifications entitlement (Apple grants that capability to the app target only). A beta install updated to
   this build loses its settings and keys and must pair again; the Mac app and Android are unchanged.
+- The Xcode project adopts Xcode 27's recommended settings (user-script sandboxing, dead-code stripping, string
+  catalogs); the design-system package no longer carries its own `AccentColor` set (the app catalogs keep theirs).
+- iPhone: a UI-test target (`HandLiveiOSUITests`) captures the App Store screenshots on the Simulator. Its three seams
+  in the app (`-HLUITestSeedDemoMessages`, `-HLUITestSeedIncomingCall`, `-HLUITestSkipNotificationRequest`) run only
+  under an XCUITest launch argument.
 
 ### Fixed
 
