@@ -87,6 +87,9 @@ extension HLConnectionStatus {
         case .disconnected: self = .networkLost
         case .connected(.lan): self = .connectedWiFi
         case .connected(.relay): self = .connectedInternet
+        // TODO(task #190/S7.1): same placeholder as HLMacUI's AppModel+Link.swift — unreachable on iOS (0.11: no
+        // Bluetooth route here at all), kept only so this switch stays exhaustive.
+        case .connected(.bluetooth): self = .connectedWiFi
         case .phoneOffline:
             let time = lastSeen.map {
                 Date(timeIntervalSince1970: TimeInterval($0) / 1000).formatted(date: .omitted, time: .shortened)

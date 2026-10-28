@@ -8,7 +8,7 @@ import HLTransport
 public protocol CallPeer: Sendable {
     func request<Body: Encodable & Sendable>(_ op: CallEventOp, data: Body, id: String,
                                              timeout: Duration) async throws -> Ack
-    /// `lan` or `relay`: the `via` of the bench lines.
+    /// `lan`, `relay` or `bluetooth`: the `via` of the bench lines (`benchChannel`).
     var route: ConnectionRoute { get }
 }
 

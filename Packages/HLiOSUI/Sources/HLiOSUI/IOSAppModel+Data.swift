@@ -55,7 +55,10 @@ extension IOSAppModel {
                 return .serverUnreachable
             }
         }
-        if let record = pairedDevice, let session = await manager?.currentSession, session.route == .lan {
+        // Direct, immediate notice over a live local session (LAN; no Bluetooth route on iOS, 0.11): a
+        // relay-connected phone already gets the revocation from `api.deleteDevice(revokePairs: true)` above, so
+        // sending it again over the relay session would just be redundant, not more reliable.
+        if let record = pairedDevice, let session = await manager?.currentSession, session.route != .relay {
             _ = try? await session.request(.pair, op: "revoke", data: PairRevokeData(pairId: record.pairId, reason: .reinstall))
         }
         await stopForErasing()

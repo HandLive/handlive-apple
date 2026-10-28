@@ -101,6 +101,12 @@ extension HLConnectionStatus {
         case .disconnected: self = .networkLost
         case .connected(.lan): self = .connectedWiFi
         case .connected(.relay): self = .connectedInternet
+        // TODO(task #190/S7.1): 0.11 wants a distinct "Connected via Bluetooth" string, not yet in the shared
+        // catalog (0.11 line ~1434: "The two Bluetooth strings are new catalog keys (S7.1)"). `.connectedWiFi` is
+        // a placeholder so this switch stays exhaustive — wrong label, must be replaced with a real
+        // `.connectedBluetooth` case once S7.1 adds `status.connected_bluetooth`/`_to`. Unreachable today: no
+        // Bluetooth radio wiring exists yet (M7.1b/c).
+        case .connected(.bluetooth): self = .connectedWiFi
         case .phoneOffline:
             let time = lastSeen.map {
                 Date(timeIntervalSince1970: TimeInterval($0) / 1000).formatted(date: .omitted, time: .shortened)

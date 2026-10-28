@@ -24,7 +24,7 @@ enum CallActionSender {
             attempt += 1
             BenchLog.event("call_action_sent", ["call": request.callId, "env": id, "peer": benchPeer,
                                                 "action": request.action.rawValue,
-                                                "via": current.route == .lan ? "lan" : "relay",
+                                                "via": current.route.benchChannel,
                                                 "attempt": String(attempt)])
             do {
                 return try await current.request(.action, data: request, id: id, timeout: remaining)
