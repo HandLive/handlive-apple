@@ -13,7 +13,11 @@ extension ConnectionManager {
             case .connected: await superviseSession()
             case .connectingRelay: await connectRelay()
             case .waitingPeer: await waitForPeer()
-            case .connectingLAN, .handshaking: apply(.connectionLost)
+            // `.connectingBT` has no handler of its own yet (no radio, M7.1b/c): like `.connectingLAN`/
+            // `.handshaking`, which are resolved synchronously inside `discover()`/`connectRelay()` without the
+            // loop ever seeing them stay set, reaching this case for real would be a bug — back off instead of
+            // spinning.
+            case .connectingLAN, .connectingBT, .handshaking: apply(.connectionLost)
             }
         }
     }
@@ -131,17 +135,18 @@ extension ConnectionManager {
         return .done
     }
 
-    /// A handshake that did not reach `Connected`: backoff per its reaction, pair removal when the phone forgot it. Over
-    /// the relay the phone is not yet authenticated and anyone on the relay path could forge a `session/error` (CONN-03
-    /// E9): `PAIR_UNKNOWN` / `PAIR_REVOKED` only back off (a revocation comes through a signed `pair_revoked` or the
-    /// LAN), and `AUTH_FAILED` / `UNSUPPORTED_VERSION` show their message on the normal schedule.
+    /// A handshake that did not reach `Connected`: backoff per its reaction, pair removal when the phone forgot it. On
+    /// a route where `phoneAuthenticatedByTLS` is false (relay, Bluetooth) the phone is not yet authenticated and
+    /// anyone on that path could forge a `session/error` (CONN-01 E4, CONN-03 E9, CONN-05 E5): `PAIR_UNKNOWN` /
+    /// `PAIR_REVOKED` only back off (a revocation comes through a signed `pair_revoked` or a route where it is true),
+    /// and `AUTH_FAILED` / `UNSUPPORTED_VERSION` show their message on the normal schedule.
     func handshakeFailed(_ error: Error, route: ConnectionRoute) {
         let failure = (error as? SessionEstablishError) ?? .protocolError
         var minProtocol: Int32?
         if case .rejected(_, let min) = failure { minProtocol = min }
         var reaction = failure.reaction
-        if route == .relay, reaction == .removePair { reaction = .backoff }
-        scheduleBackoff(reaction, minProtocol: minProtocol, keepSchedule: route == .relay)
+        if !route.phoneAuthenticatedByTLS, reaction == .removePair { reaction = .backoff }
+        scheduleBackoff(reaction, minProtocol: minProtocol, keepSchedule: !route.phoneAuthenticatedByTLS)
         apply(.handshakeFailed)
         if reaction == .removePair {
             removePair(failure == .rejected(.pairUnknown, minProtocol: nil) ? .unknownToPhone : .revoked)

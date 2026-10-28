@@ -165,7 +165,7 @@ public actor ConnectionManager {
         guard machine.handle(event) else { return }
         var fields: KeyValuePairs<String, String> = ["from": from.benchName, "to": machine.state.benchName]
         if case .connected(let route) = machine.state {
-            fields = ["from": from.benchName, "to": machine.state.benchName, "channel": route == .lan ? "lan" : "relay"]
+            fields = ["from": from.benchName, "to": machine.state.benchName, "channel": route.benchChannel]
         }
         BenchLog.event("state", fields)
         if machine.state != .backoff { nextRetry = nil }

@@ -110,9 +110,11 @@ public actor ControlSession {
         try? await send(.session, op: SessionOp.bye.rawValue, data: SessionByeData(reason: reason))
     }
 
-    /// The `session/bye` a relayed session sends when it ends for `reason`: no close code reaches the phone through the
-    /// relay, so every end from this side says `shutdown` (idle, failed rekey, 4400, a lost E2E ping, relay off…);
-    /// nothing is said when the phone ended it or the channel is already gone (CONN-02 API 4, CONN-03 API 6 logic 7).
+    /// The `session/bye` a relayed or Bluetooth session sends when it ends for `reason`: neither route has a close
+    /// code that reaches the phone (relay: no close code at all, CONN-02 API 4; Bluetooth: "A Bluetooth link has no
+    /// close codes", 0.8.4), so every end from this side says `shutdown` (idle, failed rekey, 4400, a lost E2E
+    /// ping, relay off…); nothing is said when the phone ended it or the channel is already gone (CONN-03 API 6
+    /// logic 7).
     static func relayBye(for reason: SessionEnd) -> SessionByeData.Reason? {
         switch reason {
         case .peerClosed, .peerBye: nil
@@ -156,7 +158,9 @@ public actor ControlSession {
     /// Ends the session once: fails pending requests, stops the loops, closes the channel when asked, reports why.
     func end(_ reason: SessionEnd, closing code: CloseCode?) async {
         guard ending == nil else { return }
-        if route == .relay, let bye = Self.relayBye(for: reason), !byeSent {
+        // Relay and Bluetooth both lack a close code the phone can read (see `relayBye`'s doc) — LAN's WebSocket
+        // close code says why on its own, so only the other two routes need an explicit `bye` first.
+        if route != .lan, let bye = Self.relayBye(for: reason), !byeSent {
             await sendBye(bye) // before `ending`: sealing stops once the session is over
             guard ending == nil else { return }
         }
@@ -174,6 +178,10 @@ public actor ControlSession {
     private func startLoops() {
         loops.append(Task { await self.receiveLoop() })
         loops.append(Task { await self.keepAliveLoop() })
+        // Relay only: the WebSocket ping (`keepAliveLoop`) only reaches the relay server, never the phone, so it
+        // proves nothing about the phone's liveness (`endToEndPingLoop`'s own doc comment). A Bluetooth L2CAP
+        // channel is direct peer-to-peer like the LAN — its `channel.ping()` already round-trips to the real
+        // phone, so `keepAliveLoop` alone is enough; no second, redundant ping loop needed.
         if route == .relay { loops.append(Task { await self.endToEndPingLoop() }) }
     }
 
