@@ -1,4 +1,4 @@
-/// Mã lỗi ứng dụng trong `ack.error.code`, đúng bảng 0.8.1 (mã relay HTTP 0.8.2 không thuộc đây).
+/// Mã lỗi ứng dụng trong `ack.error.code`, đúng bảng 0.8.1 (đủ cả Phase 7 DIRECT_WIFI_UNAVAILABLE; mã relay HTTP 0.8.2 không thuộc đây).
 public enum ErrorCode: String, Codable, CaseIterable, Sendable, LenientStringEnum {
     /// Giá trị từ phiên bản mới hơn mà bên này chưa biết (0.5.1 quy tắc 6); không bao giờ gửi đi.
     case unrecognized = ""
@@ -52,4 +52,5 @@ public enum ErrorCode: String, Codable, CaseIterable, Sendable, LenientStringEnu
     case usbAdbUnavailable = "USB_ADB_UNAVAILABLE"
     case macExtensionNotActive = "MAC_EXTENSION_NOT_ACTIVE"
     case macMicDriverMissing = "MAC_MIC_DRIVER_MISSING"
+    case directWifiUnavailable = "DIRECT_WIFI_UNAVAILABLE"
 }
