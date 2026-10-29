@@ -31,7 +31,7 @@ public actor ConnectionManager {
     var bluetoothPowered = false
     /// The ephemeral private key `BluetoothLinkConnector` uses for `noise1` (0.4.5 step 2) — a real random key
     /// in production; a test overrides it to reproduce a `bt-link.json` vector byte for byte.
-    var bluetoothEphemeralKey: () -> Data = { X25519.generatePrivateKey() }
+    var bluetoothEphemeralKey: @Sendable () -> Data = { X25519.generatePrivateKey() }
     var issue: LinkIssue?
     var nextRetry: Date?
     /// Wait of the next `Backoff`; `nil` waits for a signal only (update required, pair removed).
@@ -180,7 +180,7 @@ public actor ConnectionManager {
     }
 
     /// Overrides `bluetoothEphemeralKey` (a test reproducing a `bt-link.json` vector byte for byte).
-    func setBluetoothEphemeralKey(_ generate: @escaping () -> Data) {
+    func setBluetoothEphemeralKey(_ generate: @escaping @Sendable () -> Data) {
         bluetoothEphemeralKey = generate
     }
 

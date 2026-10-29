@@ -17,7 +17,7 @@ public enum BluetoothLinkConnectError: Error, Equatable, Sendable {
 /// candidate advertiser (`keyConfirmationFailed`, CONN-05 E3) or `Backoff` (`linkRejected`, E4).
 enum BluetoothLinkConnector {
     static func connect(stream: any BluetoothByteStream, psk: Data,
-                        generateEphemeralPrivateKey: @escaping () -> Data = { X25519.generatePrivateKey() })
+                        generateEphemeralPrivateKey: @escaping @Sendable () -> Data = { X25519.generatePrivateKey() })
     async throws -> BluetoothChannel {
         let client = BluetoothLinkSecurityClient(generateEphemeralPrivateKey: generateEphemeralPrivateKey)
         let challenge = try await readPreauthRecord(stream)

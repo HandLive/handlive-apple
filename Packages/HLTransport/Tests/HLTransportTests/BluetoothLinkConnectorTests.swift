@@ -27,13 +27,16 @@ struct BluetoothLinkConnectorTests {
     @Test("a full handshake matches the vector's c1/c2")
     func fullHandshakeMatchesVector() async throws {
         let v = try Self.handshakeVector()
+        let challengeRecord = try v.hex("challenge_record")
+        let noise2Record = try v.hex("noise2_record")
+        let psk = try v.hex("psk")
+        let ePrivC = try v.hex("e_priv_c")
         let (client, peripheral) = FakeBluetoothByteStream.pair()
         Task {
-            try? await Self.servePreauth(peripheral, challengeRecord: v.hex("challenge_record"),
-                                         noise2Record: v.hex("noise2_record"))
+            try? await Self.servePreauth(peripheral, challengeRecord: challengeRecord, noise2Record: noise2Record)
         }
-        let channel = try await BluetoothLinkConnector.connect(stream: client, psk: try v.hex("psk"),
-                                                                generateEphemeralPrivateKey: { try! v.hex("e_priv_c") })
+        let channel = try await BluetoothLinkConnector.connect(stream: client, psk: psk,
+                                                                generateEphemeralPrivateKey: { ePrivC })
         _ = channel // the resulting BluetoothChannel itself is covered by BluetoothChannelTests-style vectors
     }
 
@@ -46,14 +49,16 @@ struct BluetoothLinkConnectorTests {
         let tamperedPayload = try invalid.hex("e_pub_s") + invalid.hex("ciphertext_tag_2")
         let tamperedNoise2 = BtRecordCodec.encode(BtPreauthRecord.encode(kind: BtPreauthRecord.kindNoise2,
                                                                           payload: tamperedPayload))
+        let challengeRecord = try v.hex("challenge_record")
+        let psk = try v.hex("psk")
+        let ePrivC = try v.hex("e_priv_c")
         let (client, peripheral) = FakeBluetoothByteStream.pair()
         Task {
-            try? await Self.servePreauth(peripheral, challengeRecord: v.hex("challenge_record"),
-                                         noise2Record: tamperedNoise2)
+            try? await Self.servePreauth(peripheral, challengeRecord: challengeRecord, noise2Record: tamperedNoise2)
         }
         await #expect(throws: BluetoothLinkConnectError.keyConfirmationFailed) {
-            _ = try await BluetoothLinkConnector.connect(stream: client, psk: try v.hex("psk"),
-                                                          generateEphemeralPrivateKey: { try! v.hex("e_priv_c") })
+            _ = try await BluetoothLinkConnector.connect(stream: client, psk: psk,
+                                                          generateEphemeralPrivateKey: { ePrivC })
         }
     }
 
@@ -61,18 +66,21 @@ struct BluetoothLinkConnectorTests {
     func rejectRecordThrowsKeyConfirmationFailed() async throws {
         let v = try Self.handshakeVector()
         let rejectRecord = BtRecordCodec.encode(BtPreauthRecord.encode(kind: BtPreauthRecord.kindReject))
+        let challengeRecord = try v.hex("challenge_record")
+        let psk = try v.hex("psk")
+        let ePrivC = try v.hex("e_priv_c")
         let (client, peripheral) = FakeBluetoothByteStream.pair()
         Task {
             try? await {
-                try await peripheral.write(v.hex("challenge_record"))
+                try await peripheral.write(challengeRecord)
                 let rlen = BtRecordCodec.decodeRlen(try await peripheral.read(BtRecordCodec.lengthPrefixSize))
                 _ = try await peripheral.read(rlen)
                 try await peripheral.write(rejectRecord)
             }()
         }
         await #expect(throws: BluetoothLinkConnectError.keyConfirmationFailed) {
-            _ = try await BluetoothLinkConnector.connect(stream: client, psk: try v.hex("psk"),
-                                                          generateEphemeralPrivateKey: { try! v.hex("e_priv_c") })
+            _ = try await BluetoothLinkConnector.connect(stream: client, psk: psk,
+                                                          generateEphemeralPrivateKey: { ePrivC })
         }
     }
 

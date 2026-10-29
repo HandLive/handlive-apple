@@ -9,7 +9,8 @@ import HLProtocol
 public final class CoreBluetoothCentral: NSObject, BluetoothCentral, CBCentralManagerDelegate, CBPeripheralDelegate,
                                           @unchecked Sendable {
     /// `BT_SERVICE_UUID` (0.4.5, 00-common-specs 0.10): self-generated 128-bit UUID, not the spike's `0xFEED`.
-    public static let serviceUUID = CBUUID(string: "3b3a01f9-ab27-44a8-bb68-b9b11a488bdb")
+    /// `CBUUID` is non-`Sendable` but this instance is never mutated after creation, so the check is a false positive.
+    public nonisolated(unsafe) static let serviceUUID = CBUUID(string: "3b3a01f9-ab27-44a8-bb68-b9b11a488bdb")
 
     private var manager: CBCentralManager!
     private let lock = NSLock()
