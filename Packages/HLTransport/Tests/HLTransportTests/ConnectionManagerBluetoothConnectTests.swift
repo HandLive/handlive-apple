@@ -130,6 +130,45 @@ struct ConnectionManagerBluetoothConnectTests {
         await setup.manager.stop()
     }
 
+    @Test("No matching peer ever appears: no connect attempt, ordinary backoff on the LAN_DISCOVERY_GRACE schedule (CONN-05 E2)")
+    func noPeerSeenNeverAttemptsAConnection() async throws {
+        let v = try Self.handshakeVector()
+        let setup = await ManagerHarness.make(pair: v.pair)
+        setup.bluetooth.publish(.poweredOn) // no .results ever follows: the phone is out of range, or A-SVC stopped
+
+        await setup.manager.start(phone: setup.phone)
+        #expect(await setup.recorder.waitForState(.backoff) != nil)
+        #expect(setup.bluetooth.openAttempts.isEmpty)
+        await setup.manager.stop()
+    }
+
+    @Test("Bluetooth turning off clears discovered advertisements; turning back on needs a fresh one (0.4.5 E1)")
+    func poweredOffThenOnClearsStaleAdvertisements() async throws {
+        let v = try Self.handshakeVector()
+        let setup = await ManagerHarness.make(pair: v.pair)
+        let hint = Self.currentHint(prk: v.pair.prk)
+        Self.wireWorkingPeripheral(setup, peripheralId: "peripheral-1", v)
+        setup.bluetooth.publish(.poweredOn)
+        setup.bluetooth.publish(.results([BluetoothAdvertisement(
+            peripheralId: "peripheral-1",
+            serviceData: BtAdvertisementServiceData(psm: 23456, hints: [hint]))]))
+
+        await setup.manager.start(phone: setup.phone)
+        #expect(await setup.recorder.waitForState(.connected(.bluetooth)) != nil)
+        #expect(await !setup.manager.matchingBluetoothCandidates().isEmpty)
+
+        setup.bluetooth.publish(.poweredOff)
+        #expect(await waitUntil { await setup.manager.matchingBluetoothCandidates().isEmpty })
+        // The radio turning off is a scanning concern, not a reason to drop an already-open L2CAP session.
+        #expect(await setup.recorder.waitForState(.connected(.bluetooth)) != nil)
+
+        setup.bluetooth.publish(.poweredOn) // no fresh advertisement republished yet
+        try? await Task.sleep(for: .milliseconds(30))
+        #expect(await setup.manager.matchingBluetoothCandidates().isEmpty) // the stale entry must not come back on its own
+
+        await setup.manager.stop()
+    }
+
     @Test("A dropped Bluetooth link ends the session and backs off (CONN-05 E6)")
     func disconnectBacksOff() async throws {
         let v = try Self.handshakeVector()
