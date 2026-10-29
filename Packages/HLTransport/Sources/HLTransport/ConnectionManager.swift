@@ -33,6 +33,8 @@ public actor ConnectionManager {
     /// race, Huy #3613): cancelled and restarted on every event, so the run loop never wakes on a snapshot
     /// still mid-update between two advertisements of the same rotation.
     var bluetoothSignalTask: Task<Void, Never>?
+    /// `false` from each Bluetooth event until `bluetoothSignalTask` fires: no candidate is offered mid-burst.
+    var bluetoothSettled = false
     /// The ephemeral private key `BluetoothLinkConnector` uses for `noise1` (0.4.5 step 2) — a real random key
     /// in production; a test overrides it to reproduce a `bt-link.json` vector byte for byte.
     var bluetoothEphemeralKey: @Sendable () -> Data = { X25519.generatePrivateKey() }
