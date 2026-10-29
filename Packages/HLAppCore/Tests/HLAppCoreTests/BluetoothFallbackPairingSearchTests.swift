@@ -110,6 +110,53 @@ struct BluetoothFallbackPairingSearchTests {
         await #expect(throws: PairingFailure.pinInvalid(attemptsLeft: 0)) { try await outcome.value }
         #expect(await bluetooth.wasCancelled())
     }
+
+    /// Trang's finding (#3932): both legs used to start from the same `attemptsLeft: Int` but decrement it
+    /// independently, so whichever leg lost the race (and got `cancelAll()`-ed) had its spent attempts discarded.
+    /// With one `PinAttemptCounter` shared by reference through `credential.attempts`, a spend survives regardless
+    /// of which side wins or gets cancelled.
+    @Test("Bluetooth already spent two attempts before the LAN's own wrong PIN wins the race: locks out at zero")
+    func bluetoothSpendsTwoThenLANWinsWithTheThird() async throws {
+        let counter = PinAttemptCounter(left: 3)
+        let lan = ScriptedPairingSearching()
+        let bluetooth = ScriptedPairingSearching()
+        let combined = BluetoothFallbackPairingSearch(lan: lan, bluetooth: bluetooth)
+        let identity = try Self.identity()
+        let credential = PairingCredential.pin("482917", attemptsLeft: 3, attempts: counter)
+        let outcome = Task {
+            try await combined.run(identity: identity, credential: credential, offerTimeout: .seconds(1)) { _ in }
+        }
+        #expect(await bluetooth.awaitRun())
+        // Bluetooth's own internal retry (BtPinPairingSearch.search) already tried two wrong candidates on the
+        // shared counter before the LAN found its own wrong PIN and won the race.
+        _ = await counter.spend()
+        _ = await counter.spend()
+        #expect(await lan.awaitRun())
+        await lan.answer(.failure(PairingFailure.pinInvalid(attemptsLeft: await counter.spend())))
+        await #expect(throws: PairingFailure.pinInvalid(attemptsLeft: 0)) { try await outcome.value }
+        #expect(await bluetooth.wasCancelled())
+        #expect(await counter.left == 0)
+    }
+
+    @Test("Bluetooth spends one attempt, then the whole race is cancelled: 2 are still left for the next run")
+    func bluetoothSpendsOneThenTheWholeRaceIsCancelled() async throws {
+        let counter = PinAttemptCounter(left: 3)
+        let lan = ScriptedPairingSearching()
+        let bluetooth = ScriptedPairingSearching()
+        let combined = BluetoothFallbackPairingSearch(lan: lan, bluetooth: bluetooth)
+        let identity = try Self.identity()
+        let credential = PairingCredential.pin("482917", attemptsLeft: 3, attempts: counter)
+        let outcome = Task {
+            try await combined.run(identity: identity, credential: credential, offerTimeout: .seconds(1)) { _ in }
+        }
+        #expect(await bluetooth.awaitRun())
+        _ = await counter.spend() // Bluetooth's own internal retry already cost one attempt.
+        outcome.cancel() // PairingController.stop(): the sheet closes while both legs are still racing.
+        await #expect(throws: CancellationError.self) { try await outcome.value }
+        #expect(await lan.wasCancelled())
+        #expect(await bluetooth.wasCancelled())
+        #expect(await counter.left == 2) // kept for the next run over the same PIN and counter.
+    }
 }
 
 /// A `PairingSearching` the test answers by hand, parallel to `HLMacUITests.ScriptedSearch` (not reusable here:

@@ -200,4 +200,26 @@ struct BtPinPairingSearchTests {
                                      offerTimeout: .seconds(1))
         }
     }
+
+    /// The LAN and Bluetooth race for the same PIN (`BluetoothFallbackPairingSearch`) and share one
+    /// `PinAttemptCounter` (0.4.5 "PIN", C3): a wrong PIN here must spend that shared counter, not a fresh one
+    /// seeded from `attemptsLeft`, or attempts already spent by the LAN would not count (Trang's finding, #3932).
+    @Test("a shared counter already spent by the LAN is what Bluetooth spends from, not a fresh one")
+    func sharedCounterIsSpentInsteadOfAFreshOne() async throws {
+        let central = FakeBluetoothCentral()
+        let phone = FakeBtPinPhone(pin: "482918")
+        central.onOpenChannel(peripheralId: "other-pin") { phone.clientEnd }
+        let served = Task { try await phone.serveAndPair() }
+
+        let shared = PinAttemptCounter(left: 1) // the LAN already spent two of the three attempts
+        var search = BtPinPairingSearch(central: central)
+        search.overallTimeout = .milliseconds(500)
+        central.publish(.results([Self.advertisement("other-pin")]))
+        await #expect(throws: PairingFailure.pinInvalid(attemptsLeft: 0)) {
+            _ = try await search.run(identity: try PairingFixtures.identity(), pin: Self.pin, attemptsLeft: 3,
+                                     attempts: shared, offerTimeout: .seconds(1))
+        }
+        #expect(try await served.value == .rejectedNoise1)
+        #expect(await shared.left == 0)
+    }
 }
