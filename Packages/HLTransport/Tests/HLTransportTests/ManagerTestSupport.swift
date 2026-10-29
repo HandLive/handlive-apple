@@ -156,6 +156,14 @@ actor LinkRecorder {
         return status
     }
 
+    /// The most recent status, unlike `waitForState`, which matches any status in the history.
+    var latestStatus: LinkStatus? {
+        for event in events.reversed() {
+            if case .status(let status) = event { return status }
+        }
+        return nil
+    }
+
     var connectedCount: Int {
         events.filter { if case .connected = $0 { return true } else { return false } }.count
     }

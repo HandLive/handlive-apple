@@ -84,13 +84,15 @@ struct ConnectionManagerBluetoothConnectTests {
         Self.wireWorkingPeripheral(setup, peripheralId: "peripheral-1", v)
 
         let hint = Self.currentHint(prk: v.pair.prk)
-        setup.bluetooth.publish(.poweredOn)
+        // Rotates (0.4.5 "Rotation": new PSM, new advertising set, same `BT_HINT_PERIOD`) before the manager
+        // ever looks: only the latest snapshot must ever reach `openChannel`. `.poweredOn` comes last because
+        // the manager's loop may act between two events the watcher drains, so a candidate only becomes usable
+        // once both snapshots have been seen.
         setup.bluetooth.publish(.results([BluetoothAdvertisement(
             peripheralId: "peripheral-1", serviceData: BtAdvertisementServiceData(psm: 11111, hints: [hint]))]))
-        // Rotates (0.4.5 "Rotation": new PSM, new advertising set, same `BT_HINT_PERIOD`) before the manager
-        // ever looks: only the latest snapshot must ever reach `openChannel`.
         setup.bluetooth.publish(.results([BluetoothAdvertisement(
             peripheralId: "peripheral-1", serviceData: BtAdvertisementServiceData(psm: 22222, hints: [hint]))]))
+        setup.bluetooth.publish(.poweredOn)
 
         await setup.manager.start(phone: setup.phone)
         #expect(await setup.recorder.waitForState(.connected(.bluetooth)) != nil)
@@ -146,6 +148,7 @@ struct ConnectionManagerBluetoothConnectTests {
     func poweredOffThenOnClearsStaleAdvertisements() async throws {
         let v = try Self.handshakeVector()
         let setup = await ManagerHarness.make(pair: v.pair)
+        await setup.manager.setBluetoothEphemeralKey { v.ePrivC }
         let hint = Self.currentHint(prk: v.pair.prk)
         Self.wireWorkingPeripheral(setup, peripheralId: "peripheral-1", v)
         setup.bluetooth.publish(.poweredOn)
@@ -159,8 +162,10 @@ struct ConnectionManagerBluetoothConnectTests {
 
         setup.bluetooth.publish(.poweredOff)
         #expect(await waitUntil { await setup.manager.matchingBluetoothCandidates().isEmpty })
-        // The radio turning off is a scanning concern, not a reason to drop an already-open L2CAP session.
-        #expect(await setup.recorder.waitForState(.connected(.bluetooth)) != nil)
+        // The radio turning off is a scanning concern, not a reason to drop an already-open L2CAP session:
+        // the latest status, not just one in the history, must still be Connected.
+        try? await Task.sleep(for: .milliseconds(30))
+        #expect(await setup.recorder.latestStatus?.state == .connected(.bluetooth))
 
         setup.bluetooth.publish(.poweredOn) // no fresh advertisement republished yet
         try? await Task.sleep(for: .milliseconds(30))
