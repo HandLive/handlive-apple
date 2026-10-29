@@ -4,8 +4,9 @@ import HLProtocol
 
 /// `BluetoothCentral` over real CoreBluetooth (0.4.5 "Roles": M-APP is the central) — scans for
 /// `BT_SERVICE_UUID`, reads the PSM and hints from the scan response, and opens L2CAP channels on request.
-/// **Not measured on a real device yet** (M7.1c Gói B): `NSBluetoothAlwaysUsageDescription` is M7.7a's, so
-/// `CBCentralManager` cannot even start scanning on the Mac until that Info.plist entry lands.
+/// **Not measured on a real device yet** (M7.1c Gói B): macOS/Info.plist already carries
+/// `NSBluetoothAlwaysUsageDescription`; the status line, "Open Settings" button and primer for a denied or
+/// off radio are M7.7a's (0.4.5/SET-03 B1 UI, tracked separately from this transport-layer central).
 public final class CoreBluetoothCentral: NSObject, BluetoothCentral, CBCentralManagerDelegate, CBPeripheralDelegate,
                                           @unchecked Sendable {
     /// `BT_SERVICE_UUID` (0.4.5, 00-common-specs 0.10): self-generated 128-bit UUID, not the spike's `0xFEED`.

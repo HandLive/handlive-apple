@@ -4,6 +4,8 @@
 <dict>
 	<key>NSAppleEventsUsageDescription</key>
 	<string>HandLive reads the address of the page open in your browser so you can continue on your phone.</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>HandLive uses Bluetooth to connect to your Android phone when neither device has network access.</string>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_handlive._tcp</string>
