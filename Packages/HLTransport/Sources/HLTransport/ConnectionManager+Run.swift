@@ -27,9 +27,19 @@ extension ConnectionManager {
     // MARK: - Idle
 
     private func stayIdle(_ reason: IdleReason) async {
-        if phone == nil || !networkUp || sleeping {
-            if phone != nil && !networkUp { apply(.networkLost) }
+        guard let phone, !sleeping else {
             _ = await signals.next(timeout: nil)
+            return
+        }
+        if !networkUp {
+            // 0.11 "start without a network when Bluetooth is usable": LAN/relay need a network, but a
+            // Bluetooth candidate connects at once (CONN-05) — only wait idle when none is in sight yet.
+            guard matchingBluetoothCandidates().first != nil else {
+                _ = await signals.next(timeout: nil)
+                return
+            }
+            apply(.bluetoothInstanceFound)
+            await connectBluetooth(phone: phone)
             return
         }
         if reason == .needsRepair {
@@ -59,6 +69,13 @@ extension ConnectionManager {
                 let allMismatched = matching.allSatisfy { mismatched.contains($0.name) }
                 if afterCandidate(result, allMismatched: allMismatched) { return }
                 continue
+            }
+            // CONN-05 step 4: "Priority LAN > Bluetooth... otherwise the Bluetooth candidate is connected at
+            // once" — tried only once no (untried) LAN candidate is in sight, never waits for the LAN grace.
+            if matchingBluetoothCandidates().first != nil {
+                apply(.bluetoothInstanceFound)
+                await connectBluetooth(phone: phone)
+                return
             }
             let remaining = ContinuousClock.now.duration(to: deadline)
             guard remaining > .zero else { return graceElapsed() }

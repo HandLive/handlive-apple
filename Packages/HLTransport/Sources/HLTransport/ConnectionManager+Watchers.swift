@@ -53,4 +53,28 @@ extension ConnectionManager {
         else { return [] }
         return discovered.filter { $0.speaksProtocolV1 && DiscoveryHint.matches(txtValue: $0.hints, accepted: hints) }
     }
+
+    func watchBluetoothCentral() async {
+        for await event in bluetooth.events() {
+            switch event {
+            case .poweredOn:
+                bluetoothPowered = true
+                signals.post(.bluetooth)
+            case .poweredOff:
+                bluetoothPowered = false
+                bluetoothDiscovered = []
+            case .results(let advertisements):
+                bluetoothDiscovered = advertisements
+                signals.post(.bluetooth)
+            }
+        }
+    }
+
+    /// Advertisements whose hint matches the pair in the epoch window `e − 4`…`e + 4` (0.4.5 "Advertisement",
+    /// CONN-05 step 3); empty whenever the radio is off (E1).
+    func matchingBluetoothCandidates() -> [BluetoothAdvertisement] {
+        guard bluetoothPowered, let phone else { return [] }
+        let accepted = BtAdvertisementHint.acceptedHints(prk: phone.pair.prk, nowMs: HLUUID.currentTimeMs())
+        return bluetoothDiscovered.filter { BtAdvertisementHint.matches(advertised: $0.serviceData.hints, accepted: accepted) }
+    }
 }
