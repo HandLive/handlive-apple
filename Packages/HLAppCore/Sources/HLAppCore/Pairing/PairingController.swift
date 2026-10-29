@@ -67,7 +67,9 @@ public final class PairingController: ObservableObject {
     private var generation = 0
 
     public init(host: any PairingHost,
-                search: any PairingSearching = PairingSearch(discovery: BonjourDiscovery(), connector: WebSocketConnector()),
+                search: any PairingSearching = BluetoothFallbackPairingSearch(
+                    lan: PairingSearch(discovery: BonjourDiscovery(), connector: WebSocketConnector()),
+                    bluetooth: BluetoothPairingSearch(central: ConnectionManager.defaultBluetoothCentral())),
                 lifetime: Duration = PairingCodes.lifetime, onPaired: @escaping @MainActor (String) -> Void) {
         self.host = host
         self.search = search
@@ -245,5 +247,4 @@ public final class PairingController: ObservableObject {
             startSearch()
         }
     }
-
 }
