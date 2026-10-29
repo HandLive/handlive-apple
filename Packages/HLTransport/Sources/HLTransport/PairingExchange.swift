@@ -74,6 +74,8 @@ public struct PairingExchange: Sendable {
             // Argon2id, 64 MiB: on a Dispatch worker, off the cooperative pool.
             secret = await PairingAuthDerivation.pinKeyOffPool(pin: pin, clientNonce: clientNonce,
                                                                serverNonce: fields.nonce, parameters: pinParameters)
+        case .bluetoothPIN(let key):
+            secret = key
         }
         let client = PairingParty(deviceId: identity.deviceId, nonce: clientNonce,
                                   signingPublicKey: identity.signingPublicKey, dhPublicKey: identity.dhPublicKey,

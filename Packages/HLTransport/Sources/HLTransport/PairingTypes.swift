@@ -34,11 +34,15 @@ public enum PairingCredential: Sendable, Equatable {
     case qr(secret: Data, rendezvous: PairingRendezvous? = nil)
     /// `attemptsLeft` counts this attempt: 3 for a new PIN; a wrong PIN leaves one fewer (E7).
     case pin(String, attemptsLeft: Int)
+    /// Flow C over Bluetooth (PAIR-01 C3): `K_bt_pin` from the channel's CPace `ISK`, in place of the Argon2id
+    /// `K_pin`. `pair/hello` says `mode = "pin"`; a wrong PIN already failed the link handshake before this runs
+    /// (`BtPinPairingSearch`), so a bad `mac` here is `AUTH_FAILED`, not `PIN_INVALID`. Never used on the LAN.
+    case bluetoothPIN(key: Data)
 
     var mode: PairHelloData.Mode {
         switch self {
         case .qr: .qr
-        case .pin: .pin
+        case .pin, .bluetoothPIN: .pin
         }
     }
 }

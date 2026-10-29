@@ -41,7 +41,7 @@ enum BluetoothLinkConnector {
     }
 
     /// `rlen` (checked against `BT_PREAUTH_RECORD_MAX` before allocating, review #165) then the pre-auth body.
-    private static func readPreauthRecord(_ stream: any BluetoothByteStream) async throws -> BtPreauthRecord.Decoded {
+    static func readPreauthRecord(_ stream: any BluetoothByteStream) async throws -> BtPreauthRecord.Decoded {
         do {
             let rlen = BtRecordCodec.decodeRlen(try await stream.read(BtRecordCodec.lengthPrefixSize))
             try BtRecordCodec.requireWithinBound(rlen, maxBodySize: BtLinkConstants.preauthRecordMax)

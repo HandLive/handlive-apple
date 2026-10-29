@@ -181,6 +181,8 @@ public struct PairingSearch: PairingSearching {
             return { $0.speaksProtocolV1 && $0.pairingKeyHash?.lowercased() == hint }
         case .pin:
             return { $0.speaksProtocolV1 && $0.pinPairingOpen }
+        case .bluetoothPIN:
+            return { _ in false }
         }
     }
 
@@ -194,6 +196,8 @@ public struct PairingSearch: PairingSearching {
             return { $0.speaksProtocolV1 && $0.pairingKeyHash == nil }
         case .pin:
             return { $0.speaksProtocolV1 && $0.txt["pm"] == nil }
+        case .bluetoothPIN:
+            return { _ in false }
         }
     }
 }
