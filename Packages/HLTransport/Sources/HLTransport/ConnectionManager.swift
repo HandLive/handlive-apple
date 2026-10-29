@@ -29,11 +29,12 @@ public actor ConnectionManager {
     var bluetoothDiscovered: [BluetoothAdvertisement] = []
     /// Whether the radio is on (0.4.5 E1); no advertisement is ever a candidate while it isn't.
     var bluetoothPowered = false
-    /// Debounces a burst of `watchBluetoothCentral()` events into one `.bluetooth` signal (CONN-05 rotation
-    /// race, Huy #3613): cancelled and restarted on every event, so the run loop never wakes on a snapshot
-    /// still mid-update between two advertisements of the same rotation.
+    /// Coalesces a burst of `watchBluetoothCentral()` events into one `.bluetooth` signal: cancelled and
+    /// restarted on every event, so the signal only fires once the burst has quieted down.
     var bluetoothSignalTask: Task<Void, Never>?
-    /// `false` from each Bluetooth event until `bluetoothSignalTask` fires: no candidate is offered mid-burst.
+    /// `false` from each Bluetooth event until `bluetoothSignalTask` fires uncancelled: the actual guard against
+    /// `matchingBluetoothCandidates()` returning a snapshot still mid-rotation, independent of what woke the run
+    /// loop (`.bluetooth`, `.network`, or entering `.discovering`/`.idle` on its own).
     var bluetoothSettled = false
     /// The ephemeral private key `BluetoothLinkConnector` uses for `noise1` (0.4.5 step 2) — a real random key
     /// in production; a test overrides it to reproduce a `bt-link.json` vector byte for byte.
