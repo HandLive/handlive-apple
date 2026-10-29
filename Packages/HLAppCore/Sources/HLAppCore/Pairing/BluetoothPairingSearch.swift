@@ -20,10 +20,11 @@ public struct BluetoothPairingSearch: PairingSearching {
             var search = BtQrPairingSearch(central: central)
             search.overallTimeout = overallTimeout
             return try await search.run(identity: identity, pairingSecret: secret, offerTimeout: offerTimeout)
-        case .pin(let pin, let attemptsLeft):
+        case .pin(let pin, let attemptsLeft, let attempts):
             var search = BtPinPairingSearch(central: central)
             search.overallTimeout = overallTimeout
-            return try await search.run(identity: identity, pin: pin, attemptsLeft: attemptsLeft, offerTimeout: offerTimeout)
+            return try await search.run(identity: identity, pin: pin, attemptsLeft: attemptsLeft, attempts: attempts,
+                                        offerTimeout: offerTimeout)
         case .bluetoothPIN:
             // `PairingController` never holds this as its own credential: it is `BtPinPairingSearch`'s own internal
             // representation, built only after a Bluetooth PIN link has already secured (0.4.5 "PIN").

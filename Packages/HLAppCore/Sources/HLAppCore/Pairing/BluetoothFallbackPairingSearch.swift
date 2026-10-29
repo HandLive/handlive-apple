@@ -7,9 +7,14 @@ import HLTransport
 /// in practice the LAN is almost always faster to discover and connect once reachable, so racing already gives it
 /// that edge without a separate precedence check.
 ///
-/// A PIN's `attemptsLeft` is shared across both transports (0.4.5 "PIN", C3): since both sides start from the same
-/// `credential`, a wrong PIN on *either* one throws the same `PairingFailure.pinInvalid(attemptsLeft:)`
-/// `PairingController` already knows how to act on, with no extra bookkeeping needed here.
+/// A PIN's attempt budget is shared across both transports (0.4.5 "PIN", C3) through one `PinAttemptCounter`
+/// actor attached to `credential.pin`'s `attempts` (`PairingController` creates it once per PIN): both `lan` and
+/// `bluetooth` receive the very same `credential` value, hence the same counter reference, so a wrong PIN on
+/// *either* one spends from the one pool. That is what makes `cancelAll()` below safe to call on the losing
+/// side: whatever it already spent is already committed to the shared actor, not held only in a thrown error that
+/// is about to be discarded — the finding Trang raised when this used to be a plain `attemptsLeft: Int` copied
+/// to each side (#3932). The winner still throws `PairingFailure.pinInvalid(attemptsLeft:)` the same way
+/// `PairingController` always knew how to act on; only where that number comes from changed.
 public struct BluetoothFallbackPairingSearch: PairingSearching {
     public let lan: any PairingSearching
     public let bluetooth: any PairingSearching

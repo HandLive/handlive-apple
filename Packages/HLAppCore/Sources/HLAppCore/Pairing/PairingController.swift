@@ -163,7 +163,7 @@ public final class PairingController: ObservableObject {
             }
         case .pin:
             pin = PairingCodes.newPIN()
-            credential = .pin(pin, attemptsLeft: Self.pinAttempts)
+            credential = .pin(pin, attemptsLeft: Self.pinAttempts, attempts: PinAttemptCounter(left: Self.pinAttempts))
             qrURI = ""
             startSearch()
         }
@@ -237,7 +237,7 @@ public final class PairingController: ObservableObject {
             notice = .insecure
             newCode()
         case PairingFailure.pinInvalid(let attemptsLeft) where attemptsLeft > 0:
-            credential = .pin(pin, attemptsLeft: attemptsLeft)
+            credential = .pin(pin, attemptsLeft: attemptsLeft, attempts: credential?.pinAttemptsCounter)
             startSearch()
         case PairingFailure.pinInvalid:
             newCode() // E7: a new PIN after the third wrong one

@@ -38,12 +38,16 @@ public struct BtPinPairingSearch: Sendable {
     }
 
     /// `pin`: the six digits shown on this Mac. `attemptsLeft` counts this search's first attempt, as in
-    /// `PairingCredential.pin` (3 for a new PIN). Throws `BtPinPairingSearchError.timedOut`,
+    /// `PairingCredential.pin` (3 for a new PIN), and seeds a fresh counter when `attempts` is `nil`. `attempts`,
+    /// when given, is the counter `BluetoothFallbackPairingSearch` also hands to the LAN side for the same PIN
+    /// (`PairingCredential.pin`'s `attempts`): every wrong guess here spends it directly, so attempts already
+    /// spent on the other transport count too (C3). Throws `BtPinPairingSearchError.timedOut`,
     /// `PairingFailure.pinInvalid(attemptsLeft:)`, or what `PairingExchange.run` throws once a link has secured (that
     /// link holds the PIN window, 0.4.5 "Pairing link", so it is not retried on another candidate).
-    public func run(identity: PairingIdentity, pin: String, attemptsLeft: Int,
+    public func run(identity: PairingIdentity, pin: String, attemptsLeft: Int, attempts: PinAttemptCounter? = nil,
                     offerTimeout: Duration) async throws -> PairingResult {
-        let attempts = PinAttemptCounter(left: attemptsLeft)
+        let attempts = attempts ?? PinAttemptCounter(left: attemptsLeft)
+        let before = await attempts.left
         do {
             return try await withThrowingTaskGroup(of: PairingResult.self) { group in
                 group.addTask {
@@ -59,7 +63,7 @@ public struct BtPinPairingSearch: Sendable {
             }
         } catch BtPinPairingSearchError.timedOut {
             let left = await attempts.left
-            if left < attemptsLeft { throw PairingFailure.pinInvalid(attemptsLeft: left) }
+            if left < before { throw PairingFailure.pinInvalid(attemptsLeft: left) }
             throw BtPinPairingSearchError.timedOut
         }
     }
@@ -104,21 +108,6 @@ public struct BtPinPairingSearch: Sendable {
         if case .secured = outcome { return outcome }
         await stream.close()
         return outcome
-    }
-}
-
-/// One PIN window's failed-attempt counter for the duration of a search (C3).
-actor PinAttemptCounter {
-    private(set) var left: Int
-
-    init(left: Int) {
-        self.left = left
-    }
-
-    /// Spends one attempt and returns what is left.
-    func spend() -> Int {
-        left = max(left - 1, 0)
-        return left
     }
 }
 

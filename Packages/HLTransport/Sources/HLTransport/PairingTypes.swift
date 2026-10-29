@@ -29,11 +29,15 @@ public struct PairingIdentity: Sendable {
 }
 
 /// What authenticates the exchange: the QR code's `pairing_secret`, or the PIN shown on this device (A1–A5).
-public enum PairingCredential: Sendable, Equatable {
+public enum PairingCredential: Sendable {
     /// With a rendezvous joined on the relay, the QR code carries its `rv` and the phone may pair through it (P2).
     case qr(secret: Data, rendezvous: PairingRendezvous? = nil)
-    /// `attemptsLeft` counts this attempt: 3 for a new PIN; a wrong PIN leaves one fewer (E7).
-    case pin(String, attemptsLeft: Int)
+    /// `attemptsLeft` counts this attempt: 3 for a new PIN; a wrong PIN leaves one fewer (E7). `attempts`, when
+    /// set (`PairingController`, via `BluetoothFallbackPairingSearch`), is the counter the LAN exchange and the
+    /// Bluetooth search actually spend from in common (C3): `attemptsLeft` alone is a snapshot that can go stale
+    /// once the other transport also spends from the same counter, so code that enforces the limit must prefer
+    /// `attempts` over `attemptsLeft` whenever it is present (Trang's finding, #3932).
+    case pin(String, attemptsLeft: Int, attempts: PinAttemptCounter? = nil)
     /// Flow C over Bluetooth (PAIR-01 C3): `K_bt_pin` from the channel's CPace `ISK`, in place of the Argon2id
     /// `K_pin`. `pair/hello` says `mode = "pin"`; a wrong PIN already failed the link handshake before this runs
     /// (`BtPinPairingSearch`), so a bad `mac` here is `AUTH_FAILED`, not `PIN_INVALID`. Never used on the LAN.
@@ -43,6 +47,30 @@ public enum PairingCredential: Sendable, Equatable {
         switch self {
         case .qr: .qr
         case .pin, .bluetoothPIN: .pin
+        }
+    }
+
+    /// `.pin`'s shared attempt counter, if any (`PairingController` reattaches it to the next round's credential).
+    public var pinAttemptsCounter: PinAttemptCounter? {
+        if case .pin(_, _, let attempts) = self { return attempts }
+        return nil
+    }
+}
+
+/// Compares `pin`'s `attemptsLeft` snapshot only: `attempts`, when attached, is a shared actor identified by
+/// reference, not by value, and is never part of what makes two credentials "the same" (tests build `.pin` values
+/// without it to assert against what `PairingController` produced with one attached).
+extension PairingCredential: Equatable {
+    public static func == (lhs: PairingCredential, rhs: PairingCredential) -> Bool {
+        switch (lhs, rhs) {
+        case (.qr(let lSecret, let lRendezvous), .qr(let rSecret, let rRendezvous)):
+            return lSecret == rSecret && lRendezvous == rRendezvous
+        case (.pin(let lPin, let lLeft, _), .pin(let rPin, let rLeft, _)):
+            return lPin == rPin && lLeft == rLeft
+        case (.bluetoothPIN(let lKey), .bluetoothPIN(let rKey)):
+            return lKey == rKey
+        default:
+            return false
         }
     }
 }

@@ -70,7 +70,7 @@ public struct PairingExchange: Sendable {
         switch credential {
         case .qr(let pairingSecret, _):
             secret = pairingSecret
-        case .pin(let pin, _):
+        case .pin(let pin, _, _):
             // Argon2id, 64 MiB: on a Dispatch worker, off the cooperative pool.
             secret = await PairingAuthDerivation.pinKeyOffPool(pin: pin, clientNonce: clientNonce,
                                                                serverNonce: fields.nonce, parameters: pinParameters)
@@ -90,8 +90,7 @@ public struct PairingExchange: Sendable {
         let authKey = PairingAuthDerivation.authKey(secret: secret, clientNonce: clientNonce, serverNonce: fields.nonce)
         let expected = PairingAuthDerivation.offerMac(authKey: authKey, transcript: transcript)
         guard HMACSHA256.constantTimeEquals(expected, fields.mac) else {
-            if case .pin(_, let attemptsLeft) = credential { throw PairingRefusal.wrongPIN(attemptsLeft: attemptsLeft - 1) }
-            throw PairingRefusal.authFailed(.offerMac)
+            throw await wrongOfferMacRefusal()
         }
         guard DeviceIdentity.matches(deviceId: offer.deviceId, signingPublicKey: fields.signingKey) else {
             throw PairingRefusal.authFailed(.offerDeviceId)
@@ -106,6 +105,19 @@ public struct PairingExchange: Sendable {
             throw PairingRefusal.authFailed(.malformed)
         }
         return AcceptedOffer(offer: offer, fields: fields, authKey: authKey, transcript: transcript, prk: prk)
+    }
+
+    /// A wrong offer MAC with a `.pin` credential spends the PIN's attempt budget (API 3 logic 3, C3): `attempts`,
+    /// when the credential carries one, is the counter Bluetooth spends from too, so it is what is actually left
+    /// — `attemptsLeft` alone can go stale once the other transport also spends from it (Trang's finding, #3932).
+    private func wrongOfferMacRefusal() async -> PairingRefusal {
+        guard case .pin(_, let attemptsLeft, let attempts) = credential else {
+            return .authFailed(.offerMac)
+        }
+        guard let attempts else {
+            return .wrongPIN(attemptsLeft: attemptsLeft - 1)
+        }
+        return .wrongPIN(attemptsLeft: await attempts.spend())
     }
 }
 
