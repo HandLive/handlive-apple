@@ -29,6 +29,10 @@ public actor ConnectionManager {
     var bluetoothDiscovered: [BluetoothAdvertisement] = []
     /// Whether the radio is on (0.4.5 E1); no advertisement is ever a candidate while it isn't.
     var bluetoothPowered = false
+    /// Debounces a burst of `watchBluetoothCentral()` events into one `.bluetooth` signal (CONN-05 rotation
+    /// race, Huy #3613): cancelled and restarted on every event, so the run loop never wakes on a snapshot
+    /// still mid-update between two advertisements of the same rotation.
+    var bluetoothSignalTask: Task<Void, Never>?
     /// The ephemeral private key `BluetoothLinkConnector` uses for `noise1` (0.4.5 step 2) — a real random key
     /// in production; a test overrides it to reproduce a `bt-link.json` vector byte for byte.
     var bluetoothEphemeralKey: @Sendable () -> Data = { X25519.generatePrivateKey() }
@@ -93,6 +97,8 @@ public actor ConnectionManager {
     public func stop() async {
         workers.forEach { $0.cancel() }
         workers.removeAll()
+        bluetoothSignalTask?.cancel()
+        bluetoothSignalTask = nil
         await session?.close(bye: .shutdown)
         session = nil
         await closeRelay()

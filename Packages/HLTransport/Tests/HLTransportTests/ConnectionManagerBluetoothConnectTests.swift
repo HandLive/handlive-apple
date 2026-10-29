@@ -84,15 +84,14 @@ struct ConnectionManagerBluetoothConnectTests {
         Self.wireWorkingPeripheral(setup, peripheralId: "peripheral-1", v)
 
         let hint = Self.currentHint(prk: v.pair.prk)
-        // Rotates (0.4.5 "Rotation": new PSM, new advertising set, same `BT_HINT_PERIOD`) before the manager
-        // ever looks: only the latest snapshot must ever reach `openChannel`. `.poweredOn` comes last because
-        // the manager's loop may act between two events the watcher drains, so a candidate only becomes usable
-        // once both snapshots have been seen.
+        // Real order: CoreBluetooth never reports a scan result while the radio is off, so `.poweredOn` comes
+        // first. Rotates right after (0.4.5 "Rotation": new PSM, new advertising set, same `BT_HINT_PERIOD`) —
+        // only the latest snapshot must ever reach `openChannel`, never the one from mid-rotation.
+        setup.bluetooth.publish(.poweredOn)
         setup.bluetooth.publish(.results([BluetoothAdvertisement(
             peripheralId: "peripheral-1", serviceData: BtAdvertisementServiceData(psm: 11111, hints: [hint]))]))
         setup.bluetooth.publish(.results([BluetoothAdvertisement(
             peripheralId: "peripheral-1", serviceData: BtAdvertisementServiceData(psm: 22222, hints: [hint]))]))
-        setup.bluetooth.publish(.poweredOn)
 
         await setup.manager.start(phone: setup.phone)
         #expect(await setup.recorder.waitForState(.connected(.bluetooth)) != nil)

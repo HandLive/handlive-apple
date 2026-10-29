@@ -59,14 +59,32 @@ extension ConnectionManager {
             switch event {
             case .poweredOn:
                 bluetoothPowered = true
-                signals.post(.bluetooth)
+                scheduleBluetoothSignal()
             case .poweredOff:
                 bluetoothPowered = false
                 bluetoothDiscovered = []
+                bluetoothSignalTask?.cancel()
+                bluetoothSignalTask = nil
             case .results(let advertisements):
                 bluetoothDiscovered = advertisements
-                signals.post(.bluetooth)
+                scheduleBluetoothSignal()
             }
+        }
+    }
+
+    /// Coalesces a burst of `bluetooth.events()` into one `.bluetooth` signal: CoreBluetooth can fire
+    /// `didDiscover` again right after a rotation (0.4.5 "Rotation" — new PSM, new advertising set, same
+    /// `BT_HINT_PERIOD`), and `ConnectionManager` is an actor with `watchBluetoothCentral()` and `run()` as two
+    /// separate tasks, so posting on every event risked the run loop reading `bluetoothDiscovered` between two
+    /// advertisements of the same rotation and opening the stale PSM (Huy #3613). Restarting this task on every
+    /// event means the signal only fires once the burst has quieted down, by which point `bluetoothDiscovered`
+    /// already holds the latest snapshot.
+    private func scheduleBluetoothSignal() {
+        bluetoothSignalTask?.cancel()
+        bluetoothSignalTask = Task { [signals] in
+            try? await Task.sleep(for: .milliseconds(20))
+            if Task.isCancelled { return }
+            signals.post(.bluetooth)
         }
     }
 
