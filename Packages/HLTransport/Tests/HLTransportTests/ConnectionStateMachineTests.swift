@@ -58,8 +58,29 @@ struct ConnectionStateMachineTests {
         Edge(from: .waitingPeer, event: .lanAvailable, to: .discovering),
     ]
 
+    /// Bluetooth edges of P7 (0.11, task #190): a candidate connects at once (no `LAN_DISCOVERY_GRACE` wait, unlike
+    /// the relay — "route relay giữ nguyên, xếp cuối"), the link-security handshake, pairing ending with the link
+    /// kept, and the upgrade to the LAN once it is found (same rule as the relay's upgrade edge above).
+    static let bluetoothEdges: [Edge] = [
+        Edge(from: .discovering, event: .bluetoothInstanceFound, to: .connectingBT),
+        Edge(from: .idle(.noNetwork), event: .bluetoothInstanceFound, to: .connectingBT),
+        Edge(from: .connectingBT, event: .linkSecurityVerified, to: .handshaking(.bluetooth)),
+        Edge(from: .connectingBT, event: .bluetoothConnectFailed, to: .backoff),
+        Edge(from: .idle(.notPaired), event: .bluetoothPairingLinkKept, to: .handshaking(.bluetooth)),
+        Edge(from: .handshaking(.bluetooth), event: .handshakeSucceeded, to: .connected(.bluetooth)),
+        Edge(from: .connected(.bluetooth), event: .lanAvailable, to: .connectingLAN),
+    ]
+
     @Test("Relay edges of CONN-03 E8 and the return to the LAN", arguments: relayEdges)
     func relayEdge(_ edge: Edge) {
+        var machine = ConnectionStateMachine(state: edge.from)
+        let changed = machine.handle(edge.event)
+        #expect(changed)
+        #expect(machine.state == edge.to)
+    }
+
+    @Test("Bluetooth edges of P7 (0.11, task #190)", arguments: bluetoothEdges)
+    func bluetoothEdge(_ edge: Edge) {
         var machine = ConnectionStateMachine(state: edge.from)
         let changed = machine.handle(edge.event)
         #expect(changed)
@@ -96,6 +117,9 @@ struct ConnectionStateMachineTests {
             (.discovering, .tlsPinMismatch),
             (.handshaking(.relay), .relayFailed),
             (.idle(.notPaired), .unpaired),
+            // 0.11 "Start and loss": a session over Bluetooth is not a LAN or relay session, so losing the
+            // network does not touch it (task #190).
+            (.connected(.bluetooth), .networkLost),
         ]
         for (state, event) in ignored {
             var machine = ConnectionStateMachine(state: state)
@@ -147,6 +171,15 @@ struct ConnectionStateMachineTests {
         #expect(ConnectionStatus(.waitingPeer) == .phoneOffline)
         #expect(ConnectionStatus(.connected(.lan)) == .connected(.lan))
         #expect(ConnectionStatus(.connected(.relay)) == .connected(.relay))
+        #expect(ConnectionStatus(.connectingBT) == .connecting)
+        #expect(ConnectionStatus(.connected(.bluetooth)) == .connected(.bluetooth))
+    }
+
+    @Test("Pre-authentication rule by route (0.11 AC8): true only for lan")
+    func phoneAuthenticatedByTLS() {
+        #expect(ConnectionRoute.lan.phoneAuthenticatedByTLS)
+        #expect(!ConnectionRoute.relay.phoneAuthenticatedByTLS)
+        #expect(!ConnectionRoute.bluetooth.phoneAuthenticatedByTLS)
     }
 
     @Test("Client reaction to close codes 4401, 4403, 4409, 4410, 4411, 4426, 4429")

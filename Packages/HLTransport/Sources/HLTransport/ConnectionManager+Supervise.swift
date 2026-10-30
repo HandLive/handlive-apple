@@ -10,7 +10,9 @@ extension ConnectionManager {
 
     func superviseSession() async {
         guard let current = session else { return apply(.connectionLost) }
-        let upgradeIn = current.route == .relay ? Self.upgradeRecheck : nil
+        // Recheck for a LAN upgrade on a timer for either non-LAN route (0.11 "Connected --> ConnectingLAN: on the
+        // relay or Bluetooth and the LAN is found").
+        let upgradeIn = current.route != .lan ? Self.upgradeRecheck : nil
         let resetIn = backoffResetAt.map { ContinuousClock.now.duration(to: $0) }
         let signal = await signals.next(timeout: [upgradeIn, resetIn].compactMap { $0 }.min())
         let resetDue = resetBackoffIfStable()
@@ -26,10 +28,10 @@ extension ConnectionManager {
         case .network?:
             await networkChanged(current)
         case .discovery?:
-            if current.route == .relay { await upgradeToLAN(from: current) }
+            if current.route != .lan { await upgradeToLAN(from: current) }
         case .relay(let event)?:
             await relayEventWhileConnected(event, current)
-        case nil where current.route == .relay && !resetDue:
+        case nil where current.route != .lan && !resetDue:
             upgradeTried.removeAll()
             await upgradeToLAN(from: current)
         default:
@@ -48,6 +50,10 @@ extension ConnectionManager {
 
     private func networkChanged(_ current: ControlSession) async {
         guard networkUp else {
+            // A session over Bluetooth is not a LAN or relay session: losing the network does not end it (0.11
+            // "Start and loss", CONN-05 E11) — the FSM already ignores `.networkLost` while `connected(.bluetooth)`,
+            // but this method must not tear the live session down on its own either.
+            guard current.route != .bluetooth else { return }
             session = nil
             await current.close(bye: nil)
             eventSink.yield(.disconnected)
@@ -56,7 +62,7 @@ extension ConnectionManager {
         }
         // The default network changed: a dead socket would take up to 25 s to notice; probe it now.
         await current.probe(timeout: .seconds(2))
-        if current.route == .relay { await upgradeToLAN(from: current) }
+        if current.route != .lan { await upgradeToLAN(from: current) }
     }
 
     /// The current session ended. Through the relay, with the relay still up, the phone just left: wait for it there

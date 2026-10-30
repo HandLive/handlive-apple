@@ -5,6 +5,7 @@ enum ManagerSignal: Sendable, Equatable {
     case phoneChanged
     case network
     case discovery
+    case bluetooth
     case reconnectNow
     case sleep
     case wake

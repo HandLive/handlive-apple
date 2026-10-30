@@ -12,6 +12,7 @@ public actor ConnectionManager {
     let discovery: any LANDiscovering
     let network: any NetworkMonitoring
     let connector: any ChannelConnecting
+    let bluetooth: any BluetoothCentral
     let relay: RelayServices?
     let configuration: ConnectionConfiguration
     let signals = SignalQueue()
@@ -25,6 +26,19 @@ public actor ConnectionManager {
     var networkPath: NetworkPathStatus?
     var discovered: [DiscoveredPhone] = []
     var discoveryState: DiscoveryState = .starting
+    var bluetoothDiscovered: [BluetoothAdvertisement] = []
+    /// Whether the radio is on (0.4.5 E1); no advertisement is ever a candidate while it isn't.
+    var bluetoothPowered = false
+    /// Coalesces a burst of `watchBluetoothCentral()` events into one `.bluetooth` signal: cancelled and
+    /// restarted on every event, so the signal only fires once the burst has quieted down.
+    var bluetoothSignalTask: Task<Void, Never>?
+    /// `false` from each Bluetooth event until `bluetoothSignalTask` fires uncancelled: the actual guard against
+    /// `matchingBluetoothCandidates()` returning a snapshot still mid-rotation, independent of what woke the run
+    /// loop (`.bluetooth`, `.network`, or entering `.discovering`/`.idle` on its own).
+    var bluetoothSettled = false
+    /// The ephemeral private key `BluetoothLinkConnector` uses for `noise1` (0.4.5 step 2) — a real random key
+    /// in production; a test overrides it to reproduce a `bt-link.json` vector byte for byte.
+    var bluetoothEphemeralKey: @Sendable () -> Data = { X25519.generatePrivateKey() }
     var issue: LinkIssue?
     var nextRetry: Date?
     /// Wait of the next `Backoff`; `nil` waits for a signal only (update required, pair removed).
@@ -46,10 +60,12 @@ public actor ConnectionManager {
 
     public init(localCapability: CapabilityData, discovery: any LANDiscovering = BonjourDiscovery(),
                 network: any NetworkMonitoring = PathMonitor(), connector: any ChannelConnecting = WebSocketConnector(),
+                bluetooth: any BluetoothCentral = ConnectionManager.defaultBluetoothCentral(),
                 relay: RelayServices? = nil, configuration: ConnectionConfiguration = ConnectionConfiguration()) {
         self.localCapability = localCapability
         self.discovery = discovery
         self.network = network
+        self.bluetooth = bluetooth
         self.connector = connector
         self.relay = relay
         self.configuration = configuration
@@ -65,14 +81,27 @@ public actor ConnectionManager {
         self.relayEnabled = relayEnabled
         workers.append(Task { await self.watchNetwork() })
         workers.append(Task { await self.watchDiscovery() })
+        workers.append(Task { await self.watchBluetoothCentral() })
         workers.append(Task { await self.run() })
         publishStatus()
+    }
+
+    /// `CoreBluetoothCentral` on the Mac, never created on iOS (M7.1c): CoreBluetooth compiles on both
+    /// platforms, but only the Mac app scans for a phone over Bluetooth (0.4.5 "Roles" — M-APP is the central).
+    public static func defaultBluetoothCentral() -> any BluetoothCentral {
+        #if os(macOS)
+        CoreBluetoothCentral()
+        #else
+        NullBluetoothCentral()
+        #endif
     }
 
     /// Stops everything: `session/bye {shutdown}` when connected (the user quits, CONN-02 step 8).
     public func stop() async {
         workers.forEach { $0.cancel() }
         workers.removeAll()
+        bluetoothSignalTask?.cancel()
+        bluetoothSignalTask = nil
         await session?.close(bye: .shutdown)
         session = nil
         await closeRelay()
@@ -159,13 +188,18 @@ public actor ConnectionManager {
         relay != nil && relayEnabled && (phone?.relayEnabled ?? true) && issue != .relayUntrusted
     }
 
+    /// Overrides `bluetoothEphemeralKey` (a test reproducing a `bt-link.json` vector byte for byte).
+    func setBluetoothEphemeralKey(_ generate: @escaping @Sendable () -> Data) {
+        bluetoothEphemeralKey = generate
+    }
+
     /// Applies a 0.11 event, logs the bench `state` line and publishes the status.
     func apply(_ event: ConnectionEvent) {
         let from = machine.state
         guard machine.handle(event) else { return }
         var fields: KeyValuePairs<String, String> = ["from": from.benchName, "to": machine.state.benchName]
         if case .connected(let route) = machine.state {
-            fields = ["from": from.benchName, "to": machine.state.benchName, "channel": route == .lan ? "lan" : "relay"]
+            fields = ["from": from.benchName, "to": machine.state.benchName, "channel": route.benchChannel]
         }
         BenchLog.event("state", fields)
         if machine.state != .backoff { nextRetry = nil }

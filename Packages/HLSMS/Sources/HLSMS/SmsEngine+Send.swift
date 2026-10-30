@@ -144,7 +144,7 @@ extension SmsEngine {
             }
             try? await store.recordAttempt(localId: entry.localId, now: now())
             BenchLog.event("sms_send_sent", ["local": entry.localId, "peer": benchPeer, "attempt": "\(attempt + 1)",
-                                             "via": peer.route == .relay ? "relay" : "lan"])
+                                             "via": peer.route.benchChannel])
             do {
                 let ack = try await peer.request(.send, data: request, id: envelopeId, timeout: requestTimeout)
                 var fields = [("local", entry.localId), ("peer", benchPeer), ("ok", "\(ack.ok)")]

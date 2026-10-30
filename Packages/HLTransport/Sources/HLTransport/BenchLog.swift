@@ -59,11 +59,25 @@ extension ConnectionState {
         case .idle: "Idle"
         case .discovering: "Discovering"
         case .connectingLAN: "ConnectingLAN"
+        case .connectingBT: "ConnectingBT"
         case .connectingRelay: "ConnectingRelay"
         case .waitingPeer: "WaitingPeer"
         case .handshaking: "Handshaking"
         case .connected: "Connected"
         case .backoff: "Backoff"
+        }
+    }
+}
+
+extension ConnectionRoute {
+    /// Channel label of the bench `state`/`sms_send_sent`/`call_action_sent` events ("lan", "relay", "bluetooth").
+    /// Exhaustive on purpose (P7 added `.bluetooth`): a binary `== .relay ? "relay" : "lan"` ternary would silently
+    /// mislabel a Bluetooth session as "lan" in bench logs. `public`: used from HLSMS and HLAppCore too.
+    public var benchChannel: String {
+        switch self {
+        case .lan: "lan"
+        case .relay: "relay"
+        case .bluetooth: "bluetooth"
         }
     }
 }

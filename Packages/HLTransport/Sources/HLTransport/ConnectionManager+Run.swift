@@ -13,7 +13,11 @@ extension ConnectionManager {
             case .connected: await superviseSession()
             case .connectingRelay: await connectRelay()
             case .waitingPeer: await waitForPeer()
-            case .connectingLAN, .handshaking: apply(.connectionLost)
+            // `.connectingBT` has no handler of its own yet (no radio, M7.1b/c): like `.connectingLAN`/
+            // `.handshaking`, which are resolved synchronously inside `discover()`/`connectRelay()` without the
+            // loop ever seeing them stay set, reaching this case for real would be a bug — back off instead of
+            // spinning.
+            case .connectingLAN, .connectingBT, .handshaking: apply(.connectionLost)
             }
         }
     }
@@ -23,9 +27,19 @@ extension ConnectionManager {
     // MARK: - Idle
 
     private func stayIdle(_ reason: IdleReason) async {
-        if phone == nil || !networkUp || sleeping {
-            if phone != nil && !networkUp { apply(.networkLost) }
+        guard let phone, !sleeping else {
             _ = await signals.next(timeout: nil)
+            return
+        }
+        if !networkUp {
+            // 0.11 "start without a network when Bluetooth is usable": LAN/relay need a network, but a
+            // Bluetooth candidate connects at once (CONN-05) — only wait idle when none is in sight yet.
+            guard matchingBluetoothCandidates().first != nil else {
+                _ = await signals.next(timeout: nil)
+                return
+            }
+            apply(.bluetoothInstanceFound)
+            await connectBluetooth(phone: phone)
             return
         }
         if reason == .needsRepair {
@@ -55,6 +69,13 @@ extension ConnectionManager {
                 let allMismatched = matching.allSatisfy { mismatched.contains($0.name) }
                 if afterCandidate(result, allMismatched: allMismatched) { return }
                 continue
+            }
+            // CONN-05 step 4: "Priority LAN > Bluetooth... otherwise the Bluetooth candidate is connected at
+            // once" — tried only once no (untried) LAN candidate is in sight, never waits for the LAN grace.
+            if matchingBluetoothCandidates().first != nil {
+                apply(.bluetoothInstanceFound)
+                await connectBluetooth(phone: phone)
+                return
             }
             let remaining = ContinuousClock.now.duration(to: deadline)
             guard remaining > .zero else { return graceElapsed() }
@@ -131,17 +152,18 @@ extension ConnectionManager {
         return .done
     }
 
-    /// A handshake that did not reach `Connected`: backoff per its reaction, pair removal when the phone forgot it. Over
-    /// the relay the phone is not yet authenticated and anyone on the relay path could forge a `session/error` (CONN-03
-    /// E9): `PAIR_UNKNOWN` / `PAIR_REVOKED` only back off (a revocation comes through a signed `pair_revoked` or the
-    /// LAN), and `AUTH_FAILED` / `UNSUPPORTED_VERSION` show their message on the normal schedule.
+    /// A handshake that did not reach `Connected`: backoff per its reaction, pair removal when the phone forgot it. On
+    /// a route where `phoneAuthenticatedByTLS` is false (relay, Bluetooth) the phone is not yet authenticated and
+    /// anyone on that path could forge a `session/error` (CONN-01 E4, CONN-03 E9, CONN-05 E5): `PAIR_UNKNOWN` /
+    /// `PAIR_REVOKED` only back off (a revocation comes through a signed `pair_revoked` or a route where it is true),
+    /// and `AUTH_FAILED` / `UNSUPPORTED_VERSION` show their message on the normal schedule.
     func handshakeFailed(_ error: Error, route: ConnectionRoute) {
         let failure = (error as? SessionEstablishError) ?? .protocolError
         var minProtocol: Int32?
         if case .rejected(_, let min) = failure { minProtocol = min }
         var reaction = failure.reaction
-        if route == .relay, reaction == .removePair { reaction = .backoff }
-        scheduleBackoff(reaction, minProtocol: minProtocol, keepSchedule: route == .relay)
+        if !route.phoneAuthenticatedByTLS, reaction == .removePair { reaction = .backoff }
+        scheduleBackoff(reaction, minProtocol: minProtocol, keepSchedule: !route.phoneAuthenticatedByTLS)
         apply(.handshakeFailed)
         if reaction == .removePair {
             removePair(failure == .rejected(.pairUnknown, minProtocol: nil) ? .unknownToPhone : .revoked)

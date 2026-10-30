@@ -7,6 +7,9 @@ extension ConnectionManager {
 
     func waitBackoff() async {
         let delay = pendingDelay
+        // Already set by `scheduleBackoff` (recomputed here too, now from "now", for whatever rare path reaches
+        // `.backoff` without a fresh `scheduleBackoff` call — `ConnectionManager+Supervise.swift`'s defensive
+        // `session == nil` guard; everything else always calls `scheduleBackoff` first).
         nextRetry = delay.map { Date().addingTimeInterval($0.timeInterval) }
         publishStatus()
         let deadline = delay.map { ContinuousClock.now.advanced(by: $0) }
@@ -47,8 +50,9 @@ extension ConnectionManager {
     }
 
     /// Chooses the wait of the next `Backoff` from the reaction (CONN-01 E3, E5; CONN-02). `keepSchedule`: the error
-    /// came over the relay before the phone was authenticated, so it may be forged — its message is shown but the
-    /// normal schedule goes on, never a stop or the 5-minute wait (CONN-03 E9).
+    /// came over a route where `phoneAuthenticatedByTLS` is false (relay, Bluetooth) before the phone was
+    /// authenticated, so it may be forged — its message is shown but the normal schedule goes on, never a stop or
+    /// the 5-minute wait (CONN-03 E9, CONN-05 E5).
     func scheduleBackoff(_ reaction: CloseReaction, minProtocol: Int32? = nil, keepSchedule: Bool = false) {
         let normalDelay = { Duration.seconds(self.backoff.nextDelay() * self.configuration.delayScale) }
         switch reaction {
@@ -64,5 +68,12 @@ extension ConnectionManager {
         case .removePair:
             pendingDelay = nil
         }
+        // Set immediately, not just by `waitBackoff` once `run()`'s loop reaches `.backoff`: the status this
+        // schedules usually publishes right away (`apply(.handshakeFailed)` etc., called straight after this),
+        // and that first status should already carry its retry countdown — task #196 found this gap because
+        // `ConnectionManagerBluetoothTests` calls `handshakeFailed` directly, with no `run()` loop in the test to
+        // paper over it with a second, corrected status a moment later the way every LAN/relay integration test
+        // happens to.
+        nextRetry = pendingDelay.map { Date().addingTimeInterval($0.timeInterval) }
     }
 }

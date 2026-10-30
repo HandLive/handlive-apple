@@ -48,7 +48,8 @@ extension HLConnectionStatus {
     /// Menu bar icon (MenuBarMenu README "Biểu tượng trên thanh menu").
     var menuBarSymbolName: String {
         switch self {
-        case .connectedWiFi, .connectedInternet, .usb, .connecting: "antenna.radiowaves.left.and.right"
+        case .connectedWiFi, .connectedBluetooth, .connectedInternet, .usb, .connecting:
+            "antenna.radiowaves.left.and.right"
         default: "antenna.radiowaves.left.and.right.slash"
         }
     }

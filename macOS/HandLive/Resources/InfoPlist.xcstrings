@@ -19,6 +19,24 @@
         }
       }
     },
+    "NSBluetoothAlwaysUsageDescription" : {
+      "comment" : "Purpose string of the Bluetooth permission, asked during setup (SET-03 field 17); shared with AUDIO-01, whose wording must cover call audio again when Phase 4 reopens",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HandLive connects to your Android phone over Bluetooth when they aren't on the same Wi-Fi network."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HandLive kết nối với điện thoại Android qua Bluetooth khi hai máy không cùng mạng Wi-Fi."
+          }
+        }
+      }
+    },
     "NSFocusStatusUsageDescription" : {
       "comment" : "Purpose string of the Focus status permission, asked when the user turns on Ring on Mac; one active sentence starting with HandLive",
       "extractionState" : "manual",

@@ -259,6 +259,8 @@ public enum L10n {
         public static var ok: String { L10nLookup.string("common.ok") }
         /// On
         public static var on: String { L10nLookup.string("common.on") }
+        /// Open Bluetooth Settings
+        public static var openBluetoothSettings: String { L10nLookup.string("common.open_bluetooth_settings") }
         /// Open Settings
         public static var openSettings: String { L10nLookup.string("common.open_settings") }
         /// Open System Settings
@@ -355,6 +357,8 @@ public enum L10n {
     public enum Infoplist {
         /// HandLive reads the address of the page open in your browser so you can continue on your phone.
         public static var appleEventsUsage: String { L10nLookup.string("infoplist.apple_events_usage") }
+        /// HandLive connects to your Android phone over Bluetooth when they aren't on the same Wi-Fi network.
+        public static var bluetoothAlways: String { L10nLookup.string("infoplist.bluetooth_always") }
         /// HandLive reads your Focus status so it doesn't ring or show calls while a Focus is on.
         public static var focusStatusUsage: String { L10nLookup.string("infoplist.focus_status_usage") }
         /// HandLive looks for your Android phone on your Wi-Fi network to connect to it directly, not over the internet.
@@ -449,6 +453,10 @@ public enum L10n {
         public static var usePin: String { L10nLookup.string("pairing.use_pin") }
     }
     public enum Permission {
+        /// When your Mac and phone aren't on the same Wi-Fi network, HandLive connects them over Bluetooth. macOS asks for permission next.
+        public static var bluetoothBodyMac: String { L10nLookup.string("permission.bluetooth_body_mac") }
+        /// Connect Without Wi-Fi
+        public static var bluetoothTitle: String { L10nLookup.string("permission.bluetooth_title") }
         /// HandLive looks for your Android phone on your Wi-Fi network to connect to it directly.
         public static var localNetworkPrimer: String { L10nLookup.string("permission.local_network_primer") }
         /// Find Your Phone on Wi-Fi
@@ -717,12 +725,22 @@ public enum L10n {
         public static var unreadDivider: String { L10nLookup.string("sms.unread_divider") }
     }
     public enum Status {
+        /// HandLive can't use Bluetooth, so it can't connect to the phone without Wi-Fi. Turn on HandLive in System Settings › Privacy & Security › Bluetooth.
+        public static var bluetoothDenied: String { L10nLookup.string("status.bluetooth_denied") }
+        /// Bluetooth is off. Turn it on to connect without Wi-Fi.
+        public static var bluetoothOff: String { L10nLookup.string("status.bluetooth_off") }
         /// Internet
         public static var channelInternet: String { L10nLookup.string("status.channel_internet") }
         /// LAN
         public static var channelLan: String { L10nLookup.string("status.channel_lan") }
         /// USB
         public static var channelUsb: String { L10nLookup.string("status.channel_usb") }
+        /// Connected via Bluetooth
+        public static var connectedBluetooth: String { L10nLookup.string("status.connected_bluetooth") }
+        /// Connected via Bluetooth to {device_name}
+        public static func connectedBluetoothTo(deviceName: String) -> String {
+            L10nLookup.format("status.connected_bluetooth_to", deviceName)
+        }
         /// Connected over the internet
         public static var connectedInternet: String { L10nLookup.string("status.connected_internet") }
         /// Connected via USB

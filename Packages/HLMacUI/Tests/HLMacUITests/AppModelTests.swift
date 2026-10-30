@@ -91,6 +91,7 @@ struct AppModelTests {
         #expect(HLConnectionStatus(link: LinkStatus(state: .backoff), lastSeen: nil) == .networkLost)
         #expect(HLConnectionStatus(link: LinkStatus(state: .handshaking(.lan)), lastSeen: nil) == .connecting)
         #expect(HLConnectionStatus(link: LinkStatus(state: .connected(.lan)), lastSeen: nil) == .connectedWiFi)
+        #expect(HLConnectionStatus(link: LinkStatus(state: .connected(.bluetooth)), lastSeen: nil) == .connectedBluetooth)
         #expect(HLConnectionStatus(link: LinkStatus(state: .connected(.relay)), lastSeen: nil) == .connectedInternet)
         let offline = HLConnectionStatus(link: LinkStatus(state: .waitingPeer), lastSeen: 1_727_151_000_000)
         guard case .phoneOffline(let time?) = offline else {
@@ -99,6 +100,7 @@ struct AppModelTests {
         }
         #expect(!time.isEmpty)
         #expect(HLConnectionStatus.connectedWiFi.menuBarSymbolName == "antenna.radiowaves.left.and.right")
+        #expect(HLConnectionStatus.connectedBluetooth.menuBarSymbolName == "antenna.radiowaves.left.and.right")
         #expect(HLConnectionStatus.networkLost.menuBarSymbolName == "antenna.radiowaves.left.and.right.slash")
     }
 

@@ -87,6 +87,7 @@ extension HLConnectionStatus {
         case .disconnected: self = .networkLost
         case .connected(.lan): self = .connectedWiFi
         case .connected(.relay): self = .connectedInternet
+        case .connected(.bluetooth): self = .connectedBluetooth
         case .phoneOffline:
             let time = lastSeen.map {
                 Date(timeIntervalSince1970: TimeInterval($0) / 1000).formatted(date: .omitted, time: .shortened)

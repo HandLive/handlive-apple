@@ -67,7 +67,9 @@ public final class PairingController: ObservableObject {
     private var generation = 0
 
     public init(host: any PairingHost,
-                search: any PairingSearching = PairingSearch(discovery: BonjourDiscovery(), connector: WebSocketConnector()),
+                search: any PairingSearching = BluetoothFallbackPairingSearch(
+                    lan: PairingSearch(discovery: BonjourDiscovery(), connector: WebSocketConnector()),
+                    bluetooth: BluetoothPairingSearch(central: ConnectionManager.defaultBluetoothCentral())),
                 lifetime: Duration = PairingCodes.lifetime, onPaired: @escaping @MainActor (String) -> Void) {
         self.host = host
         self.search = search
@@ -161,7 +163,7 @@ public final class PairingController: ObservableObject {
             }
         case .pin:
             pin = PairingCodes.newPIN()
-            credential = .pin(pin, attemptsLeft: Self.pinAttempts)
+            credential = .pin(pin, attemptsLeft: Self.pinAttempts, attempts: PinAttemptCounter(left: Self.pinAttempts))
             qrURI = ""
             startSearch()
         }
@@ -235,7 +237,7 @@ public final class PairingController: ObservableObject {
             notice = .insecure
             newCode()
         case PairingFailure.pinInvalid(let attemptsLeft) where attemptsLeft > 0:
-            credential = .pin(pin, attemptsLeft: attemptsLeft)
+            credential = .pin(pin, attemptsLeft: attemptsLeft, attempts: credential?.pinAttemptsCounter)
             startSearch()
         case PairingFailure.pinInvalid:
             newCode() // E7: a new PIN after the third wrong one
@@ -245,5 +247,4 @@ public final class PairingController: ObservableObject {
             startSearch()
         }
     }
-
 }

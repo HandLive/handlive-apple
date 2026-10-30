@@ -98,6 +98,18 @@ struct PairingExchangeTests {
         #expect(last.result == .failure(.pinInvalid(attemptsLeft: 0)))
     }
 
+    /// Bluetooth and the LAN race for the same PIN (`BluetoothFallbackPairingSearch`) and share one
+    /// `PinAttemptCounter`: a wrong PIN here must spend that counter, not the credential's own `attemptsLeft`
+    /// snapshot, which may already be stale by the time this runs (Trang's finding, #3932).
+    @Test("PIN: with a shared counter attached, a wrong PIN spends it instead of the credential's own snapshot")
+    func pinSpendsTheSharedCounterNotItsOwnSnapshot() async throws {
+        let shared = PinAttemptCounter(left: 1) // already brought down from 3 by two Bluetooth attempts
+        let wrong = await run(FakePairingPhone(window: .pin("042918")),
+                              credential: .pin("042917", attemptsLeft: 3, attempts: shared))
+        #expect(wrong.result == .failure(.pinInvalid(attemptsLeft: 0)))
+        #expect(await shared.left == 0)
+    }
+
     @Test("The phone's PAIRING_CLOSED ends the attempt; silence past the offer timeout is a dropped connection")
     func closedAndSilent() async {
         #expect(await run(qrPhone(.closed)).result == .failure(.pairingClosed))

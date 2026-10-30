@@ -3,6 +3,19 @@
 public enum ConnectionRoute: Equatable, Hashable, Sendable {
     case lan
     case relay
+    /// Mac only (0.4.5); iOS has no Bluetooth route (0.11).
+    case bluetooth
+
+    /// Pre-authentication rule by route (0.11 AC8): true for `lan` (and `usb`, which this type folds into `lan` —
+    /// 0.11 "Routes and priority"). Before the session handshake has authenticated the phone, a route where this
+    /// is `false` must never act on `PAIR_UNKNOWN`/`PAIR_REVOKED` (CONN-01 E4, CONN-03 E9, CONN-05 E5): anyone on
+    /// that path could forge the error.
+    public var phoneAuthenticatedByTLS: Bool {
+        switch self {
+        case .lan: true
+        case .relay, .bluetooth: false
+        }
+    }
 }
 
 /// Why the client is idle. Only `needsRepair` asks the user to act ("Needs re-pairing").
@@ -20,6 +33,8 @@ public enum ConnectionState: Equatable, Hashable, Sendable {
     case idle(IdleReason)
     case discovering
     case connectingLAN
+    /// Opening the L2CAP channel and running the link-security handshake over Bluetooth (0.4.5, CONN-05).
+    case connectingBT
     case connectingRelay
     case waitingPeer
     case handshaking(ConnectionRoute)
@@ -52,6 +67,16 @@ public enum ConnectionEvent: Equatable, Hashable, Sendable {
     case handshakeFailed
     /// `LAN_DISCOVERY_GRACE` elapsed; relay only when `relay.enabled`.
     case lanDiscoveryGraceElapsed(relayEnabled: Bool)
+    /// A Bluetooth advertisement with a matching hint, no LAN candidate (0.11, CONN-05). Connects at once: unlike
+    /// the relay, Bluetooth does not wait for `LAN_DISCOVERY_GRACE`.
+    case bluetoothInstanceFound
+    /// The link-security handshake over Bluetooth succeeded (0.4.5); next is the session handshake.
+    case linkSecurityVerified
+    /// Channel not opened, `reject`, `BT_PREAUTH_TIMEOUT` or the link-security handshake failed (CONN-05 E3, E4).
+    case bluetoothConnectFailed
+    /// Bluetooth pairing (PAIR-01 flow B) ended with `pair/done`: the link is kept, straight into the session
+    /// handshake (0.11 "Idle --> Handshaking").
+    case bluetoothPairingLinkKept
     /// Relay reached, peer offline.
     case relayConnectedPeerOffline
     /// Relay unreachable, or 401/404 after registering again.
@@ -95,15 +120,26 @@ public struct ConnectionStateMachine: Sendable {
         switch (state, event) {
         case (_, .unpaired): return .idle(.notPaired)
         case (.idle, .networkLost): return nil
+        // A session over Bluetooth is not a LAN or relay session: losing the network does not touch it (0.11
+        // "Start and loss"; CONN-02 E1, CONN-05 E11). Must come before the catch-all below.
+        case (.connected(.bluetooth), .networkLost): return nil
         case (_, .networkLost): return .idle(.noNetwork)
         case (.idle, .pairedAndNetworkAvailable): return .discovering
         case (.discovering, .lanInstanceFound): return .connectingLAN
         case (.discovering, .lanDiscoveryGraceElapsed(relayEnabled: true)): return .connectingRelay
         case (.discovering, .lanDiscoveryGraceElapsed(relayEnabled: false)): return .backoff
+        // A Bluetooth candidate connects at once, from Discovering or straight out of Idle (0.11 "Routes and
+        // priority": no LAN_DISCOVERY_GRACE wait, unlike the relay).
+        case (.discovering, .bluetoothInstanceFound), (.idle, .bluetoothInstanceFound): return .connectingBT
         case (.connectingLAN, .tlsPinVerified): return .handshaking(.lan)
         case (.connectingLAN, .tlsPinMismatch): return .discovering
         case (.connectingLAN, .allInstancesPinMismatch): return .idle(.needsRepair)
         case (.connectingLAN, .lanConnectFailed): return .backoff
+        case (.connectingBT, .linkSecurityVerified): return .handshaking(.bluetooth)
+        case (.connectingBT, .bluetoothConnectFailed): return .backoff
+        // Bluetooth pairing (PAIR-01 flow B) ends with the link kept: straight to the session handshake, no
+        // separate ConnectingBT step (0.11 "Idle --> Handshaking").
+        case (.idle, .bluetoothPairingLinkKept): return .handshaking(.bluetooth)
         case (.connectingRelay, .relayConnectedPeerOffline): return .waitingPeer
         case (.connectingRelay, .relayFailed): return .backoff
         case (.connectingRelay, .peerOnline), (.waitingPeer, .peerOnline): return .handshaking(.relay)
@@ -113,7 +149,9 @@ public struct ConnectionStateMachine: Sendable {
         case (.handshaking(let route), .handshakeSucceeded): return .connected(route)
         case (.handshaking, .handshakeFailed): return .backoff
         case (.connected, .connectionLost): return .backoff
-        case (.connected(.relay), .lanAvailable): return .connectingLAN
+        // Upgrade to the LAN from either non-LAN route (0.11 "Connected --> ConnectingLAN: on the relay or
+        // Bluetooth and the LAN is found").
+        case (.connected(.relay), .lanAvailable), (.connected(.bluetooth), .lanAvailable): return .connectingLAN
         case (.backoff, .backoffElapsed), (.backoff, .networkChanged): return .discovering
         default: return nil
         }
@@ -135,7 +173,7 @@ public enum ConnectionStatus: Equatable, Hashable, Sendable {
         case .idle(.notPaired): self = .notPaired
         case .idle(.needsRepair): self = .needsRepair
         case .idle(.noNetwork), .backoff: self = .disconnected
-        case .discovering, .connectingLAN, .connectingRelay, .handshaking: self = .connecting
+        case .discovering, .connectingLAN, .connectingBT, .connectingRelay, .handshaking: self = .connecting
         case .waitingPeer: self = .phoneOffline
         case .connected(let route): self = .connected(route)
         }
