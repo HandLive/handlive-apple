@@ -202,6 +202,8 @@
 	<string>OK</string>
 	<key>common.on</key>
 	<string>On</string>
+	<key>common.open_bluetooth_settings</key>
+	<string>Open Bluetooth Settings</string>
 	<key>common.open_settings</key>
 	<string>Open Settings</string>
 	<key>common.open_system_settings</key>
@@ -290,6 +292,8 @@
 	<string>Update HandLive on this device</string>
 	<key>infoplist.apple_events_usage</key>
 	<string>HandLive reads the address of the page open in your browser so you can continue on your phone.</string>
+	<key>infoplist.bluetooth_always</key>
+	<string>HandLive connects to your Android phone over Bluetooth when they aren't on the same Wi-Fi network.</string>
 	<key>infoplist.focus_status_usage</key>
 	<string>HandLive reads your Focus status so it doesn't ring or show calls while a Focus is on.</string>
 	<key>infoplist.local_network_usage</key>
@@ -362,6 +366,10 @@
 	<string>Unpaired; %1$@ will clean up when it reconnects</string>
 	<key>pairing.use_pin</key>
 	<string>Can't Scan? Use a PIN</string>
+	<key>permission.bluetooth_body_mac</key>
+	<string>When your Mac and phone aren't on the same Wi-Fi network, HandLive connects them over Bluetooth. macOS asks for permission next.</string>
+	<key>permission.bluetooth_title</key>
+	<string>Connect Without Wi-Fi</string>
 	<key>permission.local_network_primer</key>
 	<string>HandLive looks for your Android phone on your Wi-Fi network to connect to it directly.</string>
 	<key>permission.local_network_primer_title</key>
@@ -596,12 +604,20 @@
 	<string>Messages</string>
 	<key>sms.unread_divider</key>
 	<string>Unread messages</string>
+	<key>status.bluetooth_denied</key>
+	<string>HandLive can't use Bluetooth, so it can't connect to the phone without Wi-Fi. Turn on HandLive in System Settings › Privacy &amp; Security › Bluetooth.</string>
+	<key>status.bluetooth_off</key>
+	<string>Bluetooth is off. Turn it on to connect without Wi-Fi.</string>
 	<key>status.channel_internet</key>
 	<string>Internet</string>
 	<key>status.channel_lan</key>
 	<string>LAN</string>
 	<key>status.channel_usb</key>
 	<string>USB</string>
+	<key>status.connected_bluetooth</key>
+	<string>Connected via Bluetooth</string>
+	<key>status.connected_bluetooth_to</key>
+	<string>Connected via Bluetooth to %1$@</string>
 	<key>status.connected_internet</key>
 	<string>Connected over the internet</string>
 	<key>status.connected_usb</key>

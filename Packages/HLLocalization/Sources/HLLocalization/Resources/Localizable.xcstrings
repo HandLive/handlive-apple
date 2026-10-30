@@ -1873,6 +1873,24 @@
         }
       }
     },
+    "common.open_bluetooth_settings" : {
+      "comment" : "Button next to the Bluetooth-off status line, opens x-apple.systempreferences:com.apple.BluetoothSettings (SET-03 field 18)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Bluetooth Settings"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mở cài đặt Bluetooth"
+          }
+        }
+      }
+    },
     "common.open_settings" : {
       "comment" : "Button that opens the app's page in the system Settings (Android app info, iOS Settings) after a permission was denied for good",
       "extractionState" : "manual",
@@ -2665,6 +2683,24 @@
         }
       }
     },
+    "infoplist.bluetooth_always" : {
+      "comment" : "Purpose string of the Bluetooth permission, asked during setup (SET-03 field 17); shared with AUDIO-01, whose wording must cover call audio again when Phase 4 reopens",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HandLive connects to your Android phone over Bluetooth when they aren't on the same Wi-Fi network."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HandLive kết nối với điện thoại Android qua Bluetooth khi hai máy không cùng mạng Wi-Fi."
+          }
+        }
+      }
+    },
     "infoplist.focus_status_usage" : {
       "comment" : "Purpose string of the Focus status permission, asked when the user turns on Ring on Mac; one active sentence starting with HandLive",
       "extractionState" : "manual",
@@ -3309,6 +3345,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Không quét được? Dùng mã PIN"
+          }
+        }
+      }
+    },
+    "permission.bluetooth_body_mac" : {
+      "comment" : "Body of the Mac primer before CBCentralManager triggers the system Bluetooth dialog; title permission.bluetooth_title (SET-03 field 17, step B1)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When your Mac and phone aren't on the same Wi-Fi network, HandLive connects them over Bluetooth. macOS asks for permission next."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Khi Mac và điện thoại không cùng mạng Wi-Fi, HandLive nối hai máy qua Bluetooth. Tiếp theo macOS sẽ hỏi quyền."
+          }
+        }
+      }
+    },
+    "permission.bluetooth_title" : {
+      "comment" : "Title of the Bluetooth permission primer, shared by the Android PermissionPrimer (body permission.bluetooth_body, SET-01 field 12) and the Mac primer before the system dialog (body permission.bluetooth_body_mac, SET-03 field 17)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connect Without Wi-Fi"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kết nối không cần Wi-Fi"
           }
         }
       }
@@ -5527,6 +5599,42 @@
         }
       }
     },
+    "status.bluetooth_denied" : {
+      "comment" : "Mac Bluetooth-unavailable status line when access is denied or restricted (SET-03 E8); shown with common.open_system_settings",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HandLive can't use Bluetooth, so it can't connect to the phone without Wi-Fi. Turn on HandLive in System Settings › Privacy & Security › Bluetooth."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HandLive không dùng được Bluetooth nên không kết nối được với điện thoại khi không có Wi-Fi. Bật HandLive trong Cài đặt hệ thống › Quyền riêng tư & Bảo mật › Bluetooth."
+          }
+        }
+      }
+    },
+    "status.bluetooth_off" : {
+      "comment" : "Mac Bluetooth-unavailable status line, shown under the status line while there is no LAN session (SET-03 field 18); shown with common.open_bluetooth_settings",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetooth is off. Turn it on to connect without Wi-Fi."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bluetooth đang tắt. Bật Bluetooth để kết nối khi không có Wi-Fi."
+          }
+        }
+      }
+    },
     "status.channel_internet" : {
       "comment" : "Short channel label (pill) of a device connected through the HandLive server",
       "extractionState" : "manual",
@@ -5577,6 +5685,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "USB"
+          }
+        }
+      }
+    },
+    "status.connected_bluetooth" : {
+      "comment" : "State Connected while the session goes over Bluetooth; new catalog key (S7.1)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connected via Bluetooth"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã kết nối qua Bluetooth"
+          }
+        }
+      }
+    },
+    "status.connected_bluetooth_to" : {
+      "comment" : "Status line with the device's name (Mac menu bar menu); also the VoiceOver/TalkBack text of the indicator; new catalog key (S7.1)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connected via Bluetooth to %1$@"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã kết nối qua Bluetooth với %1$@"
           }
         }
       }

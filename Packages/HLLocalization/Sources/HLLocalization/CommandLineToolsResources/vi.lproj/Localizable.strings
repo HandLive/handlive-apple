@@ -202,6 +202,8 @@
 	<string>OK</string>
 	<key>common.on</key>
 	<string>Bật</string>
+	<key>common.open_bluetooth_settings</key>
+	<string>Mở cài đặt Bluetooth</string>
 	<key>common.open_settings</key>
 	<string>Mở cài đặt</string>
 	<key>common.open_system_settings</key>
@@ -290,6 +292,8 @@
 	<string>Cập nhật HandLive trên máy này</string>
 	<key>infoplist.apple_events_usage</key>
 	<string>HandLive đọc địa chỉ trang đang mở trong trình duyệt để bạn xem tiếp trên điện thoại.</string>
+	<key>infoplist.bluetooth_always</key>
+	<string>HandLive kết nối với điện thoại Android qua Bluetooth khi hai máy không cùng mạng Wi-Fi.</string>
 	<key>infoplist.focus_status_usage</key>
 	<string>HandLive đọc trạng thái Tập trung để không đổ chuông và không hiện cuộc gọi khi bạn đang tập trung.</string>
 	<key>infoplist.local_network_usage</key>
@@ -362,6 +366,10 @@
 	<string>Đã hủy ghép nối; %1$@ sẽ tự dọn khi kết nối lại</string>
 	<key>pairing.use_pin</key>
 	<string>Không quét được? Dùng mã PIN</string>
+	<key>permission.bluetooth_body_mac</key>
+	<string>Khi Mac và điện thoại không cùng mạng Wi-Fi, HandLive nối hai máy qua Bluetooth. Tiếp theo macOS sẽ hỏi quyền.</string>
+	<key>permission.bluetooth_title</key>
+	<string>Kết nối không cần Wi-Fi</string>
 	<key>permission.local_network_primer</key>
 	<string>HandLive tìm điện thoại Android trong mạng Wi-Fi để kết nối trực tiếp.</string>
 	<key>permission.local_network_primer_title</key>
@@ -596,12 +604,20 @@
 	<string>Tin nhắn</string>
 	<key>sms.unread_divider</key>
 	<string>Tin chưa đọc</string>
+	<key>status.bluetooth_denied</key>
+	<string>HandLive không dùng được Bluetooth nên không kết nối được với điện thoại khi không có Wi-Fi. Bật HandLive trong Cài đặt hệ thống › Quyền riêng tư &amp; Bảo mật › Bluetooth.</string>
+	<key>status.bluetooth_off</key>
+	<string>Bluetooth đang tắt. Bật Bluetooth để kết nối khi không có Wi-Fi.</string>
 	<key>status.channel_internet</key>
 	<string>Qua Internet</string>
 	<key>status.channel_lan</key>
 	<string>LAN</string>
 	<key>status.channel_usb</key>
 	<string>USB</string>
+	<key>status.connected_bluetooth</key>
+	<string>Đã kết nối qua Bluetooth</string>
+	<key>status.connected_bluetooth_to</key>
+	<string>Đã kết nối qua Bluetooth với %1$@</string>
 	<key>status.connected_internet</key>
 	<string>Đã kết nối qua Internet</string>
 	<key>status.connected_usb</key>
