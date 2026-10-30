@@ -52,12 +52,17 @@ public final class BluetoothChannel: MessageChannel, @unchecked Sendable {
     }
 
     /// Serializes the scheduler and the sealing cipher: `send(_:)` may be called concurrently (rekey alongside
-    /// normal traffic), but the scheduler's queues and the cipher's record counter are not thread-safe on
-    /// their own.
+    /// normal traffic, SMS and call-log sync at once), but the scheduler's queues and the cipher's record
+    /// counter are not thread-safe on their own. Being an actor is not enough by itself: actors are reentrant,
+    /// so a second `send` would run while the first is suspended in `stream.write` and start a second write on
+    /// a stream that allows one writer at a time. So exactly one caller drains; later callers only enqueue and
+    /// wait for that drain, which picks up their records too since it loops until the scheduler is empty.
     private actor Writer {
         private let stream: any BluetoothByteStream
         private let cipher: BtTransportCipher
         private let scheduler = BluetoothLinkScheduler()
+        private var draining = false
+        private var drainWaiters: [CheckedContinuation<Void, Error>] = []
 
         init(stream: any BluetoothByteStream, cipher: BtTransportCipher) {
             self.stream = stream
@@ -73,10 +78,30 @@ public final class BluetoothChannel: MessageChannel, @unchecked Sendable {
             case .binary(let data):
                 scheduler.enqueueBulk(data)
             }
-            while let plaintext = scheduler.poll() {
-                let sealed = try cipher.seal(plaintext)
-                try await stream.write(BtRecordCodec.encode(sealed))
-                scheduler.onDrained()
+            if draining {
+                try await withCheckedThrowingContinuation { drainWaiters.append($0) }
+                return
+            }
+            draining = true
+            do {
+                while let plaintext = scheduler.poll() {
+                    let sealed = try cipher.seal(plaintext)
+                    try await stream.write(BtRecordCodec.encode(sealed))
+                    scheduler.onDrained()
+                }
+                finishDrain(with: nil)
+            } catch {
+                finishDrain(with: error)
+                throw error
+            }
+        }
+
+        private func finishDrain(with error: Error?) {
+            draining = false
+            let waiters = drainWaiters
+            drainWaiters = []
+            for waiter in waiters {
+                if let error { waiter.resume(throwing: error) } else { waiter.resume() }
             }
         }
     }
