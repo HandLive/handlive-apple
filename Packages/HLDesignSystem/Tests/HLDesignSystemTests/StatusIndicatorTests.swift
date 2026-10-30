@@ -9,6 +9,7 @@ struct StatusIndicatorTests {
     func textsComeFromCatalog() {
         #expect(HLConnectionStatus.connectedWiFi.text == L10n.Status.connectedWifi)
         #expect(HLConnectionStatus.connectedWiFi.shortText == L10n.Status.channelLan)
+        #expect(HLConnectionStatus.connectedBluetooth.text == L10n.Status.connectedBluetooth)
         #expect(HLConnectionStatus.connectedInternet.text == L10n.Status.connectedInternet)
         #expect(HLConnectionStatus.usb.text == L10n.Status.connectedUsb)
         #expect(HLConnectionStatus.connecting.text == L10n.Status.connecting)
@@ -23,6 +24,8 @@ struct StatusIndicatorTests {
     func bothLanguages() {
         #expect(L10nLookup.string("status.connected_wifi", localization: "en") == "Connected via Wi-Fi")
         #expect(L10nLookup.string("status.connected_wifi", localization: "vi") == "Đã kết nối qua Wi-Fi")
+        #expect(L10nLookup.string("status.connected_bluetooth", localization: "en") == "Connected via Bluetooth")
+        #expect(L10nLookup.string("status.connected_bluetooth", localization: "vi") == "Đã kết nối qua Bluetooth")
         #expect(L10nLookup.string("status.repair_needed", localization: "vi") == "Cần ghép nối lại")
     }
 
@@ -30,6 +33,8 @@ struct StatusIndicatorTests {
     func accessibilityTextIncludesDevice() {
         #expect(HLConnectionStatus.connectedWiFi.accessibilityText(deviceName: "Pixel 8")
             == L10n.Status.connectedWifiTo(deviceName: "Pixel 8"))
+        #expect(HLConnectionStatus.connectedBluetooth.accessibilityText(deviceName: "Pixel 8")
+            == L10n.Status.connectedBluetoothTo(deviceName: "Pixel 8"))
         #expect(HLConnectionStatus.networkLost.accessibilityText(deviceName: "Pixel 8") == L10n.Status.disconnected)
         #expect(HLConnectionStatus.connectedWiFi.accessibilityText(deviceName: nil) == L10n.Status.connectedWifi)
     }
@@ -41,8 +46,10 @@ struct StatusIndicatorTests {
         #expect(HLConnectionStatus.notPaired.colorToken == .statusOffline)
         #expect(HLConnectionStatus.needsRepair.colorToken == .statusError)
         #expect(HLConnectionStatus.connecting.colorToken == .statusConnecting)
+        #expect(HLConnectionStatus.connectedBluetooth.colorToken == .statusConnected)
         #expect(HLConnectionStatus.connecting.pulses)
         #expect(!HLConnectionStatus.connectedWiFi.pulses)
+        #expect(!HLConnectionStatus.connectedBluetooth.pulses)
         let opacity = StatusIndicator.pulseOpacity(at: Date(timeIntervalSinceReferenceDate: 0))
         #expect(abs(opacity - 1) < 0.0001)
     }

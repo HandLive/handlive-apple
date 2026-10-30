@@ -5,6 +5,7 @@ import HLLocalization
 /// catalog (`status.*`, 0.11, PAIR-02 field 4).
 public enum HLConnectionStatus: Hashable, Sendable {
     case connectedWiFi
+    case connectedBluetooth
     case connectedInternet
     case usb
     case connecting
@@ -19,6 +20,7 @@ public enum HLConnectionStatus: Hashable, Sendable {
     public var text: String {
         switch self {
         case .connectedWiFi: L10n.Status.connectedWifi
+        case .connectedBluetooth: L10n.Status.connectedBluetooth
         case .connectedInternet: L10n.Status.connectedInternet
         case .usb: L10n.Status.connectedUsb
         case .connecting: L10n.Status.connecting
@@ -37,14 +39,19 @@ public enum HLConnectionStatus: Hashable, Sendable {
 
     /// Sentence VoiceOver reads: "Connected via Wi-Fi to Lan's Pixel 8".
     public func accessibilityText(deviceName: String?) -> String {
-        guard let deviceName, !deviceName.isEmpty, self == .connectedWiFi else { return text }
-        return L10n.Status.connectedWifiTo(deviceName: deviceName)
+        guard let deviceName, !deviceName.isEmpty else { return text }
+        switch self {
+        case .connectedWiFi: return L10n.Status.connectedWifiTo(deviceName: deviceName)
+        case .connectedBluetooth: return L10n.Status.connectedBluetoothTo(deviceName: deviceName)
+        default: return text
+        }
     }
 
     /// SF Symbol; `nil` when the state shows a pulsing dot.
     public var symbolName: String? {
         switch self {
         case .connectedWiFi: "wifi"
+        case .connectedBluetooth: "point.3.connected.trianglepath.dotted"
         case .connectedInternet: "globe"
         case .usb: "cable.connector"
         case .phoneOffline: "antenna.radiowaves.left.and.right.slash"
@@ -68,7 +75,7 @@ public enum HLConnectionStatus: Hashable, Sendable {
 
     public var colorToken: HLColorToken {
         switch self {
-        case .connectedWiFi, .connectedInternet, .usb: .statusConnected
+        case .connectedWiFi, .connectedBluetooth, .connectedInternet, .usb: .statusConnected
         case .connecting: .statusConnecting
         case .phoneOffline, .networkLost, .notPaired: .statusOffline
         case .needsRepair: .statusError

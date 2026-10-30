@@ -77,7 +77,7 @@ public struct StatusIndicator: View {
 struct StatusIndicatorPreviewGallery: View {
     private static let sampleDevice = "Pixel 8"
     private let statuses: [HLConnectionStatus] = [
-        .connectedWiFi, .connectedInternet, .usb, .connecting, .phoneOffline(lastSeen: "14:05"),
+        .connectedWiFi, .connectedBluetooth, .connectedInternet, .usb, .connecting, .phoneOffline(lastSeen: "14:05"),
         .networkLost, .needsRepair, .notPaired,
     ]
 
