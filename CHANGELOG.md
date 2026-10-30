@@ -6,6 +6,34 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-10-30
+
+### Added
+
+- **Offline connectivity (Phase 7):** Bluetooth L2CAP link as a platform-independent channel (central on macOS, peripheral
+  on iOS; initiated by the macOS app when Bluetooth is authorized and on, even without a network). Link-security handshake
+  with Noise keyed by the pairing secret; link codec (channel IDs, short and long control lanes, scheduler: control > bulk),
+  Bluetooth admission policy (pre-auth link cap, nonce challenge, authentication failure counter).
+
+- **Pairing over Bluetooth:** offline first pairing (flow B): scan for advertised proof, try every candidate with the same
+  proof, run pairing handshake over the secured link, then store as paired. PIN pairing over Bluetooth (flow C): scan for
+  PIN hint, perform CPace-X25519-SHA512 exchange, count wrong PINs, new PIN after three failures.
+
+- **Connection manager update:** macOS and iOS now start connecting when Bluetooth is authorized and on, even without a network
+  (new state machine rule in 0.11); route priority: LAN > Bluetooth; network loss ends LAN or relay sessions only, not Bluetooth.
+  Pre-auth errors on Bluetooth are checked for TLS certification, so only the pinned-TLS LAN route can unpair or stop reconnecting.
+
+- **UI labels and permission:** "Connected via Bluetooth" status line (`AppModel+Link`, `IOSAppModel+Link`, HLMacUI/HLiOSUI);
+  the Mac's `NSBluetoothAlwaysUsageDescription` triggers the system Bluetooth permission dialog before `CoreBluetoothCentral`
+  starts scanning.
+
+### Specs
+
+- Catalog strings added but no view calls them yet: the Bluetooth permission-primer screen, the Mac "Bluetooth off"/"Bluetooth
+  denied" status line with its settings button, and the Settings feature-card label — all still only exist in `HLLocalization`'s
+  generated `L10n`. Per-connection bulk stream keys (`K_bulk`) for clipboard images over the bulk lane, and Wi-Fi Direct itself
+  (M7.5/M7.7b: SSID/passphrase, socket binding, Location prompt/usage text), have no code on this platform yet.
+
 ## [0.1.1] — 2026-10-22
 
 ### Changed
