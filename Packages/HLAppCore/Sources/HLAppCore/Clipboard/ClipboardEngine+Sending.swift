@@ -8,8 +8,9 @@ extension ClipboardEngine {
 
     /// A session reached `Connected` (CONN-01 step 10): the latest local clip the phone has not acknowledged is sent
     /// again when it is less than 120 s old (QC7).
-    public func phoneConnected(peer: any ClipboardPeer, deviceId: String, name: String, feature: ClipboardFeature?) {
-        phone = Phone(peer: peer, deviceId: deviceId, name: name, feature: feature)
+    public func phoneConnected(peer: any ClipboardPeer, deviceId: String, name: String,
+                               route: ConnectionRoute = .lan, feature: ClipboardFeature?) {
+        phone = Phone(peer: peer, deviceId: deviceId, name: name, route: route, feature: feature)
         sessionStartedAt = now()
         guard let clip = latestLocal, !clip.acknowledged,
               now().timeIntervalSince(clip.createdAt) <= ClipboardConstants.staleAfter,
@@ -133,7 +134,8 @@ extension ClipboardEngine {
         let lane: EnvelopeLane = .bulk
         let waiter = try await phone.peer.sendPush(pushData(clip, transfer: transfer), lane: lane)
         BenchLog.event("clip_sent", ["clip": clip.clipId, "peer": peerId])
-        let showsProgress = clip.content.kind == .image && bytes.count > ClipboardConstants.progressThreshold
+        let showsProgress = clip.content.kind == .image
+            && ClipboardConstants.showsProgress(bytes: bytes.count, route: phone.route)
         defer { if showsProgress { onProgress(.sending, nil) } }
         for index in 0..<Int(transfer.chunkCount) {
             try Task.checkCancellation()
@@ -144,7 +146,8 @@ extension ClipboardEngine {
             if showsProgress {
                 onProgress(.sending, ClipboardProgress(direction: .sending, transferId: transfer.transferId,
                                                        deviceName: phone.name,
-                                                       fraction: Double(index + 1) / Double(transfer.chunkCount)))
+                                                       fraction: Double(index + 1) / Double(transfer.chunkCount),
+                                                       overBluetooth: phone.route == .bluetooth))
             }
         }
         return try await waiter.response(timeout: TransportConstants.requestTimeout)

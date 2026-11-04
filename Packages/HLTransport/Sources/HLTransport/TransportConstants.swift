@@ -23,4 +23,6 @@ public enum TransportConstants {
     public static let rekeyAfterAge: Duration = .seconds(24 * 3600)
     /// Old keys stay valid this long after a rekey for envelopes in flight (0.6.3 step 6).
     public static let rekeyOldKeyGrace: Duration = .seconds(30)
+    /// `BULK_DIRECT_MIN` (0.4.7): over Bluetooth, transfers this large or larger show progress (CLIP-03 field 2).
+    public static let bulkDirectMin = 128 * 1024
 }

@@ -39,7 +39,8 @@ extension AppModel {
     func clipboardConnected(_ session: ControlSession, details: LinkDetails) {
         guard let record = pairedDevice else { return }
         clipboard?.phoneConnected(peer: SessionClipboardPeer(session: session), deviceId: record.peerDeviceId,
-                                  name: record.peerName, feature: details.peerCapability.features.clipboard)
+                                  name: record.peerName, route: details.route,
+                                  feature: details.peerCapability.features.clipboard)
     }
 
     /// Results in place: the status line of the menu (for two minutes) and, after a manual send, the checkmark on

@@ -19,6 +19,8 @@ public final class ClipboardEngine {
         let peer: any ClipboardPeer
         let deviceId: String
         let name: String
+        /// Route of the session: only Bluetooth has a bulk lane of its own (0.4.7), and its progress starts lower.
+        let route: ConnectionRoute
         var feature: ClipboardFeature?
         /// `FEATURE_DISABLED` from the phone: inactive until its next `capability/update` (CLIP-01 E10).
         var suspended = false

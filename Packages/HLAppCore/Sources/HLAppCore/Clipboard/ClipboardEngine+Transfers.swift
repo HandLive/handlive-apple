@@ -110,14 +110,19 @@ extension ClipboardEngine {
         }
     }
 
+    /// Without a session (it just ended) the lower Bluetooth threshold decides, so a progress that may have been shown
+    /// is always cleared.
     private func showsProgress(_ transfer: IncomingTransfer) -> Bool {
-        transfer.push.kind == .image && transfer.transfer.size > Int64(ClipboardConstants.progressThreshold)
+        guard transfer.push.kind == .image else { return false }
+        return ClipboardConstants.showsProgress(bytes: Int(clamping: transfer.transfer.size),
+                                                route: phone?.route ?? .bluetooth)
     }
 
     private func reportIncomingProgress(_ transfer: IncomingTransfer, fraction: Double) {
         guard showsProgress(transfer), let phone else { return }
         onProgress(.receiving, ClipboardProgress(direction: .receiving, transferId: transfer.transferId,
-                                                 deviceName: phone.name, fraction: fraction))
+                                                 deviceName: phone.name, fraction: fraction,
+                                                 overBluetooth: phone.route == .bluetooth))
     }
 
     // MARK: - Auto-clear (CLIP-05)

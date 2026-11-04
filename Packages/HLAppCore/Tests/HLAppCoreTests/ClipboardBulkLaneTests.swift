@@ -115,7 +115,7 @@ struct ClipboardBulkProgressTests {
         harness.engine.poll()
         #expect(await harness.until { harness.peer.chunks.count == (image.count + 65_535) / 65_536 })
         #expect(!seen.isEmpty)
-        #expect(seen.allSatisfy(\.overBluetooth))
+        #expect(seen.allSatisfy { $0.overBluetooth })
     }
 
     @Test("LAN sending: the same image under 1 MiB shows no progress")
@@ -153,7 +153,7 @@ struct ClipboardBulkProgressTests {
         for chunk in ClipboardTransferTests.chunks(of: image, transfer: transfer) { harness.receiveChunk(chunk) }
         _ = try #require(await harness.reply(to: id))
         #expect(!seen.isEmpty)
-        #expect(seen.allSatisfy(\.overBluetooth))
+        #expect(seen.allSatisfy { $0.overBluetooth })
     }
 
     @Test("LAN receiving: the same image under 1 MiB shows no progress")

@@ -48,12 +48,16 @@ public struct ClipboardProgress: Equatable, Sendable {
     public let deviceName: String
     /// 0…1: chunks sent or received over `chunk_count`.
     public let fraction: Double
+    /// The transfer runs over the Bluetooth link: the note of CLIP-03 field 10 goes under the progress.
+    public let overBluetooth: Bool
 
-    public init(direction: Direction, transferId: String, deviceName: String, fraction: Double) {
+    public init(direction: Direction, transferId: String, deviceName: String, fraction: Double,
+                overBluetooth: Bool = false) {
         self.direction = direction
         self.transferId = transferId
         self.deviceName = deviceName
         self.fraction = fraction
+        self.overBluetooth = overBluetooth
     }
 }
 
