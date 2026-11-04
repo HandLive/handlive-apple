@@ -17,6 +17,7 @@ final class FakeClipboardPeer: ClipboardPeer, @unchecked Sendable {
     private var storedCancels: [ClipboardCancelData] = []
     private var storedConflicts: [ClipboardConflictData] = []
     private var storedReplies: [(requestId: String, ack: Ack)] = []
+    private var storedLanes: [String: [EnvelopeLane]] = [:]
     /// Delay per chunk, to cancel a transfer midway.
     var chunkDelay: Duration = .zero
 
@@ -31,6 +32,8 @@ final class FakeClipboardPeer: ClipboardPeer, @unchecked Sendable {
     var cancels: [ClipboardCancelData] { locked { storedCancels } }
     var conflicts: [ClipboardConflictData] { locked { storedConflicts } }
     var replies: [(requestId: String, ack: Ack)] { locked { storedReplies } }
+    /// Lanes used per kind of envelope (`push`, `chunk`, `cancel`, `conflict`, `reply`), in send order.
+    func lanes(_ kind: String) -> [EnvelopeLane] { locked { storedLanes[kind] ?? [] } }
 
     private func locked<T>(_ body: () -> T) -> T {
         lock.lock()
@@ -41,6 +44,7 @@ final class FakeClipboardPeer: ClipboardPeer, @unchecked Sendable {
     func sendPush(_ push: ClipboardPushData, lane: EnvelopeLane) async throws -> any AckWaiting {
         let answer: Answer = locked {
             storedPushes.append(push)
+            storedLanes["push", default: []].append(lane)
             return answers.isEmpty ? .applied : answers.removeFirst()
         }
         return ScriptedAck(clipId: push.clipId, transferId: push.transfer?.transferId, answer: answer)
@@ -48,19 +52,31 @@ final class FakeClipboardPeer: ClipboardPeer, @unchecked Sendable {
 
     func sendChunk(_ chunk: ClipboardChunkPlaintext, lane: EnvelopeLane) async throws {
         if chunkDelay > .zero { try await Task.sleep(for: chunkDelay) }
-        locked { storedChunks.append(chunk) }
+        locked {
+            storedChunks.append(chunk)
+            storedLanes["chunk", default: []].append(lane)
+        }
     }
 
     func sendCancel(_ cancel: ClipboardCancelData, lane: EnvelopeLane) async throws {
-        locked { storedCancels.append(cancel) }
+        locked {
+            storedCancels.append(cancel)
+            storedLanes["cancel", default: []].append(lane)
+        }
     }
 
     func sendConflict(_ conflict: ClipboardConflictData, lane: EnvelopeLane) async throws {
-        locked { storedConflicts.append(conflict) }
+        locked {
+            storedConflicts.append(conflict)
+            storedLanes["conflict", default: []].append(lane)
+        }
     }
 
     func reply(to requestId: String, with ack: Ack, lane: EnvelopeLane) async throws {
-        locked { storedReplies.append((requestId, ack)) }
+        locked {
+            storedReplies.append((requestId, ack))
+            storedLanes["reply", default: []].append(lane)
+        }
     }
 }
 

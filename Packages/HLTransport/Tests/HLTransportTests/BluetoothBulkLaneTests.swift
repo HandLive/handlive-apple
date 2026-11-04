@@ -30,32 +30,6 @@ struct BluetoothBulkLaneTests {
         await channel.close(code: .normal)
     }
 
-    // MARK: - Rule 4: BT_BULK_QUEUED backpressure
-
-    @Test("send(.bulkText) blocks while BT_BULK_QUEUED envelopes are pending")
-    func bulkTextBackpressure() async throws {
-        let stream = BlockingStream()
-        let channel = BluetoothChannel(stream: stream, sealKey: Data(repeating: 1, count: 32),
-                                       openKey: Data(repeating: 2, count: 32))
-        let envelope = String(repeating: "x", count: 100)
-        // Hai send đầu tiên đã xếp hàng (BT_BULK_QUEUED = 2). Send thứ ba phải chờ.
-        let first = Task { try await channel.send(.bulkText(envelope)) }
-        let second = Task { try await channel.send(.bulkText(envelope)) }
-        try await Task.sleep(for: .milliseconds(50))
-        let pending = await channel.pendingBulkEnvelopes
-        #expect(pending == 2)
-        // Send thứ ba chưa xong vì backpressure.
-        let third = Task { try await channel.send(.bulkText(envelope)) }
-        try await Task.sleep(for: .milliseconds(50))
-        #expect(third.isCancelled == false)
-        #expect(await channel.pendingBulkEnvelopes == 2)
-        // Đóng kênh để giải phóng các send đang chờ.
-        await channel.close(code: .normal)
-        first.cancel()
-        second.cancel()
-        third.cancel()
-    }
-
     // MARK: - Rule 5: link closes on long=1 on 0x02, on dlen > bulkFragmentMax, on message > messageMax
 
     @Test("a 0x02 fragment with long=1 closes the link")
@@ -154,7 +128,7 @@ struct BluetoothBulkLaneTests {
 // MARK: - Test streams
 
 /// Ghi lại mọi `write` để kiểm tra trên dây; `read` chờ mãi mãi cho đến khi `close`.
-private final class CapturingStream: BluetoothByteStream, @unchecked Sendable {
+final class CapturingStream: BluetoothByteStream, @unchecked Sendable {
     private let lock = NSLock()
     private var written: [Data] = []
     private var reader: CheckedContinuation<Data, Error>?
@@ -197,7 +171,7 @@ private final class CapturingStream: BluetoothByteStream, @unchecked Sendable {
 }
 
 /// `write` chờ mãi mãi cho đến khi `close` — dùng để kiểm tra backpressure.
-private final class BlockingStream: BluetoothByteStream, @unchecked Sendable {
+final class BlockingStream: BluetoothByteStream, @unchecked Sendable {
     private let lock = NSLock()
     private var writer: CheckedContinuation<Void, Error>?
     private var reader: CheckedContinuation<Data, Error>?
@@ -238,7 +212,7 @@ private final class BlockingStream: BluetoothByteStream, @unchecked Sendable {
 }
 
 /// `read` trả về dữ liệu được inject từ bên ngoài; `write` bỏ qua.
-private final class InjectingStream: BluetoothByteStream, @unchecked Sendable {
+final class InjectingStream: BluetoothByteStream, @unchecked Sendable {
     private let lock = NSLock()
     private var buffer = Data()
     private var waiter: (count: Int, continuation: CheckedContinuation<Data, Error>)?
@@ -294,7 +268,7 @@ private final class InjectingStream: BluetoothByteStream, @unchecked Sendable {
 
 /// Cặp `BluetoothByteStream` cho test: ghi từ `local` đến `remote` và ngược lại.
 /// Mỗi bên giữ một bộ đệm byte; `read(count)` trả về đúng `count` byte, hoặc chờ nếu chưa đủ.
-private final class BluetoothByteStreamPair: @unchecked Sendable {
+final class BluetoothByteStreamPair: @unchecked Sendable {
     var local: BluetoothByteStream!
     var remote: BluetoothByteStream!
     private let lock = NSLock()
