@@ -16,7 +16,8 @@ struct BluetoothChannelConcurrentSendTests {
         let senders = 8
         try await withThrowingTaskGroup(of: Void.self) { group in
             for index in 0..<senders {
-                group.addTask { try await channel.send(.binary(Data(repeating: UInt8(index), count: 16))) }
+                let payload = String(repeating: "\(index)", count: 16)
+                group.addTask { try await channel.send(.bulkText(payload)) }
             }
             try await group.waitForAll()
         }
@@ -34,7 +35,7 @@ struct BluetoothChannelConcurrentSendTests {
             for index in 0..<4 {
                 group.addTask {
                     do {
-                        try await channel.send(.binary(Data([UInt8(index)])))
+                        try await channel.send(.bulkText(String([Character(UnicodeScalar(index)!)])))
                         return false
                     } catch {
                         return true
@@ -45,6 +46,18 @@ struct BluetoothChannelConcurrentSendTests {
         }
         #expect(failures == 4)
         #expect(stream.maxConcurrentWriters == 1)
+        await channel.close(code: .normal)
+    }
+
+    @Test("send(.binary) throws — HL frames never travel on Bluetooth (0.4.7 bulk rule 6)")
+    func sendBinaryThrows() async throws {
+        let stream = SlowWriteStream()
+        let channel = BluetoothChannel(stream: stream, sealKey: Data(repeating: 1, count: 32),
+                                       openKey: Data(repeating: 2, count: 32))
+        await #expect(throws: ChannelClosed.self) {
+            try await channel.send(.binary(Data(count: 16)))
+        }
+        #expect(stream.writeCount == 0)
         await channel.close(code: .normal)
     }
 }
