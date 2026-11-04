@@ -50,20 +50,22 @@ public actor ControlSession {
     // MARK: - Sending
 
     /// Sends an event (no `ack`).
-    public func send<Body: Encodable & Sendable>(_ type: MessageType, op: String, data: Body) async throws {
-        try await transmit(try seal(type, plaintext: try encode(op: op, data: data)))
+    public func send<Body: Encodable & Sendable>(_ type: MessageType, op: String, data: Body,
+                                                 lane: EnvelopeLane = .control) async throws {
+        try await transmit(try seal(type, plaintext: try encode(op: op, data: data)), lane: lane)
     }
 
     /// Sends a request and returns the handle of its `ack`; the caller decides when to start waiting. A retry passes
     /// the envelope `id` of the first try, so the phone answers it from its de-duplication window (SMS-04 step 5).
     public func sendRequest<Body: Encodable & Sendable>(_ type: MessageType, op: String, data: Body,
-                                                        id: String = HLUUID.v7()) async throws -> PendingAck {
+                                                        id: String = HLUUID.v7(),
+                                                        lane: EnvelopeLane = .control) async throws -> PendingAck {
         let envelope = try seal(type, plaintext: try encode(op: op, data: data), id: id)
         pendingAcks = pendingAcks.filter { !$0.value.isResolved } // drop requests that timed out
         let pending = PendingAck(requestId: envelope.id)
         pendingAcks[envelope.id] = pending
         do {
-            try await transmit(envelope)
+            try await transmit(envelope, lane: lane)
         } catch {
             pendingAcks[envelope.id] = nil
             throw error
@@ -73,21 +75,23 @@ public actor ControlSession {
 
     /// Sends a request and waits for its `ack` (`REQUEST_TIMEOUT` unless given).
     public func request<Body: Encodable & Sendable>(_ type: MessageType, op: String, data: Body,
-                                                    timeout: Duration? = nil) async throws -> Ack {
-        try await sendRequest(type, op: op, data: data).response(timeout: timeout ?? configuration.requestTimeout)
+                                                    timeout: Duration? = nil,
+                                                    lane: EnvelopeLane = .control) async throws -> Ack {
+        try await sendRequest(type, op: op, data: data, lane: lane)
+            .response(timeout: timeout ?? configuration.requestTimeout)
     }
 
     /// Sends a binary plaintext envelope (`clipboard/chunk`, 0.5.1).
-    public func sendBinary(_ type: MessageType, plaintext: Data) async throws {
-        try await transmit(try seal(type, plaintext: plaintext))
+    public func sendBinary(_ type: MessageType, plaintext: Data, lane: EnvelopeLane = .control) async throws {
+        try await transmit(try seal(type, plaintext: plaintext), lane: lane)
     }
 
     /// Answers a request of the phone; the `ack` is kept for repeats of the same `id` (0.5.1 rule 2).
-    public func reply(to requestId: String, with ack: Ack) async throws {
+    public func reply(to requestId: String, with ack: Ack, lane: EnvelopeLane = .control) async throws {
         guard let plaintext = try? ack.encoded() else { throw SessionError.encoding }
         let envelope = try seal(.ack, plaintext: plaintext)
         recentIDs.remember(ackWire: envelope.wireString(), for: requestId)
-        try await transmit(envelope)
+        try await transmit(envelope, lane: lane)
     }
 
     /// Sends `capability/update`: a full snapshot of this device's capability (SET-02 API 1).
@@ -146,9 +150,10 @@ public actor ControlSession {
         return envelope
     }
 
-    func transmit(_ envelope: Envelope) async throws {
+    func transmit(_ envelope: Envelope, lane: EnvelopeLane = .control) async throws {
         do {
-            try await channel.send(.text(envelope.wireString()))
+            let message: ChannelMessage = lane == .bulk ? .bulkText(envelope.wireString()) : .text(envelope.wireString())
+            try await channel.send(message)
         } catch {
             throw SessionError.ended
         }

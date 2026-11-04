@@ -38,7 +38,7 @@ final class FakeClipboardPeer: ClipboardPeer, @unchecked Sendable {
         return body()
     }
 
-    func sendPush(_ push: ClipboardPushData) async throws -> any AckWaiting {
+    func sendPush(_ push: ClipboardPushData, lane: EnvelopeLane) async throws -> any AckWaiting {
         let answer: Answer = locked {
             storedPushes.append(push)
             return answers.isEmpty ? .applied : answers.removeFirst()
@@ -46,20 +46,20 @@ final class FakeClipboardPeer: ClipboardPeer, @unchecked Sendable {
         return ScriptedAck(clipId: push.clipId, transferId: push.transfer?.transferId, answer: answer)
     }
 
-    func sendChunk(_ chunk: ClipboardChunkPlaintext) async throws {
+    func sendChunk(_ chunk: ClipboardChunkPlaintext, lane: EnvelopeLane) async throws {
         if chunkDelay > .zero { try await Task.sleep(for: chunkDelay) }
         locked { storedChunks.append(chunk) }
     }
 
-    func sendCancel(_ cancel: ClipboardCancelData) async throws {
+    func sendCancel(_ cancel: ClipboardCancelData, lane: EnvelopeLane) async throws {
         locked { storedCancels.append(cancel) }
     }
 
-    func sendConflict(_ conflict: ClipboardConflictData) async throws {
+    func sendConflict(_ conflict: ClipboardConflictData, lane: EnvelopeLane) async throws {
         locked { storedConflicts.append(conflict) }
     }
 
-    func reply(to requestId: String, with ack: Ack) async throws {
+    func reply(to requestId: String, with ack: Ack, lane: EnvelopeLane) async throws {
         locked { storedReplies.append((requestId, ack)) }
     }
 }
