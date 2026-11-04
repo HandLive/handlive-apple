@@ -27,6 +27,7 @@ public final class WebSocketChannel: MessageChannel, @unchecked Sendable {
     public func send(_ message: ChannelMessage) async throws {
         let (opcode, data): (NWProtocolWebSocket.Opcode, Data) = switch message {
         case .text(let text): (.text, Data(text.utf8))
+        case .bulkText(let text): (.text, Data(text.utf8))
         case .binary(let data): (.binary, data)
         }
         let metadata = NWProtocolWebSocket.Metadata(opcode: opcode)

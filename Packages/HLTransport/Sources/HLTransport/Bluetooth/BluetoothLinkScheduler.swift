@@ -10,7 +10,7 @@ import HLProtocol
 /// (0.4.5 "Order"): `typesPendingLong` theo dõi điều này, xoá khi mảnh CUỐI của tin đó được `poll` — thứ tự trên
 /// dây đã chốt ngay lúc đó vì liên kết chỉ có một luồng byte nối tiếp.
 public final class BluetoothLinkScheduler {
-    private struct QueuedFrame { let bytes: Data; let type: String?; let isLastOfMessage: Bool }
+    private struct QueuedFrame { let bytes: Data; let type: String?; let isLastOfMessage: Bool; let isLastOfBulkEnvelope: Bool }
 
     private let bulkInflight: Int
     private var short: [Data] = []
@@ -18,6 +18,9 @@ public final class BluetoothLinkScheduler {
     private var bulk: [QueuedFrame] = []
     private var longBulkInflight = 0
     private var typesPendingLong: Set<String> = []
+    /// Số phong bì bulk đã xếp hàng mà chưa ghi xong (0.4.7 bulk rule 4): `send(.bulkText)` chặn khi đạt
+    /// `BT_BULK_QUEUED`. Tăng khi `enqueueBulk`, giảm khi mảnh cuối của phong bì được `onBulkEnvelopeDrained`.
+    private var bulkEnvelopesQueued = 0
 
     public init(bulkInflight: Int = BluetoothLinkConstants.bulkInflight) {
         self.bulkInflight = bulkInflight
@@ -35,25 +38,43 @@ public final class BluetoothLinkScheduler {
         }
     }
 
-    /// Dữ liệu bulk trên kênh `0x02` (nội dung: 0.4.7, ngoài phạm vi thẻ này).
+    /// Một phong bì bulk (0.4.7) trên kênh `0x02`: UTF-8, cùng byte với WS text frame trên `/v1/ctl`. Tăng
+    /// `bulkEnvelopesQueued`; bên gọi chặn khi đạt `BT_BULK_QUEUED` (rule 4).
     public func enqueueBulk(_ data: Data) {
         bulk.append(contentsOf: fragment(type: nil, data: data, chan: BtLinkConstants.chanBulk, long: false))
+        bulkEnvelopesQueued += 1
     }
+
+    /// Số phong bì bulk đang xếp hàng mà chưa ghi xong (0.4.7 bulk rule 4).
+    public var pendingBulkEnvelopes: Int { bulkEnvelopesQueued }
 
     public func hasPending() -> Bool { !short.isEmpty || !long.isEmpty || !bulk.isEmpty }
 
     /// Mảnh plaintext kế tiếp theo ưu tiên 0.4.5 "Priority", hay `nil` nếu không còn gì để gửi ngay.
-    public func poll() -> Data? {
-        if !short.isEmpty { return short.removeFirst() }
+    /// `isLastOfBulkEnvelope` = `true` khi mảnh này là mảnh cuối của một phong bì bulk (0.4.7 bulk rule 4):
+    /// bên gọi gọi `onBulkEnvelopeDrained` khi mảnh đó thật sự xả khỏi bộ đệm ghi.
+    public func poll() -> (data: Data, isLastOfBulkEnvelope: Bool)? {
+        if !short.isEmpty { return (short.removeFirst(), false) }
         guard longBulkInflight < bulkInflight else { return nil }
-        if !long.isEmpty { return dispatch(long.removeFirst()) }
-        if !bulk.isEmpty { return dispatch(bulk.removeFirst()) }
+        if !long.isEmpty {
+            let frame = long.removeFirst()
+            return (dispatch(frame), false)
+        }
+        if !bulk.isEmpty {
+            let frame = bulk.removeFirst()
+            return (dispatch(frame), frame.isLastOfBulkEnvelope)
+        }
         return nil
     }
 
     /// Gọi khi một bản ghi dài/bulk đã `poll` trước đó thật sự xả khỏi bộ đệm ghi (mở lại một chỗ inflight).
     public func onDrained() {
         if longBulkInflight > 0 { longBulkInflight -= 1 }
+    }
+
+    /// Gọi khi mảnh cuối của một phong bì bulk đã xả khỏi bộ đệm ghi (giảm `bulkEnvelopesQueued`).
+    public func onBulkEnvelopeDrained() {
+        if bulkEnvelopesQueued > 0 { bulkEnvelopesQueued -= 1 }
     }
 
     private func dispatch(_ frame: QueuedFrame) -> Data {
@@ -64,10 +85,12 @@ public final class BluetoothLinkScheduler {
 
     private func fragment(type: String?, data: Data, chan: Int, long: Bool) -> [QueuedFrame] {
         let chunks = chunk(data, maxSize: BtLinkConstants.bulkFragmentMax)
+        let isBulk = chan == BtLinkConstants.chanBulk
         return chunks.enumerated().map { index, part in
             let more = index != chunks.count - 1
             let plaintext = BtTransportFrame.encode(chan: chan, more: more, long: long, data: part)
-            return QueuedFrame(bytes: plaintext, type: type, isLastOfMessage: !more)
+            return QueuedFrame(bytes: plaintext, type: type, isLastOfMessage: !more,
+                               isLastOfBulkEnvelope: isBulk && !more)
         }
     }
 

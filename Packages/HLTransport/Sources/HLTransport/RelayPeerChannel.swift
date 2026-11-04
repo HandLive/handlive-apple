@@ -21,7 +21,13 @@ public final class RelayPeerChannel: MessageChannel, @unchecked Sendable {
     /// Sends an envelope (the wire JSON object of 0.5.1) to the peer.
     public func send(_ message: ChannelMessage) async throws {
         if let reason = inbox.closedReason { throw reason }
-        guard case .text(let envelope) = message, envelope.hasPrefix("{"), let link else {
+        let envelope: String
+        switch message {
+        case .text(let text): envelope = text
+        case .bulkText(let text): envelope = text
+        case .binary: throw ChannelClosed(code: nil, detail: "binary not supported on relay", local: true)
+        }
+        guard envelope.hasPrefix("{"), let link else {
             throw ChannelClosed(code: nil, detail: "not an envelope", local: true)
         }
         try await link.sendText("{\"to\":\"\(peerDeviceId)\",\"env\":\(envelope)}")
@@ -91,7 +97,13 @@ public final class RelayRendezvousChannel: MessageChannel, @unchecked Sendable {
 
     public func send(_ message: ChannelMessage) async throws {
         if let reason = inbox.closedReason { throw reason }
-        guard case .text(let text) = message, let link, let envelope = try? Envelope.parse(Data(text.utf8)) else {
+        let text: String
+        switch message {
+        case .text(let t): text = t
+        case .bulkText(let t): text = t
+        case .binary: throw ChannelClosed(code: nil, detail: "binary not supported on relay", local: true)
+        }
+        guard let link, let envelope = try? Envelope.parse(Data(text.utf8)) else {
             throw ChannelClosed(code: nil, detail: "not an envelope", local: true)
         }
         try await link.sendText(try RelayFrame.rendezvousMessage(rvId: rvId, envelope: envelope))

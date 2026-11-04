@@ -7,4 +7,8 @@ public enum BluetoothLinkConstants {
 
     /// Số bản ghi làn dài + bulk cùng lúc đã gửi mà chưa xả (0.4.5 "Priority").
     public static let bulkInflight = 2
+
+    /// Số phong bì bulk đã xếp hàng mà chưa ghi xong (0.4.7 bulk rule 4): `send(.bulkText)` không trả về khi
+    /// đã đủ phong bì này trong hàng đợi. Thay CLIP-03 "tối đa 4 chunk trong bộ đệm gửi" trên Bluetooth.
+    public static let bulkQueued = 2
 }
