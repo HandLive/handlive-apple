@@ -1,17 +1,19 @@
 import Foundation
 import HLProtocol
+import HLTransport
 
 extension ClipboardEngine {
     // MARK: - Incoming chunked clips (CLIP-03 steps 8–11, API 4–5)
 
     /// Starts receiving the chunks of a push into a temporary file (the caller ended any older transfer).
-    func startIncoming(_ push: ClipboardPushData, transfer: ClipboardTransfer, requestId: String) {
+    func startIncoming(_ push: ClipboardPushData, transfer: ClipboardTransfer, requestId: String,
+                       lane: EnvelopeLane = .bulk) {
         guard let digest = try? Base64Coding.decodeB64u(transfer.sha256),
               let started = try? IncomingTransfer(push: push, transfer: transfer, expectedDigest: digest,
                                                   requestId: requestId, directory: temporaryDirectory)
         else {
             ledger.record(push.clipId, .rejected, now: now())
-            reply(requestId, .rejected(.internal, clipId: push.clipId))
+            reply(requestId, .rejected(.internal, clipId: push.clipId), lane: lane)
             if push.kind == .image { onNotice(.imageNoSpace) }
             return
         }
@@ -33,7 +35,7 @@ extension ClipboardEngine {
         } catch {
             endIncoming()
             ledger.record(push.clipId, .rejected, now: now())
-            reply(transfer.requestId, .rejected(.internal, clipId: push.clipId))
+            reply(transfer.requestId, .rejected(.internal, clipId: push.clipId), lane: .bulk)
             if push.kind == .image { onNotice(.imageNoSpace) }
             return
         }
@@ -43,30 +45,31 @@ extension ClipboardEngine {
         case .outOfOrder:
             endIncoming()
             ledger.record(push.clipId, .rejected, now: now())
-            reply(transfer.requestId, .rejected(.badRequest, clipId: push.clipId))
+            reply(transfer.requestId, .rejected(.badRequest, clipId: push.clipId), lane: .bulk)
         case .checksumMismatch:
             endIncoming()
             ledger.record(push.clipId, .rejected, now: now())
-            reply(transfer.requestId, .rejected(.clipChecksumMismatch, clipId: push.clipId, transferId: transfer.transferId))
+            reply(transfer.requestId, .rejected(.clipChecksumMismatch, clipId: push.clipId, transferId: transfer.transferId),
+                  lane: .bulk)
         case .complete(let data):
             endIncoming()
-            completeIncoming(data, push: push, requestId: transfer.requestId)
+            completeIncoming(data, push: push, requestId: transfer.requestId, lane: .bulk)
         }
     }
 
     /// Chunked text must be valid UTF-8 once reassembled (API 3 logic 5); an image goes to the clipboard as received.
-    private func completeIncoming(_ data: Data, push: ClipboardPushData, requestId: String) {
+    private func completeIncoming(_ data: Data, push: ClipboardPushData, requestId: String, lane: EnvelopeLane) {
         switch push.kind {
         case .text:
             guard let text = String(data: data, encoding: .utf8) else {
                 ledger.record(push.clipId, .rejected, now: now())
-                reply(requestId, .rejected(.badRequest, clipId: push.clipId))
+                reply(requestId, .rejected(.badRequest, clipId: push.clipId), lane: lane)
                 return
             }
-            apply(.text(text), push: push, requestId: requestId)
+            apply(.text(text), push: push, requestId: requestId, lane: lane)
         case .image:
             let image = ClipImage(data: data, mime: push.mime, width: push.width ?? 0, height: push.height ?? 0)
-            apply(.image(image), push: push, requestId: requestId)
+            apply(.image(image), push: push, requestId: requestId, lane: lane)
         }
     }
 
@@ -92,9 +95,10 @@ extension ClipboardEngine {
         endIncoming()
         if let peer = phone?.peer {
             let cancel = ClipboardCancelData(transferId: transfer.transferId, reason: reason)
-            Task { try? await peer.sendCancel(cancel) }
+            // 0.4.7 bulk rule 1: cancel của một transfer đi làn bulk.
+            Task { try? await peer.sendCancel(cancel, lane: .bulk) }
         }
-        reply(transfer.requestId, .ignored(transfer.push.clipId, .cancelled))
+        reply(transfer.requestId, .ignored(transfer.push.clipId, .cancelled), lane: .bulk)
     }
 
     /// "Cancel" on the progress in the menu (E6), on either side: `clipboard/cancel user`.

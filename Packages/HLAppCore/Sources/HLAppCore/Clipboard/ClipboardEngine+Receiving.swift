@@ -23,9 +23,11 @@ extension ClipboardEngine {
     private func receivePush(_ payload: Payload, requestId: String) {
         guard let phone else { return }
         guard let push = try? payload.decodeData(as: ClipboardPushData.self) else {
-            reply(requestId, .rejected(.badRequest, clipId: nil))
+            reply(requestId, .rejected(.badRequest, clipId: nil), lane: .control)
             return
         }
+        // 0.4.7 bulk rule 1: ack/conflict/cancel của push có `transfer` đi làn bulk; của push inline đi làn control.
+        let lane: EnvelopeLane = push.transfer == nil ? .control : .bulk
         let bytes = push.text.map { $0.utf8.count } ?? Int(push.transfer?.size ?? 0)
         var receivedFields = [("clip", push.clipId), ("peer", Self.benchId(phone.deviceId)),
                               ("kind", push.kind.rawValue), ("bytes", String(bytes))]
@@ -33,22 +35,22 @@ extension ClipboardEngine {
         BenchLog.event("clip_received", fields: receivedFields)
         if let code = validate(push) {
             ledger.record(push.clipId, .rejected, now: now())
-            reply(requestId, .rejected(code, clipId: push.clipId))
+            reply(requestId, .rejected(code, clipId: push.clipId), lane: lane)
             return
         }
         if ledger.isDuplicate(push.clipId, now: now()) {
-            reply(requestId, .ignored(push.clipId, .duplicate))
+            reply(requestId, .ignored(push.clipId, .duplicate), lane: lane)
             return
         }
         // One incoming transfer per peer: any newer push replaces it (CLIP-03 API 3 logic 2).
         if let old = incoming {
             endIncoming()
-            reply(old.requestId, .ignored(old.push.clipId, .cancelled))
+            reply(old.requestId, .ignored(old.push.clipId, .cancelled), lane: .bulk)
         }
         if let transfer = push.transfer {
-            startIncoming(push, transfer: transfer, requestId: requestId)
+            startIncoming(push, transfer: transfer, requestId: requestId, lane: lane)
         } else if let text = push.text {
-            apply(.text(text), push: push, requestId: requestId)
+            apply(.text(text), push: push, requestId: requestId, lane: lane)
         }
     }
 
@@ -81,36 +83,36 @@ extension ClipboardEngine {
     }
 
     /// QC8, then the write (CLIP-01 API 7, CLIP-03 API 7), the QC4 trace, CLIP-05 and the `ack`.
-    func apply(_ content: ClipContent, push: ClipboardPushData, requestId: String) {
+    func apply(_ content: ClipContent, push: ClipboardPushData, requestId: String, lane: EnvelopeLane) {
         noticeUnseenLocalChange()
         if keepsUnsentLocalContent() {
             ledger.record(push.clipId, .ignored, now: now())
-            return reply(requestId, .ignored(push.clipId, .conflict))
+            return reply(requestId, .ignored(push.clipId, .conflict), lane: lane)
         }
         switch ConflictPolicy.decide(originTs: push.originTs, originDeviceId: push.originDeviceId,
                                      local: unacknowledgedLocalChange(), now: now()) {
         case .keepLocalAndReport:
             ledger.record(push.clipId, .ignored, now: now())
-            reply(requestId, .ignored(push.clipId, .conflict))
+            reply(requestId, .ignored(push.clipId, .conflict), lane: lane)
             let conflict = ClipboardConflictData(clipId: push.clipId, originDeviceId: push.originDeviceId,
                                                  deviceId: deviceId, deviceName: deviceName)
-            if let peer = phone?.peer { Task { try? await peer.sendConflict(conflict) } }
+            if let peer = phone?.peer { Task { try? await peer.sendConflict(conflict, lane: lane) } }
         case .keepLocal:
             ledger.record(push.clipId, .ignored, now: now())
-            reply(requestId, .ignored(push.clipId, .conflict))
+            reply(requestId, .ignored(push.clipId, .conflict), lane: lane)
         case .write:
-            write(content, push: push, requestId: requestId)
+            write(content, push: push, requestId: requestId, lane: lane)
         }
     }
 
-    private func write(_ content: ClipContent, push: ClipboardPushData, requestId: String) {
+    private func write(_ content: ClipContent, push: ClipboardPushData, requestId: String, lane: EnvelopeLane) {
         // Never trust the sender's sanitizing: the HTML is cleaned again before it reaches the clipboard.
         // Escaping can grow the output past the limit: the text then goes alone, still acknowledged applied.
         let html = push.html.map(HtmlClipSanitizer.sanitize)
             .flatMap { $0.isEmpty || $0.utf8.count > ClipboardConstants.maxHtmlBytes ? nil : $0 }
         guard let count = access.write(content, html: html, clipId: push.clipId, sensitive: push.sensitive) else {
             ledger.record(push.clipId, .rejected, now: now())
-            reply(requestId, .rejected(.internal, clipId: push.clipId))
+            reply(requestId, .rejected(.internal, clipId: push.clipId), lane: lane)
             return
         }
         let writtenAt = now()
@@ -127,7 +129,7 @@ extension ClipboardEngine {
         BenchLog.event("clip_applied", ["clip": push.clipId])
         ledger.record(push.clipId, .applied, now: writtenAt)
         scheduleAutoClear()
-        reply(requestId, .applied(push.clipId))
+        reply(requestId, .applied(push.clipId), lane: lane)
         let clip = ReceivedClip(clipId: push.clipId, content: content, html: html, sensitive: push.sensitive,
                                 deviceName: phone?.name ?? "", receivedAt: writtenAt)
         lastReceived = clip
@@ -181,7 +183,7 @@ extension ClipboardEngine {
         case rejected(ErrorCode, clipId: String?, transferId: String? = nil)
     }
 
-    func reply(_ requestId: String, _ result: PushResult) {
+    func reply(_ requestId: String, _ result: PushResult, lane: EnvelopeLane = .control) {
         guard let phone else { return }
         let ack: Ack
         let status: String
@@ -199,7 +201,7 @@ extension ClipboardEngine {
             (status, clipId) = ("rejected", id)
         }
         Task {
-            try? await phone.peer.reply(to: requestId, with: ack)
+            try? await phone.peer.reply(to: requestId, with: ack, lane: lane)
             if let clipId {
                 BenchLog.event("ack_sent", ["clip": clipId, "peer": Self.benchId(phone.deviceId), "status": status])
             }
