@@ -92,4 +92,13 @@ extension ClipboardProgress {
         case .receiving: return L10n.Clipboard.imageReceiving(deviceName: deviceName, percent: percent)
         }
     }
+
+    /// Ghi chú dưới tiến độ khi ảnh đi qua Bluetooth (CLIP-03 trường 10); `nil` ở LAN và relay.
+    public var bluetoothNote: String? {
+        guard overBluetooth else { return nil }
+        switch direction {
+        case .sending: return L10n.Clipboard.bulkBluetoothSending
+        case .receiving: return L10n.Clipboard.bulkBluetoothReceiving
+        }
+    }
 }

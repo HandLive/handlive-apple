@@ -100,6 +100,9 @@ public struct MenuBarMenu: View {
         ForEach([ClipboardProgress.Direction.sending, .receiving], id: \.self) { direction in
             if let progress = model.clipboardProgress[direction] {
                 Text(progress.text)
+                if let note = progress.bluetoothNote {
+                    Text(note)
+                }
                 Button(L10n.Common.cancel) { model.cancelClipboardTransfer(progress.transferId) }
             }
         }
