@@ -41,4 +41,16 @@ struct AppModelClipboardTests {
         let progress = ClipboardProgress(direction: .receiving, transferId: HLUUID.v7(), deviceName: "Pixel 8", fraction: 0.45)
         #expect(progress.text == L10n.Clipboard.imageReceiving(deviceName: "Pixel 8", percent: "45%"))
     }
+
+    @Test("Ghi chú Bluetooth dưới tiến độ (CLIP-03 trường 10): chỉ khi đi qua Bluetooth, đúng chiều gửi/nhận")
+    func bluetoothNote() {
+        func progress(_ direction: ClipboardProgress.Direction, overBluetooth: Bool) -> ClipboardProgress {
+            ClipboardProgress(direction: direction, transferId: HLUUID.v7(), deviceName: "Pixel 8", fraction: 0.2,
+                              overBluetooth: overBluetooth)
+        }
+        #expect(progress(.sending, overBluetooth: true).bluetoothNote == L10n.Clipboard.bulkBluetoothSending)
+        #expect(progress(.receiving, overBluetooth: true).bluetoothNote == L10n.Clipboard.bulkBluetoothReceiving)
+        #expect(progress(.sending, overBluetooth: false).bluetoothNote == nil)
+        #expect(progress(.receiving, overBluetooth: false).bluetoothNote == nil)
+    }
 }
