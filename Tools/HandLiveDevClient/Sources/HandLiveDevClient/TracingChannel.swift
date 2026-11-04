@@ -45,6 +45,7 @@ final class TracingChannel: MessageChannel, @unchecked Sendable {
             switch message {
             case .text(let text): return "text, \(text.utf8.count) bytes"
             case .binary(let data): return "binary, \(data.count) bytes"
+            case .bulkText(let text): return "bulk text, \(text.utf8.count) bytes"
             }
         }
         var line = "\(envelope.type.rawValue)/\(payload.op)"
