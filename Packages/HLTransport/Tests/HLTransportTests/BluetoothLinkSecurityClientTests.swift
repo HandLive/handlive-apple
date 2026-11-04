@@ -24,7 +24,8 @@ struct BluetoothLinkSecurityClientTests {
     @Test("a full handshake over the challenge/noise1/noise2 records matches the vector")
     func fullHandshakeMatchesVector() throws {
         let handshake = try Self.handshake()
-        let client = BluetoothLinkSecurityClient(generateEphemeralPrivateKey: { try! handshake.hex("e_priv_c") })
+        let ephemeralPrivateKey = try handshake.hex("e_priv_c")
+        let client = BluetoothLinkSecurityClient(generateEphemeralPrivateKey: { ephemeralPrivateKey })
 
         let challengeBody = try Self.body(ofRecord: handshake.hex("challenge_record"))
         let decodedChallenge = try BtPreauthRecord.decode(challengeBody)
@@ -45,8 +46,10 @@ struct BluetoothLinkSecurityClientTests {
     @Test("a tampered noise2 tag is rejected, not thrown")
     func tamperedNoise2TagIsRejected() throws {
         let handshake = try Self.handshake()
-        let invalid = try #require(VectorFile("bt-link.json").invalidVectors.first { $0["reason"] as? String == "tag_mismatch_noise2" })
-        let client = BluetoothLinkSecurityClient(generateEphemeralPrivateKey: { try! handshake.hex("e_priv_c") })
+        let invalid = try #require(
+            VectorFile("bt-link.json").invalidVectors.first { $0["reason"] as? String == "tag_mismatch_noise2" })
+        let ephemeralPrivateKey = try handshake.hex("e_priv_c")
+        let client = BluetoothLinkSecurityClient(generateEphemeralPrivateKey: { ephemeralPrivateKey })
         client.receiveChallenge(nS: try handshake.hex("n_s"))
         _ = try client.buildNoise1(psk: try handshake.hex("psk"))
 
@@ -57,8 +60,10 @@ struct BluetoothLinkSecurityClientTests {
     @Test("a fresh challenge changes noise1, so a recorded one from another channel never reapplies")
     func aFreshChallengeChangesNoise1() throws {
         let handshake = try Self.handshake()
-        let replayed = try #require(VectorFile("bt-link.json").invalidVectors.first { $0["reason"] as? String == "replayed_channel" })
-        let client = BluetoothLinkSecurityClient(generateEphemeralPrivateKey: { try! handshake.hex("e_priv_c") })
+        let replayed = try #require(
+            VectorFile("bt-link.json").invalidVectors.first { $0["reason"] as? String == "replayed_channel" })
+        let ephemeralPrivateKey = try handshake.hex("e_priv_c")
+        let client = BluetoothLinkSecurityClient(generateEphemeralPrivateKey: { ephemeralPrivateKey })
 
         // n_s của kênh mới (challenge khác) — noise1 dựng lại dưới prologue mới khác hẳn bản ghi của kênh cũ.
         client.receiveChallenge(nS: try replayed.hex("n_s"))

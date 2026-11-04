@@ -43,14 +43,16 @@ struct BtTransportFrameTests {
 
     @Test("more without long closes the link")
     func moreWithoutLongClosesTheLink() throws {
-        let vector = try #require(VectorFile("bt-frame.json").invalidVectors.first { $0["reason"] as? String == "more_without_long" })
+        let vector = try #require(
+            VectorFile("bt-frame.json").invalidVectors.first { $0["reason"] as? String == "more_without_long" })
         let plaintext = try vector.hex("plaintext")
         #expect(throws: BtLinkError.self) { try BtTransportFrame.decode(plaintext) }
     }
 
     @Test("a bulk/long fragment over the max closes the link")
     func bulkFragmentOverMaxClosesTheLink() throws {
-        let vector = try #require(VectorFile("bt-frame.json").invalidVectors.first { $0["reason"] as? String == "bulk_fragment_over_max" })
+        let vector = try #require(
+            VectorFile("bt-frame.json").invalidVectors.first { $0["reason"] as? String == "bulk_fragment_over_max" })
         let dlen = Int(try vector.int("dlen"))
         #expect(Int(try vector.int("bt_bulk_fragment_max")) == BtLinkConstants.bulkFragmentMax)
         #expect(dlen > BtLinkConstants.bulkFragmentMax)

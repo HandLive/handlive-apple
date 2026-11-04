@@ -63,7 +63,7 @@ public final class CoreBluetoothCentral: NSObject, BluetoothCentral, CBCentralMa
     }
 
     private func registerOpenContinuation(_ peripheralId: String,
-                                           _ continuation: CheckedContinuation<any BluetoothByteStream, Error>) {
+                                          _ continuation: CheckedContinuation<any BluetoothByteStream, Error>) {
         lock.lock()
         openContinuations[peripheralId] = continuation
         lock.unlock()
@@ -88,7 +88,7 @@ public final class CoreBluetoothCentral: NSObject, BluetoothCentral, CBCentralMa
     }
 
     public func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral,
-                                advertisementData: [String: Any], rssi: NSNumber) {
+                               advertisementData: [String: Any], rssi: NSNumber) {
         guard let serviceData = advertisementData[CBAdvertisementDataServiceDataKey] as? [CBUUID: Data],
               let bytes = serviceData[Self.serviceUUID], let parsed = BtAdvertisementServiceData.decode(bytes)
         else { return }
@@ -115,7 +115,7 @@ public final class CoreBluetoothCentral: NSObject, BluetoothCentral, CBCentralMa
     }
 
     public func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral,
-                                error: Error?) {
+                               error: Error?) {
         // A dropped L2CAP channel surfaces through `BluetoothChannel.receive()` throwing `ChannelClosed`
         // (CONN-05 E6) — this callback only forgets the advertisement, so a stale PSM is never reused.
         let id = peripheral.identifier.uuidString

@@ -5,6 +5,16 @@ import HLProtocol
 public enum ChannelMessage: Sendable, Equatable {
     case text(String)
     case binary(Data)
+    /// An envelope (0.5.1) on the bulk lane (0.4.7). Send only: a channel without a separate bulk lane sends it
+    /// as a text frame; `receive()` never returns it.
+    case bulkText(String)
+}
+
+/// Which lane an envelope travels on (0.4.7 "Bulk lane on the Bluetooth link", rule 2). Channels without a
+/// separate bulk lane ignore the lane and send as text.
+public enum EnvelopeLane: Sendable, Equatable {
+    case control
+    case bulk
 }
 
 /// Why a channel stopped: the peer's close code when there was one, or a transport error.

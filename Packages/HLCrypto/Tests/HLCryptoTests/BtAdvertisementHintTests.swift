@@ -9,7 +9,7 @@ struct BtAdvertisementHintTests {
     @Test("hint() matches every epoch of the vector")
     func hintMatchesVector() throws {
         let vector = try #require(VectorFile("bt-link.json").vectors.first { $0["kind"] as? String == "hint" })
-        #expect(try vector.string("hint_label") == String(decoding: BtAdvertisementHint.label, as: UTF8.self))
+        #expect(try vector.string("hint_label") == String(bytes: BtAdvertisementHint.label, encoding: .utf8))
         #expect(try vector.int("bt_hint_period_ms") == BtAdvertisementHint.periodMilliseconds)
         let keySource = try #require(VectorFile("bt-link.json").vectors.first {
             $0["kind"] as? String == "key" && ($0["name"] as? String) == (vector["k_bt_disc_source"] as? String)

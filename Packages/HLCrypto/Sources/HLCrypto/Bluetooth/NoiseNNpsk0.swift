@@ -17,12 +17,12 @@ public enum NoiseNNpsk0 {
     public static func prologue(nS: Data) -> Data { Data(prologueLabel.utf8) + nS }
 
     /// `h0 = ck0` = tên giao thức, hoặc SHA-256 của nó nếu dài hơn `HASHLEN` (ở đây 37 byte > 32).
-    private static func initializeSymmetric() -> (h: Data, ck: Data) {
-        let h = protocolName.count <= hashSize ? protocolName : HMACSHA256.sha256(protocolName)
-        return (h, h)
+    private static func initializeSymmetric() -> (hash: Data, ck: Data) {
+        let hash = protocolName.count <= hashSize ? protocolName : HMACSHA256.sha256(protocolName)
+        return (hash, hash)
     }
 
-    private static func mixHash(_ h: Data, _ data: Data) -> Data { HMACSHA256.sha256(h + data) }
+    private static func mixHash(_ hash: Data, _ data: Data) -> Data { HMACSHA256.sha256(hash + data) }
 
     struct MixKeyResult { let ck: Data; let tempK: Data }
 
@@ -34,14 +34,14 @@ public enum NoiseNNpsk0 {
         return MixKeyResult(ck: out1, tempK: out2)
     }
 
-    struct PskMixResult { let ck: Data; let h: Data }
+    struct PskMixResult { let ck: Data; let hash: Data }
 
     /// Token "psk": MixKeyAndHash — 3 ngõ ra qua HMAC rồi MixHash(temp_h).
-    private static func mixKeyAndHashPsk(ck: Data, h: Data, psk: Data) -> PskMixResult {
+    private static func mixKeyAndHashPsk(ck: Data, hash: Data, psk: Data) -> PskMixResult {
         let tempKey = HMACSHA256.mac(key: ck, message: psk)
         let out1 = HMACSHA256.mac(key: tempKey, message: Data([0x01]))
         let out2 = HMACSHA256.mac(key: tempKey, message: out1 + Data([0x02]))
-        return PskMixResult(ck: out1, h: mixHash(h, out2))
+        return PskMixResult(ck: out1, hash: mixHash(hash, out2))
     }
 
     /// Kết quả dựng "khung đầu" (message 1) — giữ `ck1`/`h4` cần cho `tryOpenSecondMessage` (0.4.5 bước 2, 4).
@@ -56,9 +56,9 @@ public enum NoiseNNpsk0 {
     public static func firstMessage(psk: Data, prologue: Data, ephemeralPrivateKey: Data) throws -> FirstMessageResult {
         let (h0, ck0) = initializeSymmetric()
         let h1 = mixHash(h0, prologue)
-        let pskStep = mixKeyAndHashPsk(ck: ck0, h: h1, psk: psk)
+        let pskStep = mixKeyAndHashPsk(ck: ck0, hash: h1, psk: psk)
         let ePub = try X25519.publicKey(privateKey: ephemeralPrivateKey)
-        let h3 = mixHash(pskStep.h, ePub)
+        let h3 = mixHash(pskStep.hash, ePub)
         let eStep = mixKey(ck: pskStep.ck, ikm: ePub)
         let ciphertextTag = try ChaCha20Poly1305.seal(empty, key: eStep.tempK, nonce: zeroNonce, aad: h3)
         return FirstMessageResult(ck1: eStep.ck, h4: mixHash(h3, ciphertextTag), message1: ePub + ciphertextTag)

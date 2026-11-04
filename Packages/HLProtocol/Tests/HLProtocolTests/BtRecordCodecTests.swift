@@ -19,7 +19,8 @@ struct BtRecordCodecTests {
 
     @Test("an rlen outside the three transport sizes closes before allocating")
     func rlenOutOfBoundsClosesBeforeAllocating() throws {
-        let vector = try #require(VectorFile("bt-frame.json").invalidVectors.first { $0["reason"] as? String == "rlen_out_of_bounds" })
+        let vector = try #require(
+            VectorFile("bt-frame.json").invalidVectors.first { $0["reason"] as? String == "rlen_out_of_bounds" })
         let record = try vector.hex("record")
         let rlen = BtRecordCodec.decodeRlen(record.prefix(2))
         #expect(rlen == Int(try vector.int("rlen")))
@@ -34,7 +35,9 @@ struct BtRecordCodecTests {
         let rlen = BtRecordCodec.decodeRlen(record.prefix(2))
         #expect(rlen == Int(try vector.int("rlen")))
         #expect(Int(try vector.int("bt_preauth_record_max")) == BtLinkConstants.preauthRecordMax)
-        #expect(throws: BtLinkError.self) { try BtRecordCodec.requireWithinBound(rlen, maxBodySize: BtLinkConstants.preauthRecordMax) }
+        #expect(throws: BtLinkError.self) {
+            try BtRecordCodec.requireWithinBound(rlen, maxBodySize: BtLinkConstants.preauthRecordMax)
+        }
     }
 
     @Test("every valid transport rlen never throws")

@@ -1,4 +1,5 @@
 import Foundation
+import HLTransport
 
 /// Constants of the clipboard group (0.10, 04-clipboard.md).
 public enum ClipboardConstants {
@@ -26,6 +27,12 @@ public enum ClipboardConstants {
     public static let unsentLocalWindow: TimeInterval = 5
     /// Progress is shown for images larger than this (CLIP-03 field 2).
     public static let progressThreshold = 1_048_576
+
+    /// Whether a transfer of `bytes` shows progress (CLIP-03 field 2): over Bluetooth from `BULK_DIRECT_MIN` up, on
+    /// the LAN and the relay only above 1 MiB.
+    static func showsProgress(bytes: Int, route: ConnectionRoute) -> Bool {
+        route == .bluetooth ? bytes >= TransportConstants.bulkDirectMin : bytes > progressThreshold
+    }
     /// De-duplication by `clip_id`: the latest 256 for 10 minutes (QC6).
     public static let ledgerCapacity = 256
     public static let ledgerWindow: TimeInterval = 600

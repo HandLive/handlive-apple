@@ -8,8 +8,9 @@ extension ClipboardEngine {
 
     /// A session reached `Connected` (CONN-01 step 10): the latest local clip the phone has not acknowledged is sent
     /// again when it is less than 120 s old (QC7).
-    public func phoneConnected(peer: any ClipboardPeer, deviceId: String, name: String, feature: ClipboardFeature?) {
-        phone = Phone(peer: peer, deviceId: deviceId, name: name, feature: feature)
+    public func phoneConnected(peer: any ClipboardPeer, deviceId: String, name: String,
+                               route: ConnectionRoute = .lan, feature: ClipboardFeature?) {
+        phone = Phone(peer: peer, deviceId: deviceId, name: name, route: route, feature: feature)
         sessionStartedAt = now()
         guard let clip = latestLocal, !clip.acknowledged,
               now().timeIntervalSince(clip.createdAt) <= ClipboardConstants.staleAfter,
@@ -118,7 +119,7 @@ extension ClipboardEngine {
     private func push(_ clip: OutgoingClip, to phone: Phone) async throws -> Ack {
         let peerId = Self.benchId(phone.deviceId)
         if let inline = inlinePush(clip, to: phone) {
-            let waiter = try await phone.peer.sendPush(inline)
+            let waiter = try await phone.peer.sendPush(inline, lane: .control)
             BenchLog.event("clip_sent", ["clip": clip.clipId, "peer": peerId])
             return try await waiter.response(timeout: TransportConstants.requestTimeout)
         }
@@ -129,20 +130,24 @@ extension ClipboardEngine {
                                          sha256: Base64Coding.encodeB64u(clip.content.sha256),
                                          chunkSize: Int32(chunkSize), chunkCount: chunkCount)
         if sending?.clipId == clip.clipId { sending?.transferId = transfer.transferId }
-        let waiter = try await phone.peer.sendPush(pushData(clip, transfer: transfer))
+        // 0.4.7 bulk rule 1: toàn bộ CLIP-03 transfer (push, chunks, cancel, ack, conflict) đi làn bulk.
+        let lane: EnvelopeLane = .bulk
+        let waiter = try await phone.peer.sendPush(pushData(clip, transfer: transfer), lane: lane)
         BenchLog.event("clip_sent", ["clip": clip.clipId, "peer": peerId])
-        let showsProgress = clip.content.kind == .image && bytes.count > ClipboardConstants.progressThreshold
+        let showsProgress = clip.content.kind == .image
+            && ClipboardConstants.showsProgress(bytes: bytes.count, route: phone.route)
         defer { if showsProgress { onProgress(.sending, nil) } }
         for index in 0..<Int(transfer.chunkCount) {
             try Task.checkCancellation()
             let start = index * chunkSize
             let chunk = bytes.subdata(in: start..<min(start + chunkSize, bytes.count))
             try await phone.peer.sendChunk(ClipboardChunkPlaintext(transferId: transfer.transferId, index: Int32(index),
-                                                                   chunk: chunk))
+                                                                   chunk: chunk), lane: lane)
             if showsProgress {
                 onProgress(.sending, ClipboardProgress(direction: .sending, transferId: transfer.transferId,
                                                        deviceName: phone.name,
-                                                       fraction: Double(index + 1) / Double(transfer.chunkCount)))
+                                                       fraction: Double(index + 1) / Double(transfer.chunkCount),
+                                                       overBluetooth: phone.route == .bluetooth))
             }
         }
         return try await waiter.response(timeout: TransportConstants.requestTimeout)
@@ -218,7 +223,8 @@ extension ClipboardEngine {
         onProgress(.sending, nil)
         if reason == .user, latestLocal?.clipId == current.clipId { latestLocal?.acknowledged = true }
         guard let peer = phone?.peer else { return }
-        Task { try? await peer.sendCancel(ClipboardCancelData(transferId: transferId, reason: reason)) }
+        // 0.4.7 bulk rule 1: cancel của một transfer đi làn bulk.
+        Task { try? await peer.sendCancel(ClipboardCancelData(transferId: transferId, reason: reason), lane: .bulk) }
     }
 
     static func milliseconds(_ date: Date) -> Int64 {

@@ -14,7 +14,7 @@ struct BluetoothLinkSchedulerTests {
         scheduler.enqueueControlEnvelope(type: "clipboard", envelope: Data(count: BtLinkConstants.fragmentMax + 10))
         scheduler.enqueueControlEnvelope(type: "ping", envelope: Data(count: 5))
         let first = try #require(scheduler.poll())
-        let frame = try BtTransportFrame.decode(first)
+        let frame = try BtTransportFrame.decode(first.data)
         #expect(frame.chan == BtLinkConstants.chanControl)
         #expect(frame.long == false)
         #expect(frame.data.count == 5)
@@ -25,7 +25,7 @@ struct BluetoothLinkSchedulerTests {
         let scheduler = BluetoothLinkScheduler()
         scheduler.enqueueBulk(Data(count: 10))
         scheduler.enqueueControlEnvelope(type: "session", envelope: Data(count: 20)) // type "session" -> luôn làn dài
-        let frame = try BtTransportFrame.decode(try #require(scheduler.poll()))
+        let frame = try BtTransportFrame.decode(try #require(scheduler.poll()).data)
         #expect(frame.chan == BtLinkConstants.chanControl)
         #expect(frame.long == true)
     }
@@ -40,13 +40,13 @@ struct BluetoothLinkSchedulerTests {
 
         scheduler.enqueueControlEnvelope(type: "ping", envelope: Data(count: 5))
         // Ngắn không bị cận inflight chặn: tới ngay, sau tối đa BT_BULK_INFLIGHT mảnh dài/bulk đã gửi.
-        let frame = try BtTransportFrame.decode(try #require(scheduler.poll()))
+        let frame = try BtTransportFrame.decode(try #require(scheduler.poll()).data)
         #expect(frame.data.count == 5)
         #expect(frame.long == false)
 
         scheduler.onDrained()
         scheduler.onDrained()
-        let third = try BtTransportFrame.decode(try #require(scheduler.poll()))
+        let third = try BtTransportFrame.decode(try #require(scheduler.poll()).data)
         #expect(third.chan == BtLinkConstants.chanBulk)
     }
 
@@ -58,7 +58,7 @@ struct BluetoothLinkSchedulerTests {
         _ = scheduler.poll()
         _ = scheduler.poll()
         scheduler.enqueueControlEnvelope(type: "ping", envelope: Data(count: 5))
-        let shortFrame = try BtTransportFrame.decode(try #require(scheduler.poll()))
+        let shortFrame = try BtTransportFrame.decode(try #require(scheduler.poll()).data)
         #expect(shortFrame.long == false)
         #expect(shortFrame.data.count == 5)
     }
@@ -73,7 +73,7 @@ struct BluetoothLinkSchedulerTests {
 
         var output: [Data] = []
         while let next = scheduler.poll() {
-            output.append(next)
+            output.append(next.data)
             scheduler.onDrained()
         }
         let frames = try output.map { try BtTransportFrame.decode($0) }
@@ -91,7 +91,7 @@ struct BluetoothLinkSchedulerTests {
     func sessionTypeAlwaysUsesTheLongLaneRegardlessOfSize() throws {
         let scheduler = BluetoothLinkScheduler()
         scheduler.enqueueControlEnvelope(type: "session", envelope: Data(count: 5))
-        let frame = try BtTransportFrame.decode(try #require(scheduler.poll()))
+        let frame = try BtTransportFrame.decode(try #require(scheduler.poll()).data)
         #expect(frame.long == true)
     }
 

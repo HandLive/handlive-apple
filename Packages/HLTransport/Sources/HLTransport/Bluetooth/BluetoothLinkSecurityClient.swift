@@ -38,7 +38,7 @@ public final class BluetoothLinkSecurityClient {
     /// Bước 4: `message2` = thân `noise2` sau byte kind; trả khoá `Split()` khi tag khớp, `nil` khi xác thực khoá
     /// thất bại (bao gồm `e.pub` của S là điểm bậc thấp) — 0.4.5 bước 4: C đóng kênh ngay, không nói lý do.
     public func receiveNoise2(message2: Data) -> LinkKeys? {
-        guard let opened, let ephemeralPrivateKey else { preconditionFailure("noise1 chưa dựng") }
+        guard let opened, let ephemeralPrivateKey else { preconditionFailure("buildNoise1 must run before receiveNoise2") }
         guard let keys = NoiseNNpsk0.tryOpenSecondMessage(opened, ephemeralPrivateKey: ephemeralPrivateKey,
                                                            message2: message2) else { return nil }
         return LinkKeys(c1: keys.c1, c2: keys.c2)

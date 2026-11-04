@@ -39,7 +39,8 @@ extension AppModel {
     func clipboardConnected(_ session: ControlSession, details: LinkDetails) {
         guard let record = pairedDevice else { return }
         clipboard?.phoneConnected(peer: SessionClipboardPeer(session: session), deviceId: record.peerDeviceId,
-                                  name: record.peerName, feature: details.peerCapability.features.clipboard)
+                                  name: record.peerName, route: details.route,
+                                  feature: details.peerCapability.features.clipboard)
     }
 
     /// Results in place: the status line of the menu (for two minutes) and, after a manual send, the checkmark on
@@ -89,6 +90,15 @@ extension ClipboardProgress {
         switch direction {
         case .sending: return L10n.Clipboard.imageSending(deviceName: deviceName, percent: percent)
         case .receiving: return L10n.Clipboard.imageReceiving(deviceName: deviceName, percent: percent)
+        }
+    }
+
+    /// Ghi chú dưới tiến độ khi ảnh đi qua Bluetooth (CLIP-03 trường 10); `nil` ở LAN và relay.
+    public var bluetoothNote: String? {
+        guard overBluetooth else { return nil }
+        switch direction {
+        case .sending: return L10n.Clipboard.bulkBluetoothSending
+        case .receiving: return L10n.Clipboard.bulkBluetoothReceiving
         }
     }
 }

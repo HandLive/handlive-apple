@@ -62,12 +62,8 @@ extension ConnectionManager {
             let matching = matchingCandidates()
             if let candidate = matching.first(where: { !tried.contains($0.name) }) {
                 tried.insert(candidate.name)
-                apply(.lanInstanceFound)
-                let result = await connectLAN(.service(candidate.endpoint), phone: phone,
-                                              timeout: configuration.connectTimeout, fastPath: false)
-                if result == .pinMismatch { mismatched.insert(candidate.name) }
-                let allMismatched = matching.allSatisfy { mismatched.contains($0.name) }
-                if afterCandidate(result, allMismatched: allMismatched) { return }
+                let over = await tryLANCandidate(candidate, among: matching, phone: phone, mismatched: &mismatched)
+                if over { return }
                 continue
             }
             // CONN-05 step 4: "Priority LAN > Bluetooth... otherwise the Bluetooth candidate is connected at
@@ -85,6 +81,17 @@ extension ConnectionManager {
             default: continue
             }
         }
+    }
+
+    /// Một ứng viên mDNS: nối LAN, ghi nhận nếu pin sai; trả `true` khi lượt tìm kiếm đã xong.
+    private func tryLANCandidate(_ candidate: DiscoveredPhone, among matching: [DiscoveredPhone],
+                                 phone: PairedPhone, mismatched: inout Set<String>) async -> Bool {
+        apply(.lanInstanceFound)
+        let result = await connectLAN(.service(candidate.endpoint), phone: phone,
+                                      timeout: configuration.connectTimeout, fastPath: false)
+        if result == .pinMismatch { mismatched.insert(candidate.name) }
+        let allMismatched = matching.allSatisfy { mismatched.contains($0.name) }
+        return afterCandidate(result, allMismatched: allMismatched)
     }
 
     /// `LAN_DISCOVERY_GRACE` is over: the relay when it may be used (CONN-03 step 2), otherwise `Backoff`.

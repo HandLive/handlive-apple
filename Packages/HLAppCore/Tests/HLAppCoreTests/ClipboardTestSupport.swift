@@ -17,6 +17,7 @@ final class FakeClipboardPeer: ClipboardPeer, @unchecked Sendable {
     private var storedCancels: [ClipboardCancelData] = []
     private var storedConflicts: [ClipboardConflictData] = []
     private var storedReplies: [(requestId: String, ack: Ack)] = []
+    private var storedLanes: [String: [EnvelopeLane]] = [:]
     /// Delay per chunk, to cancel a transfer midway.
     var chunkDelay: Duration = .zero
 
@@ -31,6 +32,8 @@ final class FakeClipboardPeer: ClipboardPeer, @unchecked Sendable {
     var cancels: [ClipboardCancelData] { locked { storedCancels } }
     var conflicts: [ClipboardConflictData] { locked { storedConflicts } }
     var replies: [(requestId: String, ack: Ack)] { locked { storedReplies } }
+    /// Lanes used per kind of envelope (`push`, `chunk`, `cancel`, `conflict`, `reply`), in send order.
+    func lanes(_ kind: String) -> [EnvelopeLane] { locked { storedLanes[kind] ?? [] } }
 
     private func locked<T>(_ body: () -> T) -> T {
         lock.lock()
@@ -38,29 +41,42 @@ final class FakeClipboardPeer: ClipboardPeer, @unchecked Sendable {
         return body()
     }
 
-    func sendPush(_ push: ClipboardPushData) async throws -> any AckWaiting {
+    func sendPush(_ push: ClipboardPushData, lane: EnvelopeLane) async throws -> any AckWaiting {
         let answer: Answer = locked {
             storedPushes.append(push)
+            storedLanes["push", default: []].append(lane)
             return answers.isEmpty ? .applied : answers.removeFirst()
         }
         return ScriptedAck(clipId: push.clipId, transferId: push.transfer?.transferId, answer: answer)
     }
 
-    func sendChunk(_ chunk: ClipboardChunkPlaintext) async throws {
+    func sendChunk(_ chunk: ClipboardChunkPlaintext, lane: EnvelopeLane) async throws {
         if chunkDelay > .zero { try await Task.sleep(for: chunkDelay) }
-        locked { storedChunks.append(chunk) }
+        locked {
+            storedChunks.append(chunk)
+            storedLanes["chunk", default: []].append(lane)
+        }
     }
 
-    func sendCancel(_ cancel: ClipboardCancelData) async throws {
-        locked { storedCancels.append(cancel) }
+    func sendCancel(_ cancel: ClipboardCancelData, lane: EnvelopeLane) async throws {
+        locked {
+            storedCancels.append(cancel)
+            storedLanes["cancel", default: []].append(lane)
+        }
     }
 
-    func sendConflict(_ conflict: ClipboardConflictData) async throws {
-        locked { storedConflicts.append(conflict) }
+    func sendConflict(_ conflict: ClipboardConflictData, lane: EnvelopeLane) async throws {
+        locked {
+            storedConflicts.append(conflict)
+            storedLanes["conflict", default: []].append(lane)
+        }
     }
 
-    func reply(to requestId: String, with ack: Ack) async throws {
-        locked { storedReplies.append((requestId, ack)) }
+    func reply(to requestId: String, with ack: Ack, lane: EnvelopeLane) async throws {
+        locked {
+            storedReplies.append((requestId, ack))
+            storedLanes["reply", default: []].append(lane)
+        }
     }
 }
 
@@ -104,7 +120,8 @@ final class ClipboardHarness {
     static let macId = "5b1f8c2e-9a4d-8e6f-a1b2-c3d4e5f60718"
     static let phoneId = "8c7d6e5f-4a3b-8c2d-9e1f-0a1b2c3d4e5f"
 
-    init(connected: Bool = true, platform: ClipboardPlatform = .mac, feature: ClipboardFeature? = ClipboardFeature(
+    init(connected: Bool = true, platform: ClipboardPlatform = .mac, route: ConnectionRoute = .lan,
+         feature: ClipboardFeature? = ClipboardFeature(
         enabled: true, autoSend: true, maxTextBytes: 1_048_576, maxImageBytes: 10_485_760,
         mimes: [ClipMime.text, ClipMime.png, ClipMime.jpeg])) {
         let name = "app.handlive.tests.\(UUID().uuidString)"
@@ -112,7 +129,7 @@ final class ClipboardHarness {
         self.platform = platform
         readingAllowed = platform == .mac
         engine = makeEngine()
-        if connected { connect(feature: feature) }
+        if connected { connect(feature: feature, route: route) }
     }
 
     func makeEngine() -> ClipboardEngine {
@@ -135,8 +152,9 @@ final class ClipboardHarness {
 
     func connect(feature: ClipboardFeature? = ClipboardFeature(enabled: true, autoSend: true, maxTextBytes: 1_048_576,
                                                                 maxImageBytes: 10_485_760,
-                                                                mimes: [ClipMime.text, ClipMime.png, ClipMime.jpeg])) {
-        engine.phoneConnected(peer: peer, deviceId: Self.phoneId, name: "Pixel của Lan", feature: feature)
+                                                                mimes: [ClipMime.text, ClipMime.png, ClipMime.jpeg]),
+                 route: ConnectionRoute = .lan) {
+        engine.phoneConnected(peer: peer, deviceId: Self.phoneId, name: "Pixel của Lan", route: route, feature: feature)
     }
 
     func advance(_ seconds: TimeInterval) {
