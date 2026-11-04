@@ -28,7 +28,7 @@ struct BluetoothBulkLaneTransferTests {
         let channels = frames.map(\.chan)
         #expect(channels.count == 7)
         #expect(channels.first == BtLinkConstants.chanBulk)
-        #expect(channels[1] == BtLinkConstants.chanControl, "control đi ngay sau mảnh đang ghi, trước các mảnh bulk còn lại")
+        #expect(channels[1] == BtLinkConstants.chanControl, "control đi ngay sau mảnh đang ghi")
         #expect(channels.dropFirst(2).allSatisfy { $0 == BtLinkConstants.chanBulk })
         await channel.close(code: .normal)
     }
@@ -48,7 +48,7 @@ struct BluetoothBulkLaneTransferTests {
         #expect(await stream.waitForWrites(1))
         try await Task.sleep(for: .milliseconds(100))
         #expect(await channel.pendingBulkEnvelopes == BluetoothLinkConstants.bulkQueued)
-        #expect(done.count == 0, "chưa phong bì nào ghi xong và lần gửi thứ ba còn chờ chỗ")
+        #expect(done.isEmpty, "chưa phong bì nào ghi xong, lần gửi thứ ba còn chờ chỗ")
         stream.release()
         for send in sends { try await send.value }
         #expect(done.count == 3)
@@ -71,7 +71,8 @@ struct BluetoothBulkLaneTransferTests {
         let sending = Task {
             for index in 0..<chunkCount {
                 let part = image.subdata(in: (index * chunkSize)..<((index + 1) * chunkSize))
-                let envelope = #"{"v":1,"type":"clipboard","id":"\#(chunkIDs[index])","ts":1,"payload":"\#(Base64Coding.encodeB64(part))"}"#
+                let payload = Base64Coding.encodeB64(part)
+                let envelope = #"{"v":1,"type":"clipboard","id":"\#(chunkIDs[index])","ts":1,"payload":"\#(payload)"}"#
                 try await sender.send(.bulkText(envelope))
                 if index % pingEvery == 0 {
                     let ping = expectedPings[index / pingEvery]
@@ -135,6 +136,7 @@ final class Flags: @unchecked Sendable {
     private var indexes: Set<Int> = []
     func set(_ index: Int) { lock.withLock { _ = indexes.insert(index) } }
     var count: Int { lock.withLock { indexes.count } }
+    var isEmpty: Bool { lock.withLock { indexes.isEmpty } }
 }
 
 /// Ghi lại mọi `write`; lần ghi đầu tiên dừng lại cho đến khi `release()` (một liên kết đang bận), các lần sau qua ngay.
