@@ -156,7 +156,8 @@ public final class BluetoothChannel: MessageChannel, @unchecked Sendable {
     /// A complete message as the envelope text a WebSocket text frame would carry (an invalid sequence fails the
     /// envelope parse later, like the same bytes on `/v1/ctl`).
     private static func envelopeText(_ bytes: Data) -> String {
-        String(decoding: bytes, as: UTF8.self)
+        // UTF-8 sai thì trả chuỗi rỗng: phân tích envelope thất bại ngay sau đó, thay vì để ký tự thay thế lọt vào JSON.
+        String(bytes: bytes, encoding: .utf8) ?? ""
     }
 
     /// Reads records until the stream closes or one violates a 0.4.5/0.4.7 bound (treated the same as a

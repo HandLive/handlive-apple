@@ -20,7 +20,8 @@ struct BluetoothLongLaneReassemblerTests {
 
     @Test("a message over BT_MESSAGE_MAX closes the link even mid-stream")
     func messageOverMaxClosesTheLinkEvenMidStream() throws {
-        let vector = try #require(VectorFile("bt-frame.json").invalidVectors.first { $0["reason"] as? String == "message_over_max" })
+        let vector = try #require(
+            VectorFile("bt-frame.json").invalidVectors.first { $0["reason"] as? String == "message_over_max" })
         let reassembler = BluetoothLongLaneReassembler()
         let priorFrame = BtTransportFrame(chan: 0x01, more: true, long: true,
                                           data: Data(count: Int(try vector.int("prior_bytes_received"))))

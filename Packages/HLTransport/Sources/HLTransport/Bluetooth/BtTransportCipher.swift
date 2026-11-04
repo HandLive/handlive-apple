@@ -12,7 +12,7 @@ public final class BtTransportCipher {
     private let rekeyAfterRecords: Int64
 
     public init(initialKey: Data, rekeyAfterRecords: Int64 = BluetoothLinkConstants.linkRekeyRecords,
-               initialCounter: Int64 = 0) {
+                initialCounter: Int64 = 0) {
         key = initialKey
         self.rekeyAfterRecords = rekeyAfterRecords
         counter = initialCounter
@@ -44,8 +44,8 @@ public final class BtTransportCipher {
     private func nonce(_ counter: Int64) -> Data {
         var out = Data(count: ChaCha20Poly1305.nonceByteCount)
         let unsigned = UInt64(bitPattern: counter)
-        for i in 0..<8 {
-            out[4 + i] = UInt8((unsigned >> (8 * i)) & 0xFF)
+        for index in 0..<8 {
+            out[4 + index] = UInt8((unsigned >> (8 * index)) & 0xFF)
         }
         return out
     }

@@ -31,7 +31,8 @@ struct NoiseNNpsk0Tests {
 
     @Test("a tampered noise2 tag never verifies")
     func tamperedNoise2TagNeverVerifies() throws {
-        let vector = try #require(VectorFile("bt-link.json").invalidVectors.first { $0["reason"] as? String == "tag_mismatch_noise2" })
+        let vector = try #require(
+            VectorFile("bt-link.json").invalidVectors.first { $0["reason"] as? String == "tag_mismatch_noise2" })
         let handshake = try #require(Self.handshakeVectors().first { ($0["name"] as? String)?.contains("cặp 1") == true })
         let prologue = NoiseNNpsk0.prologue(nS: try handshake.hex("n_s"))
         let built = try NoiseNNpsk0.firstMessage(psk: try handshake.hex("psk"), prologue: prologue,
