@@ -99,8 +99,7 @@ public final class RelayRendezvousChannel: MessageChannel, @unchecked Sendable {
         if let reason = inbox.closedReason { throw reason }
         let text: String
         switch message {
-        case .text(let t): text = t
-        case .bulkText(let t): text = t
+        case .text(let body), .bulkText(let body): text = body
         case .binary: throw ChannelClosed(code: nil, detail: "binary not supported on relay", local: true)
         }
         guard let link, let envelope = try? Envelope.parse(Data(text.utf8)) else {

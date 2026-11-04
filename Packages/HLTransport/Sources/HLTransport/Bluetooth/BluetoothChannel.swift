@@ -153,6 +153,12 @@ public final class BluetoothChannel: MessageChannel, @unchecked Sendable {
         }
     }
 
+    /// A complete message as the envelope text a WebSocket text frame would carry (an invalid sequence fails the
+    /// envelope parse later, like the same bytes on `/v1/ctl`).
+    private static func envelopeText(_ bytes: Data) -> String {
+        String(decoding: bytes, as: UTF8.self)
+    }
+
     /// Reads records until the stream closes or one violates a 0.4.5/0.4.7 bound (treated the same as a
     /// connection loss, CONN-05 E8: close the link without an answer, no reason given over the air).
     private static func readLoop(stream: any BluetoothByteStream, openCipher: BtTransportCipher,
@@ -172,15 +178,15 @@ public final class BluetoothChannel: MessageChannel, @unchecked Sendable {
                     // đã kiểm tra `dlen` ≤ `bulkFragmentMax`; reassembler kiểm tra tổng ≤ `messageMax`.
                     // 0.4.7 bulk rule 6: tin bulk hoàn chỉnh đi lên dưới dạng `.text` (cùng pipeline với control).
                     if let message = try bulkReassembler.accept(frame) {
-                        inbox.deliver(.text(String(decoding: message, as: UTF8.self)))
+                        inbox.deliver(.text(Self.envelopeText(message)))
                     }
                 default:
                     if frame.long {
                         if let message = try longReassembler.accept(frame) {
-                            inbox.deliver(.text(String(decoding: message, as: UTF8.self)))
+                            inbox.deliver(.text(Self.envelopeText(message)))
                         }
                     } else {
-                        inbox.deliver(.text(String(decoding: frame.data, as: UTF8.self)))
+                        inbox.deliver(.text(Self.envelopeText(frame.data)))
                     }
                 }
             }
