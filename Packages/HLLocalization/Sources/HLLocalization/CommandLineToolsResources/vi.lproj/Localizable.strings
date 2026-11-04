@@ -136,6 +136,10 @@
 	<string>Cuộc gọi chờ</string>
 	<key>clipboard.auto_send_off_on_phone</key>
 	<string>Tự gửi đang tắt trên điện thoại — dùng nút Gửi bảng nhớ tạm trên điện thoại</string>
+	<key>clipboard.bulk_bluetooth_receiving</key>
+	<string>Đang nhận qua Bluetooth. Có thể mất vài phút.</string>
+	<key>clipboard.bulk_bluetooth_sending</key>
+	<string>Đang gửi qua Bluetooth. Có thể mất vài phút.</string>
 	<key>clipboard.conflict_body</key>
 	<string>Thiết bị này vừa có nội dung sao chép mới.</string>
 	<key>clipboard.conflict_title</key>

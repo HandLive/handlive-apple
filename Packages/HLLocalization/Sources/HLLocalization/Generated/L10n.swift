@@ -173,6 +173,10 @@ public enum L10n {
     public enum Clipboard {
         /// Auto-send is off on the phone — use the Send Clipboard button on the phone
         public static var autoSendOffOnPhone: String { L10nLookup.string("clipboard.auto_send_off_on_phone") }
+        /// Receiving over Bluetooth. This can take a few minutes.
+        public static var bulkBluetoothReceiving: String { L10nLookup.string("clipboard.bulk_bluetooth_receiving") }
+        /// Sending over Bluetooth. This can take a few minutes.
+        public static var bulkBluetoothSending: String { L10nLookup.string("clipboard.bulk_bluetooth_sending") }
         /// That device just copied something new.
         public static var conflictBody: String { L10nLookup.string("clipboard.conflict_body") }
         /// Clipboard Not Updated on {device_name}

@@ -1279,6 +1279,42 @@
         }
       }
     },
+    "clipboard.bulk_bluetooth_receiving" : {
+      "comment" : "Note under the receiving progress of an image coming over the Bluetooth link with no LAN (Android notification, Mac menu bar menu; CLIP-03 field 10)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Receiving over Bluetooth. This can take a few minutes."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang nhận qua Bluetooth. Có thể mất vài phút."
+          }
+        }
+      }
+    },
+    "clipboard.bulk_bluetooth_sending" : {
+      "comment" : "Note under the sending progress of an image going over the Bluetooth link with no LAN (Android notification, Mac menu bar menu; CLIP-03 field 10)",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sending over Bluetooth. This can take a few minutes."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang gửi qua Bluetooth. Có thể mất vài phút."
+          }
+        }
+      }
+    },
     "clipboard.conflict_body" : {
       "comment" : "Body of the conflict notification; the device is the one named in the title",
       "extractionState" : "manual",
