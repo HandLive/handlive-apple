@@ -120,7 +120,8 @@ final class ClipboardHarness {
     static let macId = "5b1f8c2e-9a4d-8e6f-a1b2-c3d4e5f60718"
     static let phoneId = "8c7d6e5f-4a3b-8c2d-9e1f-0a1b2c3d4e5f"
 
-    init(connected: Bool = true, platform: ClipboardPlatform = .mac, feature: ClipboardFeature? = ClipboardFeature(
+    init(connected: Bool = true, platform: ClipboardPlatform = .mac, route: ConnectionRoute = .lan,
+         feature: ClipboardFeature? = ClipboardFeature(
         enabled: true, autoSend: true, maxTextBytes: 1_048_576, maxImageBytes: 10_485_760,
         mimes: [ClipMime.text, ClipMime.png, ClipMime.jpeg])) {
         let name = "app.handlive.tests.\(UUID().uuidString)"
@@ -128,7 +129,7 @@ final class ClipboardHarness {
         self.platform = platform
         readingAllowed = platform == .mac
         engine = makeEngine()
-        if connected { connect(feature: feature) }
+        if connected { connect(feature: feature, route: route) }
     }
 
     func makeEngine() -> ClipboardEngine {
@@ -151,8 +152,9 @@ final class ClipboardHarness {
 
     func connect(feature: ClipboardFeature? = ClipboardFeature(enabled: true, autoSend: true, maxTextBytes: 1_048_576,
                                                                 maxImageBytes: 10_485_760,
-                                                                mimes: [ClipMime.text, ClipMime.png, ClipMime.jpeg])) {
-        engine.phoneConnected(peer: peer, deviceId: Self.phoneId, name: "Pixel của Lan", feature: feature)
+                                                                mimes: [ClipMime.text, ClipMime.png, ClipMime.jpeg]),
+                 route: ConnectionRoute = .lan) {
+        engine.phoneConnected(peer: peer, deviceId: Self.phoneId, name: "Pixel của Lan", route: route, feature: feature)
     }
 
     func advance(_ seconds: TimeInterval) {

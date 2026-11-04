@@ -93,3 +93,92 @@ struct ClipboardBulkLaneTests {
         #expect(transferHarness.peer.lanes("conflict") == [.bulk])
     }
 }
+
+/// CLIP-03 field 2 và field 10: trên Bluetooth hiện tiến độ từ `BULK_DIRECT_MIN` (128 KiB), trên LAN và relay vẫn
+/// chỉ khi ảnh lớn hơn 1 MiB; ghi chú "gửi qua Bluetooth" chỉ đi kèm tiến độ của đường Bluetooth.
+@Suite("Clipboard: progress threshold by route (CLIP-03 fields 2 and 10)")
+@MainActor
+struct ClipboardBulkProgressTests {
+    /// PNG ngẫu nhiên khoảng 190 KB: trên `BULK_DIRECT_MIN`, dưới 1 MiB.
+    private static func mediumImage() throws -> Data { try ClipboardTransferTests.png(side: 220) }
+
+    @Test("Bluetooth sending: an image of at least BULK_DIRECT_MIN shows progress marked as over Bluetooth")
+    func bluetoothSendShowsProgress() async throws {
+        let image = try Self.mediumImage()
+        #expect(image.count >= TransportConstants.bulkDirectMin && image.count < ClipboardConstants.progressThreshold)
+        let harness = ClipboardHarness(route: .bluetooth)
+        var seen: [ClipboardProgress] = []
+        harness.engine.onProgress = { direction, value in
+            if direction == .sending, let value { seen.append(value) }
+        }
+        harness.pasteboard.copy([(PasteboardTypeID.png, image)])
+        harness.engine.poll()
+        #expect(await harness.until { harness.peer.chunks.count == (image.count + 65_535) / 65_536 })
+        #expect(!seen.isEmpty)
+        #expect(seen.allSatisfy(\.overBluetooth))
+    }
+
+    @Test("LAN sending: the same image under 1 MiB shows no progress")
+    func lanSendShowsNoProgress() async throws {
+        let image = try Self.mediumImage()
+        let harness = ClipboardHarness(route: .lan)
+        harness.pasteboard.copy([(PasteboardTypeID.png, image)])
+        harness.engine.poll()
+        #expect(await harness.until { harness.peer.chunks.count == (image.count + 65_535) / 65_536 })
+        #expect(!harness.progressSeen)
+    }
+
+    @Test("Bluetooth sending: an image under BULK_DIRECT_MIN shows no progress")
+    func smallImageOverBluetoothShowsNoProgress() async throws {
+        let image = try ClipboardTransferTests.png(side: 100)
+        #expect(image.count < TransportConstants.bulkDirectMin)
+        let harness = ClipboardHarness(route: .bluetooth)
+        harness.pasteboard.copy([(PasteboardTypeID.png, image)])
+        harness.engine.poll()
+        #expect(await harness.until { !harness.peer.pushes.isEmpty })
+        try await Task.sleep(for: .milliseconds(100))
+        #expect(!harness.progressSeen)
+    }
+
+    @Test("Bluetooth receiving: an image of at least BULK_DIRECT_MIN shows progress marked as over Bluetooth")
+    func bluetoothReceiveShowsProgress() async throws {
+        let image = try Self.mediumImage()
+        let harness = ClipboardHarness(route: .bluetooth)
+        var seen: [ClipboardProgress] = []
+        harness.engine.onProgress = { direction, value in
+            if direction == .receiving, let value { seen.append(value) }
+        }
+        let transfer = ClipboardTransferTests.transfer(for: image)
+        let id = harness.receive(ClipboardTransferTests.imagePush(transfer))
+        for chunk in ClipboardTransferTests.chunks(of: image, transfer: transfer) { harness.receiveChunk(chunk) }
+        _ = try #require(await harness.reply(to: id))
+        #expect(!seen.isEmpty)
+        #expect(seen.allSatisfy(\.overBluetooth))
+    }
+
+    @Test("LAN receiving: the same image under 1 MiB shows no progress")
+    func lanReceiveShowsNoProgress() async throws {
+        let image = try Self.mediumImage()
+        let harness = ClipboardHarness(route: .lan)
+        let transfer = ClipboardTransferTests.transfer(for: image)
+        let id = harness.receive(ClipboardTransferTests.imagePush(transfer))
+        for chunk in ClipboardTransferTests.chunks(of: image, transfer: transfer) { harness.receiveChunk(chunk) }
+        _ = try #require(await harness.reply(to: id))
+        #expect(!harness.progressSeen)
+    }
+
+    @Test("LAN sending: a 1 MiB image still shows progress, without the Bluetooth mark")
+    func lanLargeImageStillShowsProgress() async throws {
+        let image = try ClipboardTransferTests.png(side: 700)
+        let harness = ClipboardHarness(route: .relay)
+        var seen: [ClipboardProgress] = []
+        harness.engine.onProgress = { direction, value in
+            if direction == .sending, let value { seen.append(value) }
+        }
+        harness.pasteboard.copy([(PasteboardTypeID.png, image)])
+        harness.engine.poll()
+        #expect(await harness.until { harness.peer.chunks.count == (image.count + 65_535) / 65_536 })
+        #expect(!seen.isEmpty)
+        #expect(seen.allSatisfy { !$0.overBluetooth })
+    }
+}
